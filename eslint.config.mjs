@@ -9,6 +9,12 @@ const eslintConfig = [
   {
     ignores: [".next/**", "node_modules/**", "out/**", "next-env.d.ts"],
   },
+  {
+    files: ["src/features/home/**/*.tsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -54,3 +54,35 @@ button {
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1015;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #272a34;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b3f4e;
+}
+
+.glass-panel {
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(26 28 35 / 75%);
+  backdrop-filter: blur(12px);
+}
+
+.gold-glow {
+  box-shadow: 0 0 15px rgb(229 193 88 / 20%);
+}
+
+.emerald-glow {
+  box-shadow: 0 0 20px rgb(16 185 129 / 25%);
+}

@@ -11,8 +11,8 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "ورود | برگ سبز",
-  description: "ورود و تأیید شماره موبایل در فروشگاه برگ سبز",
+  title: "گیاهان خانگی | برگ و گلدان",
+  description: "فروشگاه تخصصی گیاهان خانگی، گل‌ها و گلدان‌های آپارتمانی",
 };
 
 export const viewport: Viewport = {

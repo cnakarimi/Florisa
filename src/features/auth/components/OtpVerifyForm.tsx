@@ -2,7 +2,7 @@
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ChevronLeft, Edit2 } from "lucide-react";
+import { ChevronLeft, Edit2 } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
@@ -18,7 +18,10 @@ import {
 import type { AuthStatus } from "@/features/auth/types";
 import { toPersianDigits } from "@/features/auth/utils/digits";
 import { maskPhone } from "@/features/auth/utils/phone";
-import { readPhone } from "@/features/auth/utils/storage";
+import {
+  readPhone,
+  storeVerification,
+} from "@/features/auth/utils/storage";
 
 const EMPTY_OTP = Array<string>(OTP_LENGTH).fill("");
 
@@ -69,8 +72,9 @@ export function OtpVerifyForm() {
 
     verificationTimeoutRef.current = window.setTimeout(() => {
       if (code === MOCK_OTP) {
-        setStatus("success");
+        storeVerification(true);
         verificationTimeoutRef.current = null;
+        router.replace("/");
         return;
       }
 
@@ -84,7 +88,7 @@ export function OtpVerifyForm() {
     return <div className="min-h-dvh bg-[#131313]" aria-label="در حال بارگذاری" />;
   }
 
-  const isLocked = status !== "idle";
+  const isLocked = status === "submitting";
 
   return (
     <AuthShell className="pt-10">
@@ -135,22 +139,9 @@ export function OtpVerifyForm() {
           ) : null}
         </div>
 
-        {status === "success" ? (
-          <div
-            className="mb-4 flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-[#3a4b3c] bg-[#0e1d11] p-3 text-center text-sm text-[#b9cbb8]"
-            role="status"
-          >
-            <CheckCircle2
-              className="size-5 shrink-0 text-[#e9c349]"
-              aria-hidden="true"
-            />
-            <span>احراز هویت با موفقیت انجام شد</span>
-          </div>
-        ) : null}
-
         <ResendTimer
           initialSeconds={RESEND_DELAY_SECONDS}
-          disabled={status !== "idle"}
+          disabled={status === "submitting"}
           onResend={() => {
             setOtp(Array<string>(OTP_LENGTH).fill(""));
             setError("");
@@ -163,14 +154,9 @@ export function OtpVerifyForm() {
           <PrimaryButton
             type="submit"
             isLoading={status === "submitting"}
-            disabled={status === "success"}
             className="rounded-2xl"
           >
-            {status === "success"
-              ? "تایید شد"
-              : status === "submitting"
-                ? "در حال بررسی"
-                : "تایید و ادامه"}
+            {status === "submitting" ? "در حال بررسی" : "تایید و ادامه"}
             {status === "idle" ? (
               <ChevronLeft className="size-5" aria-hidden="true" />
             ) : null}

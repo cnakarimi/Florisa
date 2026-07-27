@@ -1,4 +1,4 @@
-export type AuthStatus = "idle" | "submitting" | "success";
+export type AuthStatus = "idle" | "submitting";
 
 export interface OtpInputProps {
   value: string[];
@@ -6,4 +6,3 @@ export interface OtpInputProps {
   disabled?: boolean;
   hasError?: boolean;
 }
-

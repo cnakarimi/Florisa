@@ -1,4 +1,7 @@
-const PHONE_STORAGE_KEY = "sina-flower.auth.phone";
+import {
+  AUTH_PHONE_STORAGE_KEY,
+  AUTH_VERIFIED_STORAGE_KEY,
+} from "@/features/auth/constants";
 
 function canUseSessionStorage(): boolean {
   return typeof window !== "undefined";
@@ -6,7 +9,7 @@ function canUseSessionStorage(): boolean {
 
 export function storePhone(phone: string): void {
   if (canUseSessionStorage()) {
-    window.sessionStorage.setItem(PHONE_STORAGE_KEY, phone);
+    window.sessionStorage.setItem(AUTH_PHONE_STORAGE_KEY, phone);
   }
 }
 
@@ -15,6 +18,16 @@ export function readPhone(): string | null {
     return null;
   }
 
-  return window.sessionStorage.getItem(PHONE_STORAGE_KEY);
+  return window.sessionStorage.getItem(AUTH_PHONE_STORAGE_KEY);
 }
 
+export function storeVerification(isVerified: boolean): void {
+  if (!canUseSessionStorage()) {
+    return;
+  }
+
+  window.sessionStorage.setItem(
+    AUTH_VERIFIED_STORAGE_KEY,
+    String(isVerified),
+  );
+}

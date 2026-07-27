@@ -13,7 +13,10 @@ import {
   phoneFormSchema,
   type PhoneFormValues,
 } from "@/features/auth/schemas/auth";
-import { storePhone } from "@/features/auth/utils/storage";
+import {
+  storePhone,
+  storeVerification,
+} from "@/features/auth/utils/storage";
 
 export function PhoneAuthForm() {
   const router = useRouter();
@@ -31,6 +34,7 @@ export function PhoneAuthForm() {
 
   const submitPhone = async ({ phone }: PhoneFormValues) => {
     storePhone(phone);
+    storeVerification(false);
     await new Promise((resolve) => window.setTimeout(resolve, 250));
     router.push("/auth/verify");
   };

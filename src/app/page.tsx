@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import { HomeExperience } from "@/features/home/components/HomeExperience";
 
 export default function HomePage() {
-  redirect("/auth");
+  return <HomeExperience />;
 }
-

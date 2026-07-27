@@ -1,0 +1,54 @@
+from rest_framework import serializers
+
+from accounts.models import User
+from accounts.utils import (
+    IRANIAN_MOBILE_PATTERN,
+    normalize_otp_code,
+    normalize_phone,
+)
+
+
+class PhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField(
+        max_length=32,
+        trim_whitespace=True,
+        error_messages={
+            "blank": "شماره موبایل الزامی است.",
+            "required": "شماره موبایل الزامی است.",
+        },
+    )
+
+    def validate_phone(self, value: str) -> str:
+        normalized = normalize_phone(value)
+        if not IRANIAN_MOBILE_PATTERN.fullmatch(normalized):
+            raise serializers.ValidationError(
+                "شماره موبایل وارد شده معتبر نیست.",
+            )
+        return normalized
+
+
+class VerifyOTPSerializer(PhoneSerializer):
+    code = serializers.CharField(
+        min_length=5,
+        max_length=5,
+        trim_whitespace=True,
+        error_messages={
+            "blank": "کد تأیید الزامی است.",
+            "required": "کد تأیید الزامی است.",
+            "min_length": "کد تأیید باید پنج رقمی باشد.",
+            "max_length": "کد تأیید باید پنج رقمی باشد.",
+        },
+    )
+
+    def validate_code(self, value: str) -> str:
+        normalized = normalize_otp_code(value)
+        if len(normalized) != 5 or not normalized.isascii() or not normalized.isdigit():
+            raise serializers.ValidationError("کد تأیید باید پنج رقمی باشد.")
+        return normalized
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "phone", "full_name", "date_joined")
+        read_only_fields = fields

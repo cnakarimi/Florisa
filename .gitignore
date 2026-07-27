@@ -1,8 +1,9 @@
-.next/
-.npm-cache/
-node_modules/
-out/
-.env*
-!.env.example
-npm-debug.log*
-*.tsbuildinfo
+# Environment files at repository root
+.env
+.env.local
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

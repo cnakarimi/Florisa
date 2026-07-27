@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from './Header';
 import { HeroSection } from './HeroSection';
 import { CategoriesSection } from './CategoriesSection';
@@ -13,12 +14,12 @@ import { CartDrawer } from './CartDrawer';
 import { ShopCatalog } from './ShopCatalog';
 import { PlantAICare } from './PlantAICare';
 import { FavoritesView } from './FavoritesView';
-import { ProfileView } from './ProfileView';
 import { PRODUCTS } from '../data/products';
 import type { Product, CartItem, Article, TabType } from '../types';
 import { Sparkles } from 'lucide-react';
 
 export function HomeExperience() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<Product[]>([PRODUCTS[0]]);
@@ -170,8 +171,6 @@ export function HomeExperience() {
           />
         )}
 
-        {/* Tab 5: PROFILE */}
-        {activeTab === 'profile' && <ProfileView />}
       </main>
 
       {/* Product Detail Modal */}
@@ -199,7 +198,14 @@ export function HomeExperience() {
       {/* Bottom Sticky Navigation Bar matching screenshot icons */}
       <BottomNav
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          if (tab === 'profile') {
+            router.push('/profile');
+            return;
+          }
+
+          setActiveTab(tab);
+        }}
         favoritesCount={favorites.length}
       />
     </div>

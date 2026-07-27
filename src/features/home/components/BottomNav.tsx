@@ -30,8 +30,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              aria-current={isActive ? 'page' : undefined}
+              aria-label={tab.label}
               className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
                 isActive
                   ? 'text-emerald-400 font-bold scale-105'

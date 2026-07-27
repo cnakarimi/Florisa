@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import { MOCK_REQUEST_DELAY_MS } from "@/features/auth/constants";
 import { toPersianDigits } from "@/features/auth/utils/digits";
 
 interface ResendTimerProps {
   initialSeconds: number;
-  onResend: () => void;
+  onResend: () => Promise<void> | void;
   disabled?: boolean;
 }
 
@@ -18,7 +17,6 @@ export function ResendTimer({
 }: ResendTimerProps) {
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [isResending, setIsResending] = useState(false);
-  const resendTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -32,26 +30,20 @@ export function ResendTimer({
     return () => window.clearTimeout(timeoutId);
   }, [timeLeft]);
 
-  useEffect(() => {
-    return () => {
-      if (resendTimeoutRef.current !== null) {
-        window.clearTimeout(resendTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleResend = () => {
+  const handleResend = async () => {
     if (timeLeft > 0 || isResending || disabled) {
       return;
     }
 
     setIsResending(true);
-    resendTimeoutRef.current = window.setTimeout(() => {
-      onResend();
+    try {
+      await onResend();
       setTimeLeft(initialSeconds);
+    } catch {
+      // The parent displays the API error in the existing inline error area.
+    } finally {
       setIsResending(false);
-      resendTimeoutRef.current = null;
-    }, MOCK_REQUEST_DELAY_MS);
+    }
   };
 
   const formattedTime = `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(timeLeft % 60).padStart(2, "0")}`;

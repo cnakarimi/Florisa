@@ -1,4 +1,7 @@
-import { apiRequest } from "@/lib/api/client";
+import {
+  apiRequest,
+  readBrowserCookie,
+} from "@/lib/api/client";
 
 export interface AuthUser {
   id: number;
@@ -7,25 +10,47 @@ export interface AuthUser {
   date_joined: string;
 }
 
-interface UserResponse {
+export interface UserResponse {
   user: AuthUser;
 }
 
-interface DetailResponse {
+export interface DetailResponse {
   detail: string;
 }
 
-export function requestOtp(phone: string): Promise<DetailResponse> {
+let csrfInitializationPromise: Promise<void> | null = null;
+
+export async function initializeCsrf(): Promise<void> {
+  if (readBrowserCookie("csrftoken")) {
+    return;
+  }
+
+  if (!csrfInitializationPromise) {
+    csrfInitializationPromise = apiRequest<DetailResponse>(
+      "/api/auth/csrf/",
+    )
+      .then(() => undefined)
+      .finally(() => {
+        csrfInitializationPromise = null;
+      });
+  }
+
+  await csrfInitializationPromise;
+}
+
+export async function requestOtp(phone: string): Promise<DetailResponse> {
+  await initializeCsrf();
   return apiRequest<DetailResponse>("/api/auth/request-otp/", {
     method: "POST",
     body: JSON.stringify({ phone }),
   });
 }
 
-export function verifyOtp(
+export async function verifyOtp(
   phone: string,
   code: string,
 ): Promise<UserResponse> {
+  await initializeCsrf();
   return apiRequest<UserResponse>("/api/auth/verify-otp/", {
     method: "POST",
     body: JSON.stringify({ phone, code }),
@@ -36,7 +61,8 @@ export function getCurrentUser(): Promise<UserResponse> {
   return apiRequest<UserResponse>("/api/auth/me/");
 }
 
-export function logout(): Promise<void> {
+export async function logout(): Promise<void> {
+  await initializeCsrf();
   return apiRequest<void>("/api/auth/logout/", {
     method: "POST",
   });

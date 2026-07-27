@@ -9,6 +9,18 @@ Monorepo containing the Florisa frontend and authentication backend.
 
 ## Local development
 
+Copy the safe example configuration before starting either application:
+
+```powershell
+Copy-Item api\.env.example api\.env
+Copy-Item web\.env.example web\.env.local
+```
+
+The default development URLs are:
+
+- Frontend: `http://localhost:3000`
+- Django API: `http://localhost:8000`
+
 ### Frontend
 
 ```powershell
@@ -28,3 +40,7 @@ Copy-Item .env.example .env
 python manage.py migrate
 python manage.py runserver
 ```
+
+Authentication uses Django's HttpOnly session cookie. The frontend initializes
+and sends Django's CSRF token automatically and keeps only the pending phone
+number in `sessionStorage` while the OTP screen is active.

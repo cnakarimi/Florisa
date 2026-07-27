@@ -46,6 +46,12 @@ class AuthenticationAPITests(APITestCase):
         self.assertTrue(check_password(self.code, otp_request.code_hash))
         self.assertIn("csrftoken", response.cookies)
 
+    def test_csrf_endpoint_initializes_cookie(self):
+        response = self.client.get(reverse("accounts:csrf"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("csrftoken", response.cookies)
+
     def test_invalid_phone_is_rejected_in_persian(self):
         response = self.request_otp("02112345678")
 
@@ -173,6 +179,14 @@ class AuthenticationAPITests(APITestCase):
 
     def test_verification_and_logout_enforce_csrf(self):
         strict_client = APIClient(enforce_csrf_checks=True)
+        csrf_response = strict_client.get(reverse("accounts:csrf"))
+        csrf_token = csrf_response.cookies["csrftoken"].value
+
+        rejected_request = strict_client.post(
+            reverse("accounts:request-otp"),
+            {"phone": self.phone},
+            format="json",
+        )
         with patch(
             "accounts.services.otp.generate_otp",
             return_value=self.code,
@@ -181,9 +195,9 @@ class AuthenticationAPITests(APITestCase):
                 reverse("accounts:request-otp"),
                 {"phone": self.phone},
                 format="json",
+                HTTP_X_CSRFTOKEN=csrf_token,
             )
 
-        csrf_token = request_response.cookies["csrftoken"].value
         rejected_verify = strict_client.post(
             reverse("accounts:verify-otp"),
             {"phone": self.phone, "code": self.code},
@@ -196,6 +210,11 @@ class AuthenticationAPITests(APITestCase):
             HTTP_X_CSRFTOKEN=csrf_token,
         )
 
+        self.assertEqual(
+            rejected_request.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+        self.assertEqual(request_response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             rejected_verify.status_code,
             status.HTTP_403_FORBIDDEN,
@@ -218,3 +237,20 @@ class AuthenticationAPITests(APITestCase):
             status.HTTP_403_FORBIDDEN,
         )
         self.assertEqual(accepted_logout.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_credentialed_cors_allows_explicit_local_origin(self):
+        response = self.client.options(
+            reverse("accounts:request-otp"),
+            HTTP_ORIGIN="http://127.0.0.1:3000",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.headers["Access-Control-Allow-Origin"],
+            "http://127.0.0.1:3000",
+        )
+        self.assertEqual(
+            response.headers["Access-Control-Allow-Credentials"],
+            "true",
+        )

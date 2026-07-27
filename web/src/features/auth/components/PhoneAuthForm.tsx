@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { requestOtp } from "@/features/auth/api/auth";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { InlineError } from "@/features/auth/components/InlineError";
@@ -13,16 +14,16 @@ import {
   phoneFormSchema,
   type PhoneFormValues,
 } from "@/features/auth/schemas/auth";
-import {
-  storePhone,
-  storeVerification,
-} from "@/features/auth/utils/storage";
+import { normalizeIranianPhone } from "@/features/auth/utils/phone";
+import { storePendingPhone } from "@/features/auth/utils/storage";
+import { getApiErrorMessage } from "@/lib/api/client";
 
 export function PhoneAuthForm() {
   const router = useRouter();
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting, isValid },
   } = useForm<PhoneFormValues>({
     resolver: zodResolver(phoneFormSchema),
@@ -33,10 +34,18 @@ export function PhoneAuthForm() {
   });
 
   const submitPhone = async ({ phone }: PhoneFormValues) => {
-    storePhone(phone);
-    storeVerification(false);
-    await new Promise((resolve) => window.setTimeout(resolve, 250));
-    router.push("/auth/verify");
+    const normalizedPhone = normalizeIranianPhone(phone);
+
+    try {
+      await requestOtp(normalizedPhone);
+      storePendingPhone(normalizedPhone);
+      router.push("/auth/verify");
+    } catch (error) {
+      setError("phone", {
+        type: "server",
+        message: getApiErrorMessage(error, ["phone"]),
+      });
+    }
   };
 
   return (

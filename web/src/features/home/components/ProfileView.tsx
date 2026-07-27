@@ -41,7 +41,10 @@ type ActiveModal =
 
 interface ProfileViewProps {
   phone: string;
-  onLogout: () => void;
+  fullName?: string;
+  onLogout: () => void | Promise<void>;
+  logoutPending?: boolean;
+  logoutError?: string;
   onOpenCart?: () => void;
   onNavigateToTab?: (tab: TabType) => void;
   cartCount?: number;
@@ -49,12 +52,17 @@ interface ProfileViewProps {
 
 export function ProfileView({
   phone,
+  fullName = "",
   onLogout,
+  logoutPending = false,
+  logoutError = "",
   onOpenCart,
   onNavigateToTab,
   cartCount = 0,
 }: ProfileViewProps) {
-  const [userName, setUserName] = useState("سینا رضایی");
+  const [userName, setUserName] = useState(
+    fullName.trim() || "سینا رضایی",
+  );
   const [userPhone, setUserPhone] = useState(phone);
   const [userEmail, setUserEmail] = useState("sina.rezaei@gmail.com");
   const [userAddress] = useState(
@@ -603,9 +611,16 @@ export function ProfileView({
               <button
                 type="button"
                 onClick={onLogout}
+                disabled={logoutPending}
+                aria-busy={logoutPending}
+                aria-describedby={logoutError ? "logout-error" : undefined}
                 className="flex-1 rounded-xl bg-rose-500 py-2.5 text-xs font-bold text-white hover:bg-rose-600"
               >
-                بله، خروج
+                {logoutPending
+                  ? "در حال خروج..."
+                  : logoutError
+                    ? "تلاش مجدد"
+                    : "بله، خروج"}
               </button>
               <button
                 type="button"
@@ -615,6 +630,11 @@ export function ProfileView({
                 انصراف
               </button>
             </div>
+            {logoutError ? (
+              <span id="logout-error" className="sr-only" aria-live="polite">
+                {logoutError}
+              </span>
+            ) : null}
           </div>
         </div>
       ) : null}

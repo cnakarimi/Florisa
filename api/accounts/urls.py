@@ -1,6 +1,7 @@
 from django.urls import path
 
 from accounts.views import (
+    CSRFView,
     CurrentUserView,
     LogoutView,
     RequestOTPView,
@@ -11,6 +12,7 @@ from accounts.views import (
 app_name = "accounts"
 
 urlpatterns = [
+    path("csrf/", CSRFView.as_view(), name="csrf"),
     path("request-otp/", RequestOTPView.as_view(), name="request-otp"),
     path("verify-otp/", VerifyOTPView.as_view(), name="verify-otp"),
     path("me/", CurrentUserView.as_view(), name="me"),

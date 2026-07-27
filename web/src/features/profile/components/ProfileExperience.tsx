@@ -1,40 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { logout } from "@/features/auth/api/auth";
+import {
+  clearCurrentUserCache,
+  useCurrentUser,
+} from "@/features/auth/hooks/useCurrentUser";
+import { clearPendingPhone } from "@/features/auth/utils/storage";
 import { BottomNav } from "@/features/home/components/BottomNav";
 import { ProfileView } from "@/features/home/components/ProfileView";
 import type { TabType } from "@/features/home/types";
-import {
-  clearAuthentication,
-  readPhone,
-  readVerification,
-} from "@/features/auth/utils/storage";
-
-type ProfileSession =
-  | { status: "checking"; phone: null }
-  | { status: "authenticated"; phone: string };
+import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
 export function ProfileExperience() {
   const router = useRouter();
-  const [session, setSession] = useState<ProfileSession>({
-    status: "checking",
-    phone: null,
-  });
+  const currentUser = useCurrentUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    const phone = readPhone();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    if (!phone || !readVerification()) {
+  useEffect(() => {
+    if (currentUser.status === "unauthenticated") {
       router.replace("/auth");
+    }
+  }, [currentUser.status, router]);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) {
       return;
     }
 
-    setSession({ status: "authenticated", phone });
-  }, [router]);
+    setIsLoggingOut(true);
+    setLogoutError("");
 
-  const handleLogout = () => {
-    clearAuthentication();
+    try {
+      await logout();
+    } catch (error) {
+      if (
+        !(error instanceof ApiError) ||
+        (error.status !== 401 && error.status !== 403)
+      ) {
+        if (isMountedRef.current) {
+          setIsLoggingOut(false);
+          setLogoutError(getApiErrorMessage(error));
+        }
+        return;
+      }
+    }
+
+    clearPendingPhone();
+    clearCurrentUserCache();
     router.replace("/auth");
   };
 
@@ -46,11 +68,15 @@ export function ProfileExperience() {
     router.push("/");
   };
 
-  if (session.status === "checking") {
+  if (currentUser.status !== "authenticated") {
     return (
       <div
         className="min-h-dvh bg-[#0d0e12]"
-        aria-label="در حال بررسی حساب کاربری"
+        aria-label={
+          currentUser.status === "error"
+            ? currentUser.error
+            : "در حال بررسی حساب کاربری"
+        }
       />
     );
   }
@@ -59,8 +85,11 @@ export function ProfileExperience() {
     <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] pb-24 text-zinc-100">
       <main className="mx-auto max-w-6xl px-4">
         <ProfileView
-          phone={session.phone}
+          phone={currentUser.user.phone}
+          fullName={currentUser.user.full_name}
           onLogout={handleLogout}
+          logoutPending={isLoggingOut}
+          logoutError={logoutError}
           onNavigateToTab={handleNavigation}
         />
       </main>

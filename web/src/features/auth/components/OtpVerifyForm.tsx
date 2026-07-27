@@ -4,24 +4,33 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Edit2 } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import {
+  requestOtp,
+  verifyOtp,
+} from "@/features/auth/api/auth";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { InlineError } from "@/features/auth/components/InlineError";
 import { OtpInput } from "@/features/auth/components/OtpInput";
 import { ResendTimer } from "@/features/auth/components/ResendTimer";
 import {
-  MOCK_REQUEST_DELAY_MS,
-  MOCK_OTP,
   OTP_LENGTH,
   RESEND_DELAY_SECONDS,
 } from "@/features/auth/constants";
+import {
+  setCurrentUserCache,
+} from "@/features/auth/hooks/useCurrentUser";
 import type { AuthStatus } from "@/features/auth/types";
-import { toPersianDigits } from "@/features/auth/utils/digits";
+import {
+  normalizeDigits,
+  toPersianDigits,
+} from "@/features/auth/utils/digits";
 import { maskPhone } from "@/features/auth/utils/phone";
 import {
-  readPhone,
-  storeVerification,
+  clearPendingPhone,
+  readPendingPhone,
 } from "@/features/auth/utils/storage";
+import { getApiErrorMessage } from "@/lib/api/client";
 
 const EMPTY_OTP = Array<string>(OTP_LENGTH).fill("");
 
@@ -32,10 +41,10 @@ export function OtpVerifyForm() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState<AuthStatus>("idle");
   const [otpRevision, setOtpRevision] = useState(0);
-  const verificationTimeoutRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    const storedPhone = readPhone();
+    const storedPhone = readPendingPhone();
 
     if (!storedPhone) {
       router.replace("/auth");
@@ -47,20 +56,23 @@ export function OtpVerifyForm() {
 
   useEffect(() => {
     return () => {
-      if (verificationTimeoutRef.current !== null) {
-        window.clearTimeout(verificationTimeoutRef.current);
-      }
+      isMountedRef.current = false;
     };
   }, []);
 
   const goToPhoneEntry = () => {
+    clearPendingPhone();
     router.push("/auth");
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const code = otp.join("");
+    if (status === "submitting") {
+      return;
+    }
+
+    const code = normalizeDigits(otp.join(""));
 
     if (code.length !== OTP_LENGTH) {
       setError("لطفاً تمامی ۵ رقم کد تایید را وارد نمایید");
@@ -70,18 +82,34 @@ export function OtpVerifyForm() {
     setError("");
     setStatus("submitting");
 
-    verificationTimeoutRef.current = window.setTimeout(() => {
-      if (code === MOCK_OTP) {
-        storeVerification(true);
-        verificationTimeoutRef.current = null;
-        router.replace("/");
-        return;
+    try {
+      const { user } = await verifyOtp(phone, code);
+      setCurrentUserCache(user);
+      clearPendingPhone();
+      router.replace("/");
+    } catch (requestError) {
+      if (isMountedRef.current) {
+        setStatus("idle");
+        setError(getApiErrorMessage(requestError, ["code", "phone"]));
       }
+    }
+  };
 
-      setStatus("idle");
-      setError("کد تایید وارد شده صحیح نیست");
-      verificationTimeoutRef.current = null;
-    }, MOCK_REQUEST_DELAY_MS);
+  const handleResend = async () => {
+    setError("");
+
+    try {
+      await requestOtp(phone);
+      if (isMountedRef.current) {
+        setOtp(Array<string>(OTP_LENGTH).fill(""));
+        setOtpRevision((revision) => revision + 1);
+      }
+    } catch (requestError) {
+      if (isMountedRef.current) {
+        setError(getApiErrorMessage(requestError, ["phone"]));
+      }
+      throw requestError;
+    }
   };
 
   if (!phone) {
@@ -141,23 +169,18 @@ export function OtpVerifyForm() {
 
         <ResendTimer
           initialSeconds={RESEND_DELAY_SECONDS}
-          disabled={status === "submitting"}
-          onResend={() => {
-            setOtp(Array<string>(OTP_LENGTH).fill(""));
-            setError("");
-            setStatus("idle");
-            setOtpRevision((revision) => revision + 1);
-          }}
+          disabled={isLocked}
+          onResend={handleResend}
         />
 
         <div className="mt-auto pb-2 pt-6">
           <PrimaryButton
             type="submit"
-            isLoading={status === "submitting"}
+            isLoading={isLocked}
             className="rounded-2xl"
           >
-            {status === "submitting" ? "در حال بررسی" : "تایید و ادامه"}
-            {status === "idle" ? (
+            {isLocked ? "در حال بررسی" : "تایید و ادامه"}
+            {!isLocked ? (
               <ChevronLeft className="size-5" aria-hidden="true" />
             ) : null}
           </PrimaryButton>

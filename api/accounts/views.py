@@ -17,6 +17,16 @@ from accounts.services.otp import OTPError, create_otp, verify_otp
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
+class CSRFView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request: Request) -> Response:
+        return Response({"detail": "کوکی امنیتی تنظیم شد."})
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+@method_decorator(csrf_protect, name="dispatch")
 class RequestOTPView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]

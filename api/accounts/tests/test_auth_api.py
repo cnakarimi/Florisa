@@ -19,7 +19,7 @@ class AuthenticationAPITests(APITestCase):
         with patch(
             "accounts.services.otp.generate_otp",
             return_value=self.code,
-        ):
+        ), patch("accounts.services.otp.send_otp"):
             return self.client.post(
                 reverse("accounts:request-otp"),
                 {"phone": phone or self.phone},
@@ -45,6 +45,22 @@ class AuthenticationAPITests(APITestCase):
         self.assertNotEqual(otp_request.code_hash, self.code)
         self.assertTrue(check_password(self.code, otp_request.code_hash))
         self.assertIn("csrftoken", response.cookies)
+        self.assertNotIn("code", response.data)
+        self.assertNotIn(self.code, str(response.data))
+
+    def test_request_otp_delivers_normalized_phone_and_generated_code(self):
+        with patch(
+            "accounts.services.otp.generate_otp",
+            return_value=self.code,
+        ), patch("accounts.services.otp.send_otp") as delivery:
+            response = self.client.post(
+                reverse("accounts:request-otp"),
+                {"phone": "۰۹۱۲۳۴۵۶۷۸۹"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        delivery.assert_called_once_with(self.phone, self.code)
 
     def test_csrf_endpoint_initializes_cookie(self):
         response = self.client.get(reverse("accounts:csrf"))
@@ -190,7 +206,7 @@ class AuthenticationAPITests(APITestCase):
         with patch(
             "accounts.services.otp.generate_otp",
             return_value=self.code,
-        ):
+        ), patch("accounts.services.otp.send_otp"):
             request_response = strict_client.post(
                 reverse("accounts:request-otp"),
                 {"phone": self.phone},
@@ -222,6 +238,36 @@ class AuthenticationAPITests(APITestCase):
         self.assertEqual(accepted_verify.status_code, status.HTTP_200_OK)
 
         rotated_token = strict_client.cookies["csrftoken"].value
+        self.assertNotEqual(csrf_token, rotated_token)
+
+        me_response = strict_client.get(reverse("accounts:me"))
+        stale_profile_response = strict_client.post(
+            reverse("accounts:complete-registration"),
+            {"full_name": "کاربر آزمایشی"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+        accepted_profile_response = strict_client.post(
+            reverse("accounts:complete-registration"),
+            {"full_name": "کاربر آزمایشی"},
+            format="json",
+            HTTP_X_CSRFTOKEN=rotated_token,
+        )
+
+        self.assertEqual(me_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            stale_profile_response.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+        self.assertIn(
+            "اعتبار امنیتی",
+            stale_profile_response.data["detail"],
+        )
+        self.assertEqual(
+            accepted_profile_response.status_code,
+            status.HTTP_200_OK,
+        )
+
         rejected_logout = strict_client.post(
             reverse("accounts:logout"),
             format="json",

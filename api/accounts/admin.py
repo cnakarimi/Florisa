@@ -10,16 +10,17 @@ class UserAdmin(BaseUserAdmin):
     list_display = (
         "phone",
         "full_name",
+        "email",
         "is_active",
         "is_staff",
         "date_joined",
     )
     list_filter = ("is_active", "is_staff", "is_superuser")
-    search_fields = ("phone", "full_name")
+    search_fields = ("phone", "full_name", "email")
     readonly_fields = ("date_joined", "last_login")
     fieldsets = (
         (None, {"fields": ("phone", "password")}),
-        ("اطلاعات شخصی", {"fields": ("full_name",)}),
+        ("اطلاعات شخصی", {"fields": ("full_name", "email")}),
         (
             "دسترسی‌ها",
             {
@@ -42,6 +43,7 @@ class UserAdmin(BaseUserAdmin):
                 "fields": (
                     "phone",
                     "full_name",
+                    "email",
                     "password1",
                     "password2",
                     "is_active",

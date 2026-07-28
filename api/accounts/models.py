@@ -13,7 +13,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[validate_iranian_phone],
     )
-    full_name = models.CharField("نام و نام خانوادگی", max_length=150, blank=True)
+    full_name = models.CharField("نام و نام خانوادگی", max_length=150)
+    email = models.EmailField(
+        "ایمیل",
+        blank=True,
+        null=True,
+        unique=False,
+    )
     is_active = models.BooleanField("فعال", default=True)
     is_staff = models.BooleanField("عضو تیم", default=False)
     date_joined = models.DateTimeField("تاریخ عضویت", default=timezone.now)
@@ -26,6 +32,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "کاربر"
         verbose_name_plural = "کاربران"
+
+    @property
+    def is_profile_complete(self) -> bool:
+        return bool(self.full_name.strip())
 
     def clean(self) -> None:
         super().clean()

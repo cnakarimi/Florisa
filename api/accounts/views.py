@@ -1,6 +1,7 @@
 from django.contrib.auth import login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -9,7 +10,11 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from accounts.serializers import (
+    CompleteRegistrationSerializer,
+    CompleteRegistrationValidationErrorSerializer,
+    DetailResponseSerializer,
     PhoneSerializer,
+    UserResponseSerializer,
     UserSerializer,
     VerifyOTPSerializer,
 )
@@ -21,6 +26,11 @@ class CSRFView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(description="CSRF cookie initialized."),
+        },
+    )
     def get(self, request: Request) -> Response:
         return Response({"detail": "کوکی امنیتی تنظیم شد."})
 
@@ -31,6 +41,12 @@ class RequestOTPView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=PhoneSerializer,
+        responses={
+            200: OpenApiResponse(description="OTP sent."),
+        },
+    )
     def post(self, request: Request) -> Response:
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -47,6 +63,15 @@ class VerifyOTPView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=VerifyOTPSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=UserResponseSerializer,
+                description="Authenticated user, returned under the `user` key.",
+            ),
+        },
+    )
     def post(self, request: Request) -> Response:
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -78,13 +103,59 @@ class VerifyOTPView(APIView):
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                response=UserResponseSerializer,
+                description="Current user, returned under the `user` key.",
+            ),
+        },
+    )
     def get(self, request: Request) -> Response:
         return Response({"user": UserSerializer(request.user).data})
+
+
+class CompleteRegistrationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        auth=[{"cookieAuth": []}],
+        request=CompleteRegistrationSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=UserResponseSerializer,
+                description="Profile completed or updated successfully.",
+            ),
+            400: OpenApiResponse(
+                response=CompleteRegistrationValidationErrorSerializer,
+                description="Validation error.",
+            ),
+            403: OpenApiResponse(
+                response=DetailResponseSerializer,
+                description="Authentication required.",
+            ),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        serializer = CompleteRegistrationSerializer(
+            request.user,
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {"user": UserSerializer(user).data},
+            status=status.HTTP_200_OK,
+        )
 
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={204: None},
+    )
     def post(self, request: Request) -> Response:
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

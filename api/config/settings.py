@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "drf_spectacular",
     "accounts",
 ]
 
@@ -114,7 +115,67 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "accounts.exceptions.persian_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Florisa API",
+    "DESCRIPTION": "Florisa Backend API",
+    "VERSION": "1.0.0",
+    "SWAGGER_UI_SETTINGS": r"""
+    {
+      deepLinking: true,
+      withCredentials: true,
+      requestInterceptor: (request) => {
+        request.credentials = "same-origin";
+        const method = (request.method || "GET").toUpperCase();
+        const requestOrigin = new URL(
+          request.url,
+          window.location.href,
+        ).origin;
+        const csrfCookie = document.cookie
+          .split(";")
+          .map((cookie) => cookie.trim())
+          .find((cookie) => cookie.startsWith("csrftoken="));
+        if (
+          csrfCookie
+          && requestOrigin === window.location.origin
+          && ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+        ) {
+          request.headers["X-CSRFToken"] = decodeURIComponent(
+            csrfCookie.substring("csrftoken=".length),
+          );
+        }
+        return request;
+      },
+    }
+    """,
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "message_only": {
+            "format": "{message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "otp_console": {
+            "class": "logging.StreamHandler",
+            "formatter": "message_only",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "loggers": {
+        "florisa.otp": {
+            "handlers": ["otp_console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env_list(
@@ -140,4 +201,7 @@ X_FRAME_OPTIONS = "DENY"
 
 OTP_EXPIRATION_SECONDS = int(os.getenv("OTP_EXPIRATION_SECONDS", "120"))
 OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
-OTP_PROVIDER_CLASS = "accounts.services.providers.ConsoleOTPProvider"
+OTP_DELIVERY_BACKEND = os.getenv(
+    "OTP_DELIVERY_BACKEND",
+    "console" if DEBUG else "sms",
+).strip().lower()

@@ -6,10 +6,9 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
 from django.utils import timezone
-from django.utils.module_loading import import_string
 
 from accounts.models import OTPRequest
-from accounts.services.providers import OTPProvider
+from accounts.services.providers import send_otp
 from accounts.utils import (
     normalize_otp_code,
     normalize_phone,
@@ -53,11 +52,6 @@ def generate_otp() -> str:
     return f"{secrets.randbelow(100_000):05d}"
 
 
-def get_otp_provider() -> OTPProvider:
-    provider_class = import_string(settings.OTP_PROVIDER_CLASS)
-    return provider_class()
-
-
 @transaction.atomic
 def create_otp(phone: str) -> CreatedOTP:
     normalized_phone = normalize_phone(phone)
@@ -75,7 +69,7 @@ def create_otp(phone: str) -> CreatedOTP:
         expires_at=timezone.now()
         + timedelta(seconds=settings.OTP_EXPIRATION_SECONDS),
     )
-    get_otp_provider().send(normalized_phone, code)
+    send_otp(normalized_phone, code)
     return CreatedOTP(request=otp_request, code=code)
 
 

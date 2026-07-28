@@ -48,7 +48,56 @@ class VerifyOTPSerializer(PhoneSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_profile_complete = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = User
-        fields = ("id", "phone", "full_name", "date_joined")
+        fields = (
+            "id",
+            "phone",
+            "full_name",
+            "email",
+            "is_profile_complete",
+        )
         read_only_fields = fields
+
+
+class UserResponseSerializer(serializers.Serializer):
+    user = UserSerializer(read_only=True)
+
+
+class CompleteRegistrationSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(
+        max_length=150,
+        required=True,
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+    email = serializers.EmailField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ("full_name", "email")
+
+    def validate_email(self, value: str | None) -> str | None:
+        return value or None
+
+
+class CompleteRegistrationValidationErrorSerializer(serializers.Serializer):
+    full_name = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+    )
+    email = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+    )
+
+
+class DetailResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()

@@ -1,12 +1,36 @@
-from abc import ABC, abstractmethod
+import logging
+
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 
-class OTPProvider(ABC):
-    @abstractmethod
-    def send(self, phone: str, code: str) -> None:
-        raise NotImplementedError
+logger = logging.getLogger("florisa.otp")
+CONSOLE_BACKEND = "console"
 
 
-class ConsoleOTPProvider(OTPProvider):
-    def send(self, phone: str, code: str) -> None:
-        print(f"OTP for {phone}: {code}", flush=True)
+def send_otp(phone: str, code: str) -> None:
+    backend = settings.OTP_DELIVERY_BACKEND
+
+    if backend != CONSOLE_BACKEND:
+        raise ImproperlyConfigured(
+            f"Unsupported OTP delivery backend: {backend!r}.",
+        )
+    if not settings.DEBUG:
+        raise ImproperlyConfigured(
+            "Console OTP delivery is only permitted when DEBUG is True.",
+        )
+
+    divider = "=" * 50
+    logger.info(
+        "%s\n"
+        "FLORISA DEVELOPMENT OTP\n"
+        "Phone: %s\n"
+        "Code: %s\n"
+        "Expires in: %s seconds\n"
+        "%s",
+        divider,
+        phone,
+        code,
+        settings.OTP_EXPIRATION_SECONDS,
+        divider,
+    )

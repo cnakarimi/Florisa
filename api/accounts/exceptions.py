@@ -16,6 +16,11 @@ def persian_exception_handler(exc, context) -> Response | None:
     if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
         response.data = {"detail": "برای دسترسی باید وارد حساب کاربری شوید."}
     elif isinstance(exc, PermissionDenied):
-        response.data = {"detail": "اجازه انجام این عملیات را ندارید."}
+        if str(exc.detail).startswith("CSRF Failed:"):
+            response.data = {
+                "detail": "اعتبار امنیتی درخواست نامعتبر است.",
+            }
+        else:
+            response.data = {"detail": "اجازه انجام این عملیات را ندارید."}
 
     return response

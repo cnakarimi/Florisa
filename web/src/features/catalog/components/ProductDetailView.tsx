@@ -27,7 +27,7 @@ interface ProductDetailViewProps {
   cartCount: number;
   isFavorite: boolean;
   onBack: () => void;
-  onOpenCart: () => void;
+  onNavigateToCart: () => void;
   onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct, quantity: number) => void;
 }
@@ -43,7 +43,7 @@ export function ProductDetailView({
   cartCount,
   isFavorite,
   onBack,
-  onOpenCart,
+  onNavigateToCart,
   onToggleFavorite,
   onAddToCart,
 }: ProductDetailViewProps) {
@@ -139,7 +139,7 @@ export function ProductDetailView({
 
           <button
             type="button"
-            onClick={onOpenCart}
+            onClick={onNavigateToCart}
             className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#191b23] text-zinc-200 transition hover:border-amber-400/40 hover:text-white"
             aria-label="مشاهده سبد خرید"
           >

@@ -5,7 +5,7 @@ import { toPersianDigits } from '../utils/persian';
 interface HeaderProps {
   cartCount: number;
   favoritesCount: number;
-  onOpenCart: () => void;
+  onNavigateToCart: () => void;
   onOpenFavorites: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -15,7 +15,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   cartCount,
   favoritesCount,
-  onOpenCart,
+  onNavigateToCart,
   onOpenFavorites,
   searchQuery,
   setSearchQuery,
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Cart Button */}
           <button
-            onClick={onOpenCart}
+            onClick={onNavigateToCart}
             className="relative p-2.5 rounded-full bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-600/30 transition-all flex items-center gap-2 px-3.5"
             title="سبد خرید"
           >

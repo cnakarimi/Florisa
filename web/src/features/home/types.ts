@@ -1,5 +1,3 @@
-import type { CatalogProduct } from "@/features/catalog/types";
-
 export interface Product {
   id: string;
   title: string;
@@ -40,12 +38,6 @@ export interface Article {
   date: string;
   author: string;
   tags: string[];
-}
-
-export interface CartItem {
-  product: CatalogProduct;
-  quantity: number;
-  selectedPotColor?: string;
 }
 
 export type TabType = 'home' | 'shop' | 'care_ai' | 'favorites' | 'profile';

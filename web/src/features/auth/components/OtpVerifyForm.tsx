@@ -25,11 +25,16 @@ import {
   clearPendingPhone,
   readPendingPhone,
 } from "@/features/auth/utils/storage";
+import { withNext } from "@/features/auth/utils/redirect";
 import { getApiErrorMessage } from "@/lib/api/client";
 
 const EMPTY_OTP = Array<string>(OTP_LENGTH).fill("");
 
-export function OtpVerifyForm() {
+interface OtpVerifyFormProps {
+  nextPath?: string;
+}
+
+export function OtpVerifyForm({ nextPath = "/" }: OtpVerifyFormProps) {
   const router = useRouter();
   const auth = useAuth();
   const [phone, setPhone] = useState("");
@@ -45,14 +50,18 @@ export function OtpVerifyForm() {
     }
 
     if (auth.isAuthenticated) {
-      router.replace(auth.isProfileComplete ? "/" : "/auth/register");
+      router.replace(
+        auth.isProfileComplete
+          ? nextPath
+          : withNext("/auth/register", nextPath),
+      );
       return;
     }
 
     const storedPhone = readPendingPhone();
 
     if (!storedPhone) {
-      router.replace("/auth");
+      router.replace(withNext("/auth", nextPath));
       return;
     }
 
@@ -62,6 +71,7 @@ export function OtpVerifyForm() {
     auth.isAuthenticated,
     auth.isInitializing,
     auth.isProfileComplete,
+    nextPath,
     router,
   ]);
 
@@ -73,7 +83,7 @@ export function OtpVerifyForm() {
 
   const goToPhoneEntry = () => {
     clearPendingPhone();
-    router.push("/auth");
+    router.push(withNext("/auth", nextPath));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -97,7 +107,9 @@ export function OtpVerifyForm() {
       const user = await auth.verifyOtp(phone, code);
       clearPendingPhone();
       router.replace(
-        user.is_profile_complete ? "/" : "/auth/register",
+        user.is_profile_complete
+          ? nextPath
+          : withNext("/auth/register", nextPath),
       );
     } catch (requestError) {
       if (isMountedRef.current) {

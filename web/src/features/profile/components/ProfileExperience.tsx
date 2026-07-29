@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { clearPendingPhone } from "@/features/auth/utils/storage";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { BottomNav } from "@/features/home/components/BottomNav";
 import { ProfileView } from "@/features/home/components/ProfileView";
 import type { TabType } from "@/features/home/types";
@@ -13,6 +14,7 @@ import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 export function ProfileExperience() {
   const router = useRouter();
   const auth = useAuth();
+  const cart = useCart();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const isMountedRef = useRef(true);
@@ -106,6 +108,8 @@ export function ProfileExperience() {
           onLogout={handleLogout}
           logoutPending={isLoggingOut}
           logoutError={logoutError}
+          cartCount={cart.totalBundles}
+          onNavigateToCart={() => router.push("/cart")}
           onNavigateToTab={handleNavigation}
         />
       </main>

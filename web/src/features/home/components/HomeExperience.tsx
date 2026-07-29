@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import type {
   CatalogProduct,
@@ -16,22 +17,20 @@ import { ProductCard } from "./ProductCard";
 import { MagazineSection } from "./MagazineSection";
 import { BottomNav } from "./BottomNav";
 import { ArticleModal } from "./ArticleModal";
-import { CartDrawer } from "./CartDrawer";
 import { ShopCatalog } from "./ShopCatalog";
 import { PlantAICare } from "./PlantAICare";
 import { FavoritesView } from "./FavoritesView";
-import type { Article, CartItem, TabType } from "../types";
+import type { Article, TabType } from "../types";
 
 export function HomeExperience() {
   const router = useRouter();
+  const cart = useCart();
   const [activeTab, setActiveTab] = useState<TabType>("home");
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<CatalogProduct[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [ordering, setOrdering] = useState<ProductOrdering>("newest");
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const {
     categories,
@@ -50,50 +49,6 @@ export function HomeExperience() {
     search: searchQuery,
     ordering,
   });
-
-  const handleAddToCart = (
-    product: CatalogProduct,
-    quantity = 1,
-    selectedPotColor?: string,
-  ) => {
-    if (!product.is_in_stock) {
-      return;
-    }
-
-    setCart((current) => {
-      const existingIndex = current.findIndex(
-        (item) => item.product.id === product.id,
-      );
-      if (existingIndex > -1) {
-        const updated = [...current];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
-          selectedPotColor:
-            selectedPotColor ?? updated[existingIndex].selectedPotColor,
-        };
-        return updated;
-      }
-      return [
-        ...current,
-        { product, quantity, selectedPotColor },
-      ];
-    });
-  };
-
-  const handleUpdateQuantity = (productId: number, quantity: number) => {
-    setCart((current) =>
-      current.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item,
-      ),
-    );
-  };
-
-  const handleRemoveItem = (productId: number) => {
-    setCart((current) =>
-      current.filter((item) => item.product.id !== productId),
-    );
-  };
 
   const handleToggleFavorite = (product: CatalogProduct) => {
     setFavorites((current) => {
@@ -136,7 +91,7 @@ export function HomeExperience() {
               (favorite) => favorite.id === product.id,
             )}
             onToggleFavorite={handleToggleFavorite}
-            onAddToCart={(item) => handleAddToCart(item, 1)}
+            onAddToCart={(item) => cart.addItem(item)}
             onSelectProduct={openProduct}
           />
         ))}
@@ -171,9 +126,9 @@ export function HomeExperience() {
   return (
     <div className="min-h-screen bg-[#0d0e12] pb-24 font-['Vazirmatn',sans-serif] text-zinc-100 selection:bg-emerald-600 selection:text-white">
       <Header
-        cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
+        cartCount={cart.totalBundles}
         favoritesCount={favorites.length}
-        onOpenCart={() => setIsCartOpen(true)}
+        onNavigateToCart={() => router.push("/cart")}
         onOpenFavorites={() => setActiveTab("favorites")}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -228,7 +183,7 @@ export function HomeExperience() {
             categories={categories}
             favorites={favorites}
             onToggleFavorite={handleToggleFavorite}
-            onAddToCart={(product) => handleAddToCart(product, 1)}
+            onAddToCart={(product) => cart.addItem(product)}
             onSelectProduct={openProduct}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -251,7 +206,7 @@ export function HomeExperience() {
           <FavoritesView
             favorites={favorites}
             onToggleFavorite={handleToggleFavorite}
-            onAddToCart={(product) => handleAddToCart(product, 1)}
+            onAddToCart={(product) => cart.addItem(product)}
             onSelectProduct={openProduct}
           />
         ) : null}
@@ -260,15 +215,6 @@ export function HomeExperience() {
       <ArticleModal
         article={selectedArticle}
         onClose={() => setSelectedArticle(null)}
-      />
-
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cart}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onClearCart={() => setCart([])}
       />
 
       <BottomNav

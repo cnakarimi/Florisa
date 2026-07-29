@@ -10,9 +10,16 @@ import {
 } from "@/features/auth/components/RegisterView";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { createRegistrationSuccessToken } from "@/features/auth/utils/registrationSuccess";
+import { withNext } from "@/features/auth/utils/redirect";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
-export function RegisterExperience() {
+interface RegisterExperienceProps {
+  nextPath?: string;
+}
+
+export function RegisterExperience({
+  nextPath = "/",
+}: RegisterExperienceProps) {
   const router = useRouter();
   const auth = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,12 +37,12 @@ export function RegisterExperience() {
     }
 
     if (!auth.isAuthenticated) {
-      router.replace("/auth");
+      router.replace(withNext("/auth", nextPath));
       return;
     }
 
     if (auth.isProfileComplete) {
-      router.replace("/");
+      router.replace(nextPath);
     }
   }, [
     auth.initializationError,
@@ -43,6 +50,7 @@ export function RegisterExperience() {
     auth.isInitializing,
     auth.isProfileComplete,
     isSubmitting,
+    nextPath,
     router,
   ]);
 
@@ -69,6 +77,11 @@ export function RegisterExperience() {
           "تکمیل حساب کاربری تأیید نشد. دوباره تلاش کنید.",
         );
         setIsSubmitting(false);
+        return;
+      }
+
+      if (nextPath !== "/") {
+        router.replace(nextPath);
         return;
       }
 

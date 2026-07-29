@@ -17,10 +17,15 @@ import {
 } from "@/features/auth/schemas/auth";
 import { normalizeIranianPhone } from "@/features/auth/utils/phone";
 import { storePendingPhone } from "@/features/auth/utils/storage";
+import { withNext } from "@/features/auth/utils/redirect";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 
-export function PhoneAuthForm() {
+interface PhoneAuthFormProps {
+  nextPath?: string;
+}
+
+export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
   const router = useRouter();
   const auth = useAuth();
   const {
@@ -38,12 +43,17 @@ export function PhoneAuthForm() {
 
   useEffect(() => {
     if (!auth.isInitializing && auth.isAuthenticated) {
-      router.replace(auth.isProfileComplete ? "/" : "/auth/register");
+      router.replace(
+        auth.isProfileComplete
+          ? nextPath
+          : withNext("/auth/register", nextPath),
+      );
     }
   }, [
     auth.isAuthenticated,
     auth.isInitializing,
     auth.isProfileComplete,
+    nextPath,
     router,
   ]);
 
@@ -53,7 +63,7 @@ export function PhoneAuthForm() {
     try {
       await auth.requestOtp(normalizedPhone);
       storePendingPhone(normalizedPhone);
-      router.push("/auth/verify");
+      router.push(withNext("/auth/verify", nextPath));
     } catch (error) {
       setError("phone", {
         type: "server",

@@ -45,7 +45,7 @@ interface ProfileViewProps {
   onLogout: () => void | Promise<void>;
   logoutPending?: boolean;
   logoutError?: string;
-  onOpenCart?: () => void;
+  onNavigateToCart?: () => void;
   onNavigateToTab?: (tab: TabType) => void;
   cartCount?: number;
 }
@@ -57,7 +57,7 @@ export function ProfileView({
   onLogout,
   logoutPending = false,
   logoutError = "",
-  onOpenCart,
+  onNavigateToCart,
   onNavigateToTab,
   cartCount = 0,
 }: ProfileViewProps) {
@@ -103,7 +103,7 @@ export function ProfileView({
 
         <button
           type="button"
-          onClick={onOpenCart}
+          onClick={onNavigateToCart}
           className="relative rounded-full p-2 text-zinc-300 transition-all hover:bg-white/5 hover:text-amber-400"
           aria-label="سبد خرید"
         >

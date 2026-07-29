@@ -5,12 +5,11 @@ import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getProductDetail } from "@/features/catalog/api/catalog";
 import type {
-  CatalogProduct,
   CatalogProductDetail,
 } from "@/features/catalog/types";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CartDrawer } from "@/features/home/components/CartDrawer";
-import type { CartItem } from "@/features/home/types";
 import { CatalogFeedback } from "./CatalogFeedback";
 import { ProductDetailLoading } from "./ProductDetailLoading";
 import { ProductDetailView } from "./ProductDetailView";
@@ -23,12 +22,12 @@ export function ProductDetailExperience({
   slug,
 }: ProductDetailExperienceProps) {
   const router = useRouter();
+  const cart = useCart();
   const [product, setProduct] = useState<CatalogProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -92,59 +91,6 @@ export function ProductDetailExperience({
     router.push("/");
   }, [router]);
 
-  const handleAddToCart = (
-    selectedProduct: CatalogProduct,
-    quantity: number,
-  ) => {
-    if (!selectedProduct.is_in_stock) {
-      return;
-    }
-
-    setCart((current) => {
-      const existingIndex = current.findIndex(
-        (item) => item.product.id === selectedProduct.id,
-      );
-      const availableStock = Math.max(1, selectedProduct.stock_bundles);
-
-      if (existingIndex >= 0) {
-        const updated = [...current];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: Math.min(
-            availableStock,
-            updated[existingIndex].quantity + quantity,
-          ),
-        };
-        return updated;
-      }
-
-      return [
-        ...current,
-        {
-          product: selectedProduct,
-          quantity: Math.min(availableStock, quantity),
-        },
-      ];
-    });
-    setIsCartOpen(true);
-  };
-
-  const handleUpdateQuantity = (productId: number, quantity: number) => {
-    setCart((current) =>
-      current.map((item) =>
-        item.product.id === productId
-          ? {
-              ...item,
-              quantity: Math.min(
-                item.product.stock_bundles,
-                Math.max(1, quantity),
-              ),
-            }
-          : item,
-      ),
-    );
-  };
-
   if (isLoading) {
     return <ProductDetailLoading />;
   }
@@ -186,24 +132,19 @@ export function ProductDetailExperience({
     <>
       <ProductDetailView
         product={product}
-        cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
+        cartCount={cart.totalBundles}
         isFavorite={isFavorite}
         onBack={goBack}
-        onOpenCart={() => setIsCartOpen(true)}
+        onNavigateToCart={() => router.push("/cart")}
         onToggleFavorite={() => setIsFavorite((current) => !current)}
-        onAddToCart={handleAddToCart}
+        onAddToCart={(selectedProduct, quantity) => {
+          cart.addItem(selectedProduct, quantity);
+          setIsCartOpen(true);
+        }}
       />
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        cartItems={cart}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={(productId) =>
-          setCart((current) =>
-            current.filter((item) => item.product.id !== productId),
-          )
-        }
-        onClearCart={() => setCart([])}
       />
     </>
   );

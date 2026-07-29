@@ -78,11 +78,21 @@ export function FavoritesView({
                   <button
                     type="button"
                     onClick={() => onAddToCart(product)}
-                    disabled={!product.is_in_stock}
+                    disabled={
+                      !product.is_in_stock ||
+                      product.stock_bundles <
+                        product.minimum_order_bundles
+                    }
                     className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
                   >
                     <ShoppingBag className="h-3.5 w-3.5" />
-                    <span>{product.is_in_stock ? "خرید" : "ناموجود"}</span>
+                    <span>
+                      {product.is_in_stock &&
+                      product.stock_bundles >=
+                        product.minimum_order_bundles
+                        ? "خرید"
+                        : "ناموجود"}
+                    </span>
                   </button>
 
                   <button

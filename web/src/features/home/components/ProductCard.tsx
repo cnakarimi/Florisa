@@ -21,10 +21,13 @@ export function ProductCard({
 }: ProductCardProps) {
   const [addedAnimation, setAddedAnimation] = useState(false);
   const productTags = [product.flower_type, product.color].filter(Boolean);
+  const canAddToCart =
+    product.is_in_stock &&
+    product.stock_bundles >= product.minimum_order_bundles;
 
   const handleAddToCartClick = (event: MouseEvent) => {
     event.stopPropagation();
-    if (!product.is_in_stock) {
+    if (!canAddToCart) {
       return;
     }
 
@@ -121,16 +124,16 @@ export function ProductCard({
           <button
             type="button"
             onClick={handleAddToCartClick}
-            disabled={!product.is_in_stock}
+            disabled={!canAddToCart}
             className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[11px] font-medium transition-all sm:text-xs ${
-              !product.is_in_stock
+              !canAddToCart
                 ? "cursor-not-allowed border-white/5 bg-[#1a1b22] text-zinc-600"
                 : addedAnimation
                   ? "border-emerald-500 bg-emerald-600 text-white"
                   : "border-white/10 bg-[#222430] text-zinc-200 hover:border-emerald-500/50 hover:bg-emerald-600/30 hover:text-white"
             }`}
           >
-            {!product.is_in_stock ? (
+            {!canAddToCart ? (
               <>
                 <PackageX className="h-3.5 w-3.5" />
                 <span>ناموجود</span>

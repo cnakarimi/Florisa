@@ -1,27 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, X } from "lucide-react";
-import { getProductDetail } from "@/features/catalog/api/catalog";
+import { Sparkles } from "lucide-react";
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import type {
   CatalogProduct,
-  CatalogProductDetail,
   ProductOrdering,
 } from "@/features/catalog/types";
-import {
-  ApiError,
-  getApiErrorMessage,
-} from "@/lib/api/client";
 import { Header } from "./Header";
 import { HeroSection } from "./HeroSection";
 import { CategoriesSection } from "./CategoriesSection";
 import { ProductCard } from "./ProductCard";
 import { MagazineSection } from "./MagazineSection";
 import { BottomNav } from "./BottomNav";
-import { ProductModal } from "./ProductModal";
 import { ArticleModal } from "./ArticleModal";
 import { CartDrawer } from "./CartDrawer";
 import { ShopCatalog } from "./ShopCatalog";
@@ -29,13 +22,7 @@ import { PlantAICare } from "./PlantAICare";
 import { FavoritesView } from "./FavoritesView";
 import type { Article, CartItem, TabType } from "../types";
 
-interface HomeExperienceProps {
-  initialProductSlug?: string;
-}
-
-export function HomeExperience({
-  initialProductSlug,
-}: HomeExperienceProps) {
+export function HomeExperience() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -45,13 +32,6 @@ export function HomeExperience({
   const [searchQuery, setSearchQuery] = useState("");
   const [ordering, setOrdering] = useState<ProductOrdering>("newest");
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] =
-    useState<CatalogProductDetail | null>(null);
-  const [isDetailLoading, setIsDetailLoading] = useState(
-    Boolean(initialProductSlug),
-  );
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailRetry, setDetailRetry] = useState(0);
 
   const {
     categories,
@@ -70,49 +50,6 @@ export function HomeExperience({
     search: searchQuery,
     ordering,
   });
-
-  useEffect(() => {
-    if (!initialProductSlug) {
-      return;
-    }
-
-    let isCurrent = true;
-
-    Promise.resolve().then(() => {
-      if (!isCurrent) {
-        return;
-      }
-      setIsDetailLoading(true);
-      setDetailError(null);
-      setSelectedProduct(null);
-    });
-
-    getProductDetail(initialProductSlug, detailRetry > 0)
-      .then((product) => {
-        if (isCurrent) {
-          setSelectedProduct(product);
-        }
-      })
-      .catch((error: unknown) => {
-        if (!isCurrent) {
-          return;
-        }
-        if (error instanceof ApiError && error.status === 404) {
-          setDetailError("محصول موردنظر پیدا نشد یا دیگر فعال نیست.");
-          return;
-        }
-        setDetailError(getApiErrorMessage(error));
-      })
-      .finally(() => {
-        if (isCurrent) {
-          setIsDetailLoading(false);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [detailRetry, initialProductSlug]);
 
   const handleAddToCart = (
     product: CatalogProduct,
@@ -319,50 +256,6 @@ export function HomeExperience({
           />
         ) : null}
       </main>
-
-      {selectedProduct ? (
-        <ProductModal
-          key={selectedProduct.id}
-          product={selectedProduct}
-          onClose={() => router.push("/")}
-          isFavorite={favorites.some(
-            (favorite) => favorite.id === selectedProduct.id,
-          )}
-          onToggleFavorite={handleToggleFavorite}
-          onAddToCart={handleAddToCart}
-        />
-      ) : null}
-
-      {initialProductSlug && isDetailLoading ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="w-full max-w-md">
-            <CatalogFeedback
-              kind="loading"
-              message="در حال دریافت جزئیات محصول..."
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {initialProductSlug && detailError && !isDetailLoading ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="relative w-full max-w-md">
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/40 p-2 text-zinc-300"
-              aria-label="بازگشت به فروشگاه"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <CatalogFeedback
-              kind="error"
-              message={detailError}
-              onRetry={() => setDetailRetry((value) => value + 1)}
-            />
-          </div>
-        </div>
-      ) : null}
 
       <ArticleModal
         article={selectedArticle}

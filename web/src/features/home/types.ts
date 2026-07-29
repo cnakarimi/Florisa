@@ -1,3 +1,5 @@
+import type { CatalogProduct } from "@/features/catalog/types";
+
 export interface Product {
   id: string;
   title: string;
@@ -41,7 +43,7 @@ export interface Article {
 }
 
 export interface CartItem {
-  product: Product;
+  product: CatalogProduct;
   quantity: number;
   selectedPotColor?: string;
 }

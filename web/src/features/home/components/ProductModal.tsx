@@ -1,176 +1,222 @@
-import React, { useState } from 'react';
-import { X, Heart, Sun, Droplets, Thermometer, ShieldAlert, Check, ShoppingBag, Star } from 'lucide-react';
-import type { Product } from '../types';
-import { formatToman, toPersianDigits } from '../utils/persian';
+import { useState } from "react";
+import {
+  Check,
+  Flower2,
+  Heart,
+  Layers3,
+  Package,
+  Palette,
+  ShoppingBag,
+  X,
+} from "lucide-react";
+import { CatalogImage } from "@/features/catalog/components/CatalogImage";
+import type {
+  CatalogProduct,
+  CatalogProductDetail,
+} from "@/features/catalog/types";
+import { formatToman, toPersianDigits } from "../utils/persian";
 
 interface ProductModalProps {
-  product: Product | null;
+  product: CatalogProductDetail;
   onClose: () => void;
   isFavorite: boolean;
-  onToggleFavorite: (product: Product) => void;
-  onAddToCart: (product: Product, quantity: number, potColor?: string) => void;
+  onToggleFavorite: (product: CatalogProduct) => void;
+  onAddToCart: (product: CatalogProduct, quantity: number) => void;
 }
 
-export const ProductModal: React.FC<ProductModalProps> = ({
+export function ProductModal({
   product,
   onClose,
   isFavorite,
   onToggleFavorite,
   onAddToCart,
-}) => {
-  const [quantity, setQuantity] = useState(1);
-  const [selectedPotColor, setSelectedPotColor] = useState('مشکی مات');
+}: ProductModalProps) {
+  const minimumQuantity = Math.max(1, product.minimum_order_bundles);
+  const [quantity, setQuantity] = useState(minimumQuantity);
   const [added, setAdded] = useState(false);
-
-  if (!product) return null;
-
-  const potColors = [
-    { name: 'مشکی مات', hex: '#1a1a1a' },
-    { name: 'سفید سرامیکی', hex: '#e5e5e5' },
-    { name: 'خاکستری بتنی', hex: '#666666' },
-    { name: 'سبد کنفی', hex: '#b38b59' },
+  const gallery = [
+    ...(product.cover_image
+      ? [{ id: "cover", image: product.cover_image, alt_text: product.name }]
+      : []),
+    ...product.images.map((image) => ({
+      id: String(image.id),
+      image: image.image,
+      alt_text: image.alt_text || product.name,
+    })),
   ];
+  const [selectedImage, setSelectedImage] = useState<string | null>(
+    gallery[0]?.image ?? null,
+  );
 
   const handleAdd = () => {
-    onAddToCart(product, quantity, selectedPotColor);
+    if (!product.is_in_stock) {
+      return;
+    }
+    onAddToCart(product, quantity);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    window.setTimeout(() => setAdded(false), 2000);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-[#161822] border border-white/10 rounded-2xl overflow-hidden shadow-2xl text-right animate-in fade-in zoom-in duration-200 my-8">
-        {/* Close & Favorite Top Bar */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-md sm:p-4">
+      <div className="relative my-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#161822] text-right shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
           <button
+            type="button"
             onClick={onClose}
-            className="p-2.5 rounded-full bg-black/60 text-zinc-300 hover:text-white backdrop-blur-md border border-white/10"
+            className="rounded-full border border-white/10 bg-black/60 p-2.5 text-zinc-300 backdrop-blur-md hover:text-white"
+            aria-label="بستن جزئیات محصول"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+        <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onToggleFavorite(product)}
-            className={`p-2.5 rounded-full backdrop-blur-md border transition-all ${
+            className={`rounded-full border p-2.5 backdrop-blur-md transition-all ${
               isFavorite
-                ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-                : 'bg-black/60 text-zinc-300 border-white/10 hover:text-white'
+                ? "border-rose-500/40 bg-rose-500/20 text-rose-400"
+                : "border-white/10 bg-black/60 text-zinc-300 hover:text-white"
             }`}
+            aria-label="افزودن به علاقه‌مندی‌ها"
           >
-            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-rose-500' : ''}`} />
+            <Heart
+              className={`h-5 w-5 ${isFavorite ? "fill-rose-500" : ""}`}
+            />
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Image Column */}
-          <div className="relative bg-[#101117] h-72 md:h-full min-h-[300px]">
-            <img
-              src={product.image}
-              alt={product.title}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#161822] via-transparent to-transparent md:hidden" />
+          <div className="flex min-h-[320px] flex-col bg-[#101117]">
+            <div className="relative min-h-[300px] flex-1">
+              <CatalogImage
+                src={selectedImage}
+                alt={product.name}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#161822] via-transparent to-transparent md:hidden" />
+            </div>
+
+            {gallery.length > 1 ? (
+              <div className="flex gap-2 overflow-x-auto border-t border-white/5 p-3">
+                {gallery.map((image) => (
+                  <button
+                    type="button"
+                    key={image.id}
+                    onClick={() => setSelectedImage(image.image)}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border ${
+                      selectedImage === image.image
+                        ? "border-amber-400"
+                        : "border-white/10"
+                    }`}
+                    aria-label={`نمایش ${image.alt_text}`}
+                  >
+                    <CatalogImage
+                      src={image.image}
+                      alt={image.alt_text}
+                      sizes="56px"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          {/* Details Column */}
-          <div className="p-6 flex flex-col justify-between">
+          <div className="flex flex-col justify-between p-6">
             <div>
-              {/* Category & Rating */}
-              <div className="flex items-center justify-between text-xs text-amber-400 mb-2">
-                <span className="bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-amber-300">
-                  {product.categoryLabel}
+              <div className="mb-2 flex items-center justify-between text-xs text-amber-400">
+                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-amber-300">
+                  {product.category.name}
                 </span>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  <span className="font-bold">{toPersianDigits(product.rating)}</span>
-                  <span className="text-zinc-500">({toPersianDigits(product.reviewCount)} نظر)</span>
-                </div>
+                <span
+                  className={
+                    product.is_in_stock ? "text-emerald-400" : "text-rose-400"
+                  }
+                >
+                  {product.is_in_stock
+                    ? `${toPersianDigits(product.stock_bundles)} دسته موجود`
+                    : "ناموجود"}
+                </span>
               </div>
 
-              {/* Title & Pot */}
-              <h3 className="text-2xl font-bold text-white leading-tight mb-1">
-                {product.title}
-              </h3>
-              {product.titleEnglish && (
-                <p className="text-xs text-zinc-400 font-mono mb-3">{product.titleEnglish}</p>
-              )}
+              <h1 className="mb-1 text-2xl font-bold leading-tight text-white">
+                {product.name}
+              </h1>
+              {product.short_description ? (
+                <p className="mb-3 text-xs leading-6 text-zinc-400">
+                  {product.short_description}
+                </p>
+              ) : null}
+              {product.description ? (
+                <p className="mb-5 text-xs font-light leading-6 text-zinc-300">
+                  {product.description}
+                </p>
+              ) : null}
 
-              <p className="text-xs text-zinc-300 leading-relaxed font-light mb-5">
-                {product.description}
-              </p>
-
-              {/* Plant Care Metrics Grid */}
-              <div className="grid grid-cols-2 gap-2.5 p-3 rounded-xl bg-[#101117] border border-white/5 mb-5 text-xs">
+              <div className="mb-5 grid grid-cols-2 gap-2.5 rounded-xl border border-white/5 bg-[#101117] p-3 text-xs">
                 <div className="flex items-center gap-2">
-                  <Sun className="w-4 h-4 text-amber-400" />
+                  <Flower2 className="h-4 w-4 text-amber-400" />
                   <div>
-                    <span className="text-[10px] text-zinc-500 block">نیاز نوری</span>
-                    <span className="text-zinc-200 font-medium">{product.sunlight}</span>
+                    <span className="block text-[10px] text-zinc-500">
+                      نوع گل
+                    </span>
+                    <span className="font-medium text-zinc-200">
+                      {product.flower_type}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Droplets className="w-4 h-4 text-blue-400" />
+                  <Palette className="h-4 w-4 text-rose-400" />
                   <div>
-                    <span className="text-[10px] text-zinc-500 block">آبیاری</span>
-                    <span className="text-zinc-200 font-medium">{product.watering}</span>
+                    <span className="block text-[10px] text-zinc-500">رنگ</span>
+                    <span className="font-medium text-zinc-200">
+                      {product.color || "—"}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Thermometer className="w-4 h-4 text-emerald-400" />
+                  <Layers3 className="h-4 w-4 text-emerald-400" />
                   <div>
-                    <span className="text-[10px] text-zinc-500 block">درجه سختی</span>
-                    <span className="text-zinc-200 font-medium">{product.careLevel}</span>
+                    <span className="block text-[10px] text-zinc-500">
+                      اندازه دسته
+                    </span>
+                    <span className="font-medium text-zinc-200">
+                      {toPersianDigits(product.stems_per_bundle)} شاخه
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-rose-400" />
+                  <Package className="h-4 w-4 text-blue-400" />
                   <div>
-                    <span className="text-[10px] text-zinc-500 block">ایمنی حیوانات</span>
-                    <span className="text-zinc-200 font-medium">
-                      {product.isPetFriendly ? 'ایمن' : 'غیرایمن'}
+                    <span className="block text-[10px] text-zinc-500">
+                      حداقل سفارش
+                    </span>
+                    <span className="font-medium text-zinc-200">
+                      {toPersianDigits(product.minimum_order_bundles)} دسته
                     </span>
                   </div>
                 </div>
               </div>
-
-              {/* Pot Color Selector */}
-              <div className="mb-5">
-                <label className="text-xs text-zinc-400 block mb-2">رنگ گلدان پایه:</label>
-                <div className="flex items-center gap-3">
-                  {potColors.map((color) => (
-                    <button
-                      key={color.name}
-                      onClick={() => setSelectedPotColor(color.name)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-all ${
-                        selectedPotColor === color.name
-                          ? 'border-emerald-400 bg-emerald-500/10 text-white font-medium'
-                          : 'border-white/10 text-zinc-400 hover:border-white/20'
-                      }`}
-                    >
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-white/20"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      <span>{color.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            {/* Price & Quantity & Add to Cart */}
-            <div className="pt-4 border-t border-white/10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 bg-[#101117] border border-white/10 rounded-xl p-1">
+            <div className="border-t border-white/10 pt-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#101117] p-1">
                   <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-8 h-8 rounded-lg bg-[#1f212d] hover:bg-zinc-700 text-white text-base flex items-center justify-center font-bold"
+                    type="button"
+                    onClick={() =>
+                      setQuantity((current) =>
+                        Math.max(minimumQuantity, current - 1),
+                      )
+                    }
+                    disabled={!product.is_in_stock}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1f212d] text-base font-bold text-white hover:bg-zinc-700 disabled:opacity-40"
                   >
                     -
                   </button>
@@ -178,38 +224,57 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     {toPersianDigits(quantity)}
                   </span>
                   <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="w-8 h-8 rounded-lg bg-[#1f212d] hover:bg-zinc-700 text-white text-base flex items-center justify-center font-bold"
+                    type="button"
+                    onClick={() =>
+                      setQuantity((current) =>
+                        Math.min(product.stock_bundles, current + 1),
+                      )
+                    }
+                    disabled={
+                      !product.is_in_stock ||
+                      quantity >= product.stock_bundles
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1f212d] text-base font-bold text-white hover:bg-zinc-700 disabled:opacity-40"
                   >
                     +
                   </button>
                 </div>
 
                 <div className="text-left">
-                  <span className="text-[10px] text-zinc-400 block">مبلغ کل</span>
+                  <span className="block text-[10px] text-zinc-400">
+                    مبلغ کل
+                  </span>
                   <span className="text-lg font-extrabold text-amber-400">
-                    {formatToman(product.price * quantity)}
+                    {formatToman(product.price_per_bundle * quantity)}
                   </span>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={handleAdd}
-                className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
-                  added
-                    ? 'bg-emerald-600 text-white shadow-emerald-950/50'
-                    : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                disabled={!product.is_in_stock}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold shadow-lg transition-all ${
+                  !product.is_in_stock
+                    ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
+                    : added
+                      ? "bg-emerald-600 text-white shadow-emerald-950/50"
+                      : "bg-emerald-500 text-black shadow-emerald-500/20 hover:bg-emerald-400"
                 }`}
               >
                 {added ? (
                   <>
-                    <Check className="w-5 h-5 text-white" />
+                    <Check className="h-5 w-5 text-white" />
                     <span>به سبد خرید اضافه شد</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingBag className="w-5 h-5" />
-                    <span>افزودن به سبد خرید</span>
+                    <ShoppingBag className="h-5 w-5" />
+                    <span>
+                      {product.is_in_stock
+                        ? "افزودن به سبد خرید"
+                        : "ناموجود"}
+                    </span>
                   </>
                 )}
               </button>
@@ -219,4 +284,4 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       </div>
     </div>
   );
-};
+}

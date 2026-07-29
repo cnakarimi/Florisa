@@ -1,137 +1,143 @@
-import React, { useState } from 'react';
-import { Heart, Check } from 'lucide-react';
-import type { Product } from '../types';
-import { formatToman } from '../utils/persian';
+import { useState, type MouseEvent } from "react";
+import { Check, Heart, PackageX } from "lucide-react";
+import { CatalogImage } from "@/features/catalog/components/CatalogImage";
+import type { CatalogProduct } from "@/features/catalog/types";
+import { formatToman, toPersianDigits } from "../utils/persian";
 
 interface ProductCardProps {
-  product: Product;
+  product: CatalogProduct;
   isFavorite: boolean;
-  onToggleFavorite: (product: Product) => void;
-  onAddToCart: (product: Product) => void;
-  onSelectProduct: (product: Product) => void;
+  onToggleFavorite: (product: CatalogProduct) => void;
+  onAddToCart: (product: CatalogProduct) => void;
+  onSelectProduct: (product: CatalogProduct) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
+export function ProductCard({
   product,
   isFavorite,
   onToggleFavorite,
   onAddToCart,
   onSelectProduct,
-}) => {
+}: ProductCardProps) {
   const [addedAnimation, setAddedAnimation] = useState(false);
+  const productTags = [product.flower_type, product.color].filter(Boolean);
 
-  const handleAddToCartClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAddToCartClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    if (!product.is_in_stock) {
+      return;
+    }
+
     onAddToCart(product);
     setAddedAnimation(true);
-    setTimeout(() => setAddedAnimation(false), 1500);
+    window.setTimeout(() => setAddedAnimation(false), 1500);
   };
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleFavoriteClick = (event: MouseEvent) => {
+    event.stopPropagation();
     onToggleFavorite(product);
   };
 
   return (
-    <div
+    <article
       onClick={() => onSelectProduct(product)}
-      className="group relative bg-[#181a22] border border-white/10 rounded-2xl overflow-hidden hover:border-emerald-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 cursor-pointer flex flex-col justify-between"
+      className="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#181a22] transition-all duration-300 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-black/50"
     >
-      {/* Image & Badges Container */}
-      <div className="relative aspect-square w-full bg-[#121319] overflow-hidden">
-        <img
-          src={product.image}
-          alt={product.title}
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+      <div className="relative aspect-square w-full overflow-hidden bg-[#121319]">
+        <CatalogImage
+          src={product.cover_image}
+          alt={product.name}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
         />
 
-        {/* Favorite Heart Button Overlay */}
         <button
+          type="button"
           onClick={handleFavoriteClick}
-          className={`absolute top-3 left-3 z-10 p-2 rounded-full backdrop-blur-md transition-all ${
+          className={`absolute left-3 top-3 z-10 rounded-full border p-2 backdrop-blur-md transition-all ${
             isFavorite
-              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-              : 'bg-black/40 text-zinc-400 hover:text-white border border-white/10'
+              ? "border-rose-500/40 bg-rose-500/20 text-rose-400"
+              : "border-white/10 bg-black/40 text-zinc-400 hover:text-white"
           }`}
           title="افزودن به علاقه‌مندی‌ها"
+          aria-label="افزودن به علاقه‌مندی‌ها"
         >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`} />
+          <Heart
+            className={`h-4 w-4 ${
+              isFavorite ? "fill-rose-500 text-rose-500" : ""
+            }`}
+          />
         </button>
 
-        {/* New Badge */}
-        {product.isNew && (
-          <span className="absolute top-3 right-3 z-10 bg-amber-500/90 text-black font-bold text-[10px] px-2 py-0.5 rounded-full border border-amber-300/40">
-            جدید
+        {product.is_featured ? (
+          <span className="absolute right-3 top-3 z-10 rounded-full border border-amber-300/40 bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-black">
+            ویژه
           </span>
-        )}
+        ) : null}
 
-        {/* Care Tags Row matching screenshot (e.g. "نگهداری آسان" and "+۴") */}
-        <div className="absolute bottom-2.5 right-2.5 left-2.5 flex items-center justify-between pointer-events-none gap-1">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {product.careTags.slice(0, 2).map((tag, idx) => (
+        <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1">
+          <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
+            {productTags.map((tag) => (
               <span
-                key={idx}
-                className="inline-flex items-center gap-1 bg-[#12131a]/85 backdrop-blur-md border border-white/15 text-zinc-200 text-[10px] sm:text-[11px] px-2.5 py-1 rounded-full"
+                key={tag}
+                className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-[#12131a]/85 px-2.5 py-1 text-[10px] text-zinc-200 backdrop-blur-md sm:text-[11px]"
               >
-                <Check className="w-3 h-3 text-emerald-400 stroke-[2.5]" />
+                <Check className="h-3 w-3 stroke-[2.5] text-emerald-400" />
                 <span>{tag}</span>
               </span>
             ))}
           </div>
 
-          <span className="bg-[#12131a]/85 backdrop-blur-md border border-white/15 text-zinc-400 text-[10px] font-mono px-2 py-1 rounded-full">
-            +۴
+          <span
+            className={`rounded-full border bg-[#12131a]/85 px-2 py-1 text-[10px] backdrop-blur-md ${
+              product.is_in_stock
+                ? "border-emerald-500/30 text-emerald-300"
+                : "border-rose-500/30 text-rose-300"
+            }`}
+          >
+            {product.is_in_stock ? "موجود" : "ناموجود"}
           </span>
         </div>
       </div>
 
-      {/* Card Info Section */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      <div className="flex flex-1 flex-col justify-between p-4">
         <div>
-          {/* Title matching screenshot "سانسوریا پوست ماری" */}
-          <h4 className="text-sm sm:text-base font-bold text-white group-hover:text-emerald-400 transition-colors leading-tight mb-1">
-            {product.title}
+          <h4 className="mb-1 text-sm font-bold leading-tight text-white transition-colors group-hover:text-emerald-400 sm:text-base">
+            {product.name}
           </h4>
-
-          {/* Subtitle matching screenshot "گلدان فایبرگلاس" */}
-          <p className="text-xs text-zinc-400 font-light mb-3">
-            {product.potType}
+          <p className="mb-3 text-xs font-light text-zinc-400">
+            {toPersianDigits(product.stems_per_bundle)} شاخه در هر دسته
           </p>
         </div>
 
-        {/* Bottom Price & Add to Cart Row */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5 gap-2">
-          {/* Price */}
+        <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
           <div className="flex flex-col">
-            {product.discountPrice ? (
-              <div className="flex flex-col">
-                <span className="text-[10px] text-zinc-500 line-through">
-                  {formatToman(product.price)}
-                </span>
-                <span className="text-xs sm:text-sm font-extrabold text-amber-400">
-                  {formatToman(product.discountPrice)}
-                </span>
-              </div>
-            ) : (
-              <span className="text-xs sm:text-sm font-extrabold text-white">
-                {formatToman(product.price)}
-              </span>
-            )}
+            <span className="text-xs font-extrabold text-white sm:text-sm">
+              {formatToman(product.price_per_bundle)}
+            </span>
+            <span className="text-[10px] text-zinc-500">هر دسته</span>
           </div>
 
-          {/* Add to Cart Button matching screenshot "اضافه به سبد خرید" */}
           <button
+            type="button"
             onClick={handleAddToCartClick}
-            className={`text-[11px] sm:text-xs font-medium px-3.5 py-2 rounded-xl border transition-all flex items-center gap-1.5 ${
-              addedAnimation
-                ? 'bg-emerald-600 border-emerald-500 text-white'
-                : 'bg-[#222430] hover:bg-emerald-600/30 border-white/10 hover:border-emerald-500/50 text-zinc-200 hover:text-white'
+            disabled={!product.is_in_stock}
+            className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[11px] font-medium transition-all sm:text-xs ${
+              !product.is_in_stock
+                ? "cursor-not-allowed border-white/5 bg-[#1a1b22] text-zinc-600"
+                : addedAnimation
+                  ? "border-emerald-500 bg-emerald-600 text-white"
+                  : "border-white/10 bg-[#222430] text-zinc-200 hover:border-emerald-500/50 hover:bg-emerald-600/30 hover:text-white"
             }`}
           >
-            {addedAnimation ? (
+            {!product.is_in_stock ? (
               <>
-                <Check className="w-3.5 h-3.5 text-white" />
+                <PackageX className="h-3.5 w-3.5" />
+                <span>ناموجود</span>
+              </>
+            ) : addedAnimation ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-white" />
                 <span>اضافه شد</span>
               </>
             ) : (
@@ -140,6 +146,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
-};
+}

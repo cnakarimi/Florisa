@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { X, Trash2, ShoppingBag, Check, ShieldCheck, Tag } from 'lucide-react';
 import type { CartItem } from '../types';
+import { CatalogImage } from '@/features/catalog/components/CatalogImage';
 import { formatToman, toPersianDigits } from '../utils/persian';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemoveItem: (productId: string) => void;
+  onUpdateQuantity: (productId: number, quantity: number) => void;
+  onRemoveItem: (productId: number) => void;
   onClearCart: () => void;
 }
 
@@ -26,7 +27,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price_per_bundle * item.quantity,
+    0,
+  );
   const shippingFee = subtotal > 1000000 ? 0 : 45000;
   const discountAmount = discountApplied ? subtotal * 0.1 : 0;
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
@@ -89,21 +93,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   className="flex items-center justify-between p-3 rounded-xl bg-[#1c1e2a] border border-white/5 gap-3"
                 >
                   {/* Thumbnail */}
-                  <img
-                    src={item.product.image}
-                    alt={item.product.title}
-                    referrerPolicy="no-referrer"
-                    className="w-16 h-16 rounded-lg object-cover bg-black/40"
-                  />
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/40">
+                    <CatalogImage
+                      src={item.product.cover_image}
+                      alt={item.product.name}
+                      sizes="64px"
+                    />
+                  </div>
 
                   {/* Info */}
                   <div className="flex-1">
-                    <h4 className="text-xs font-bold text-white mb-0.5">{item.product.title}</h4>
+                    <h4 className="text-xs font-bold text-white mb-0.5">{item.product.name}</h4>
                     <p className="text-[10px] text-zinc-400 mb-1">
-                      {item.selectedPotColor || item.product.potType}
+                      {item.product.stems_per_bundle} شاخه در هر دسته
                     </p>
                     <span className="text-xs font-extrabold text-amber-400">
-                      {formatToman(item.product.price * item.quantity)}
+                      {formatToman(item.product.price_per_bundle * item.quantity)}
                     </span>
                   </div>
 

@@ -1,191 +1,374 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Header } from './Header';
-import { HeroSection } from './HeroSection';
-import { CategoriesSection } from './CategoriesSection';
-import { ProductCard } from './ProductCard';
-import { MagazineSection } from './MagazineSection';
-import { BottomNav } from './BottomNav';
-import { ProductModal } from './ProductModal';
-import { ArticleModal } from './ArticleModal';
-import { CartDrawer } from './CartDrawer';
-import { ShopCatalog } from './ShopCatalog';
-import { PlantAICare } from './PlantAICare';
-import { FavoritesView } from './FavoritesView';
-import { PRODUCTS } from '../data/products';
-import type { Product, CartItem, Article, TabType } from '../types';
-import { Sparkles } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Sparkles, X } from "lucide-react";
+import { getProductDetail } from "@/features/catalog/api/catalog";
+import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
+import { useCatalog } from "@/features/catalog/hooks/useCatalog";
+import type {
+  CatalogProduct,
+  CatalogProductDetail,
+  ProductOrdering,
+} from "@/features/catalog/types";
+import {
+  ApiError,
+  getApiErrorMessage,
+} from "@/lib/api/client";
+import { Header } from "./Header";
+import { HeroSection } from "./HeroSection";
+import { CategoriesSection } from "./CategoriesSection";
+import { ProductCard } from "./ProductCard";
+import { MagazineSection } from "./MagazineSection";
+import { BottomNav } from "./BottomNav";
+import { ProductModal } from "./ProductModal";
+import { ArticleModal } from "./ArticleModal";
+import { CartDrawer } from "./CartDrawer";
+import { ShopCatalog } from "./ShopCatalog";
+import { PlantAICare } from "./PlantAICare";
+import { FavoritesView } from "./FavoritesView";
+import type { Article, CartItem, TabType } from "../types";
 
-export function HomeExperience() {
+interface HomeExperienceProps {
+  initialProductSlug?: string;
+}
+
+export function HomeExperience({
+  initialProductSlug,
+}: HomeExperienceProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [activeTab, setActiveTab] = useState<TabType>("home");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [favorites, setFavorites] = useState<Product[]>([PRODUCTS[0]]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [favorites, setFavorites] = useState<CatalogProduct[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [ordering, setOrdering] = useState<ProductOrdering>("newest");
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] =
+    useState<CatalogProductDetail | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(
+    Boolean(initialProductSlug),
+  );
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailRetry, setDetailRetry] = useState(0);
 
-  // Cart operations
-  const handleAddToCart = (product: Product, quantity = 1, potColor?: string) => {
-    setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
+  const {
+    categories,
+    products,
+    hasNextPage,
+    isCategoriesLoading,
+    isProductsLoading,
+    isLoadingMore,
+    categoriesError,
+    productsError,
+    retryCategories,
+    retryProducts,
+    loadMore,
+  } = useCatalog({
+    category: selectedCategory,
+    search: searchQuery,
+    ordering,
+  });
+
+  useEffect(() => {
+    if (!initialProductSlug) {
+      return;
+    }
+
+    let isCurrent = true;
+
+    Promise.resolve().then(() => {
+      if (!isCurrent) {
+        return;
+      }
+      setIsDetailLoading(true);
+      setDetailError(null);
+      setSelectedProduct(null);
+    });
+
+    getProductDetail(initialProductSlug, detailRetry > 0)
+      .then((product) => {
+        if (isCurrent) {
+          setSelectedProduct(product);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isCurrent) {
+          return;
+        }
+        if (error instanceof ApiError && error.status === 404) {
+          setDetailError("محصول موردنظر پیدا نشد یا دیگر فعال نیست.");
+          return;
+        }
+        setDetailError(getApiErrorMessage(error));
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsDetailLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [detailRetry, initialProductSlug]);
+
+  const handleAddToCart = (
+    product: CatalogProduct,
+    quantity = 1,
+    selectedPotColor?: string,
+  ) => {
+    if (!product.is_in_stock) {
+      return;
+    }
+
+    setCart((current) => {
+      const existingIndex = current.findIndex(
+        (item) => item.product.id === product.id,
+      );
       if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        if (potColor) updated[existingIndex].selectedPotColor = potColor;
+        const updated = [...current];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + quantity,
+          selectedPotColor:
+            selectedPotColor ?? updated[existingIndex].selectedPotColor,
+        };
         return updated;
       }
-      return [...prev, { product, quantity, selectedPotColor: potColor }];
+      return [
+        ...current,
+        { product, quantity, selectedPotColor },
+      ];
     });
   };
 
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
-    setCart((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
+  const handleUpdateQuantity = (productId: number, quantity: number) => {
+    setCart((current) =>
+      current.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item,
+      ),
     );
   };
 
-  const handleRemoveItem = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  const handleRemoveItem = (productId: number) => {
+    setCart((current) =>
+      current.filter((item) => item.product.id !== productId),
+    );
   };
 
-  // Favorite toggle
-  const handleToggleFavorite = (product: Product) => {
-    setFavorites((prev) => {
-      const exists = prev.some((p) => p.id === product.id);
-      if (exists) return prev.filter((p) => p.id !== product.id);
-      return [...prev, product];
+  const handleToggleFavorite = (product: CatalogProduct) => {
+    setFavorites((current) => {
+      const exists = current.some((item) => item.id === product.id);
+      return exists
+        ? current.filter((item) => item.id !== product.id)
+        : [...current, product];
     });
   };
 
-  // Filter products for homepage
-  const homepageProducts = PRODUCTS.filter((p) => {
-    if (selectedCategory && p.category !== selectedCategory) return false;
-    if (searchQuery) {
-      return (
-        p.title.includes(searchQuery) ||
-        p.description.includes(searchQuery) ||
-        (p.titleEnglish && p.titleEnglish.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-    return true;
-  });
+  const openProduct = (product: CatalogProduct) => {
+    router.push(`/products/${encodeURIComponent(product.slug)}`);
+  };
+
+  const productGrid = isProductsLoading ? (
+    <CatalogFeedback kind="loading" />
+  ) : productsError && products.length === 0 ? (
+    <CatalogFeedback
+      kind="error"
+      message={productsError}
+      onRetry={retryProducts}
+    />
+  ) : products.length === 0 ? (
+    <CatalogFeedback
+      kind="empty"
+      message={
+        searchQuery || selectedCategory
+          ? "محصولی مطابق جستجو یا دسته‌بندی انتخاب‌شده پیدا نشد."
+          : undefined
+      }
+    />
+  ) : (
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            isFavorite={favorites.some(
+              (favorite) => favorite.id === product.id,
+            )}
+            onToggleFavorite={handleToggleFavorite}
+            onAddToCart={(item) => handleAddToCart(item, 1)}
+            onSelectProduct={openProduct}
+          />
+        ))}
+      </div>
+
+      {productsError ? (
+        <div className="mt-4">
+          <CatalogFeedback
+            kind="error"
+            message={productsError}
+            onRetry={retryProducts}
+            compact
+          />
+        </div>
+      ) : null}
+
+      {hasNextPage ? (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="rounded-xl border border-white/10 bg-[#222430] px-6 py-2.5 text-xs font-semibold text-white hover:border-emerald-500/50 disabled:cursor-wait disabled:opacity-60"
+          >
+            {isLoadingMore ? "در حال دریافت..." : "نمایش محصولات بیشتر"}
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-[#0d0e12] text-zinc-100 font-['Vazirmatn',sans-serif] pb-24 selection:bg-emerald-600 selection:text-white">
-      {/* Top Header */}
+    <div className="min-h-screen bg-[#0d0e12] pb-24 font-['Vazirmatn',sans-serif] text-zinc-100 selection:bg-emerald-600 selection:text-white">
       <Header
         cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         favoritesCount={favorites.length}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenFavorites={() => setActiveTab('favorites')}
+        onOpenFavorites={() => setActiveTab("favorites")}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeTab={activeTab}
       />
 
-      {/* Main Screen Container */}
-      <main className="max-w-6xl mx-auto px-4">
-        {/* Tab 1: HOME (Home Screen matching screenshot) */}
-        {activeTab === 'home' && (
+      <main className="mx-auto max-w-6xl px-4">
+        {activeTab === "home" ? (
           <div className="space-y-6 animate-in fade-in duration-300">
-            {/* Hero Banner Section */}
             <HeroSection
-              onShopClick={() => setActiveTab('shop')}
-              onCareClick={() => setActiveTab('care_ai')}
+              onShopClick={() => setActiveTab("shop")}
+              onCareClick={() => setActiveTab("care_ai")}
             />
 
-            {/* Categories Section ("دسته بندی") */}
             <CategoriesSection
+              categories={categories}
               selectedCategory={selectedCategory}
-              onSelectCategory={(catId) => setSelectedCategory(catId)}
+              onSelectCategory={setSelectedCategory}
+              isLoading={isCategoriesLoading}
+              error={categoriesError}
+              onRetry={retryCategories}
             />
 
-            {/* Latest Products Section ("جدیدترین محصولات") matching screenshot */}
             <section className="my-8">
-              <div className="flex items-center justify-between mb-5 px-1">
-                <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                  <span className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                    <Sparkles className="w-4 h-4" />
+              <div className="mb-5 flex items-center justify-between px-1">
+                <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight text-white">
+                  <span className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-1 text-amber-400">
+                    <Sparkles className="h-4 w-4" />
                   </span>
                   <span>جدیدترین محصولات</span>
                 </h3>
                 <button
-                  onClick={() => setActiveTab('shop')}
+                  type="button"
+                  onClick={() => setActiveTab("shop")}
                   className="text-xs text-amber-400 hover:underline"
                 >
                   مشاهده همه
                 </button>
               </div>
-
-              {/* Product Cards Grid matching screenshot */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                {homepageProducts.map((product) => {
-                  const isFav = favorites.some((f) => f.id === product.id);
-                  return (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      isFavorite={isFav}
-                      onToggleFavorite={handleToggleFavorite}
-                      onAddToCart={(p) => handleAddToCart(p, 1)}
-                      onSelectProduct={(p) => setSelectedProduct(p)}
-                    />
-                  );
-                })}
-              </div>
+              {productGrid}
             </section>
 
-            {/* Plant Magazine Section ("مجله گیاهان") matching screenshot */}
-            <MagazineSection onSelectArticle={(article) => setSelectedArticle(article)} />
+            <MagazineSection
+              onSelectArticle={(article) => setSelectedArticle(article)}
+            />
           </div>
-        )}
+        ) : null}
 
-        {/* Tab 2: SHOP CATALOG */}
-        {activeTab === 'shop' && (
+        {activeTab === "shop" ? (
           <ShopCatalog
-            products={PRODUCTS}
+            products={products}
+            categories={categories}
             favorites={favorites}
             onToggleFavorite={handleToggleFavorite}
-            onAddToCart={(p) => handleAddToCart(p, 1)}
-            onSelectProduct={(p) => setSelectedProduct(p)}
+            onAddToCart={(product) => handleAddToCart(product, 1)}
+            onSelectProduct={openProduct}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            ordering={ordering}
+            onOrderingChange={setOrdering}
+            isLoading={isProductsLoading}
+            error={productsError}
+            onRetry={retryProducts}
+            hasNextPage={hasNextPage}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
           />
-        )}
+        ) : null}
 
-        {/* Tab 3: AI PLANT DOCTOR */}
-        {activeTab === 'care_ai' && <PlantAICare />}
+        {activeTab === "care_ai" ? <PlantAICare /> : null}
 
-        {/* Tab 4: FAVORITES */}
-        {activeTab === 'favorites' && (
+        {activeTab === "favorites" ? (
           <FavoritesView
             favorites={favorites}
             onToggleFavorite={handleToggleFavorite}
-            onAddToCart={(p) => handleAddToCart(p, 1)}
-            onSelectProduct={(p) => setSelectedProduct(p)}
+            onAddToCart={(product) => handleAddToCart(product, 1)}
+            onSelectProduct={openProduct}
           />
-        )}
-
+        ) : null}
       </main>
 
-      {/* Product Detail Modal */}
-      <ProductModal
-        product={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        isFavorite={favorites.some((f) => f?.id === selectedProduct?.id)}
-        onToggleFavorite={handleToggleFavorite}
-        onAddToCart={handleAddToCart}
+      {selectedProduct ? (
+        <ProductModal
+          key={selectedProduct.id}
+          product={selectedProduct}
+          onClose={() => router.push("/")}
+          isFavorite={favorites.some(
+            (favorite) => favorite.id === selectedProduct.id,
+          )}
+          onToggleFavorite={handleToggleFavorite}
+          onAddToCart={handleAddToCart}
+        />
+      ) : null}
+
+      {initialProductSlug && isDetailLoading ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-md">
+            <CatalogFeedback
+              kind="loading"
+              message="در حال دریافت جزئیات محصول..."
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {initialProductSlug && detailError && !isDetailLoading ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className="relative w-full max-w-md">
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/40 p-2 text-zinc-300"
+              aria-label="بازگشت به فروشگاه"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <CatalogFeedback
+              kind="error"
+              message={detailError}
+              onRetry={() => setDetailRetry((value) => value + 1)}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <ArticleModal
+        article={selectedArticle}
+        onClose={() => setSelectedArticle(null)}
       />
 
-      {/* Article Reader Modal */}
-      <ArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
-
-      {/* Cart Slide-over Drawer */}
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -195,15 +378,13 @@ export function HomeExperience() {
         onClearCart={() => setCart([])}
       />
 
-      {/* Bottom Sticky Navigation Bar matching screenshot icons */}
       <BottomNav
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          if (tab === 'profile') {
-            router.push('/profile');
+          if (tab === "profile") {
+            router.push("/profile");
             return;
           }
-
           setActiveTab(tab);
         }}
         favoritesCount={favorites.length}

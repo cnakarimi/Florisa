@@ -1,9 +1,11 @@
 import { API_BASE_URL } from "@/lib/api/config";
 
-const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export const NETWORK_ERROR_MESSAGE =
   "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
 const MALFORMED_RESPONSE_MESSAGE = "پاسخ دریافتی از سرور معتبر نیست.";
+const CSRF_ERROR_MESSAGE =
+  "اعتبار امنیتی درخواست دریافت نشد. لطفاً دوباره تلاش کنید.";
 
 export type ApiFieldErrors = Record<string, string[]>;
 
@@ -37,6 +39,28 @@ export function readBrowserCookie(name: string): string | null {
     .find((item) => item.startsWith(prefix));
 
   return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+}
+
+let csrfInitializationPromise: Promise<void> | null = null;
+
+export async function ensureCsrfCookie(): Promise<void> {
+  if (readBrowserCookie("csrftoken")) {
+    return;
+  }
+
+  if (!csrfInitializationPromise) {
+    csrfInitializationPromise = apiRequest<unknown>("/api/auth/csrf/")
+      .then(() => undefined)
+      .finally(() => {
+        csrfInitializationPromise = null;
+      });
+  }
+
+  await csrfInitializationPromise;
+
+  if (!readBrowserCookie("csrftoken")) {
+    throw new ApiError(CSRF_ERROR_MESSAGE, 403);
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -114,11 +138,13 @@ export async function apiRequest<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  if (!SAFE_METHODS.has(method)) {
+  if (UNSAFE_METHODS.has(method)) {
+    await ensureCsrfCookie();
     const csrfToken = readBrowserCookie("csrftoken");
-    if (csrfToken) {
-      headers.set("X-CSRFToken", csrfToken);
+    if (!csrfToken) {
+      throw new ApiError(CSRF_ERROR_MESSAGE, 403);
     }
+    headers.set("X-CSRFToken", csrfToken);
   }
 
   let response: Response;

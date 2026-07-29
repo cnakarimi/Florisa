@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import type { ReactNode } from "react";
+import { AuthProvider } from "@/features/auth/hooks/AuthProvider";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -28,7 +29,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="fa" dir="rtl">
-      <body className={vazirmatn.variable}>{children}</body>
+      <body className={vazirmatn.variable}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { requestOtp } from "@/features/auth/api/auth";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
+import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
 import { InlineError } from "@/features/auth/components/InlineError";
 import { PhoneInput } from "@/features/auth/components/PhoneInput";
 import {
@@ -16,10 +17,12 @@ import {
 } from "@/features/auth/schemas/auth";
 import { normalizeIranianPhone } from "@/features/auth/utils/phone";
 import { storePendingPhone } from "@/features/auth/utils/storage";
+import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { getApiErrorMessage } from "@/lib/api/client";
 
 export function PhoneAuthForm() {
   const router = useRouter();
+  const auth = useAuth();
   const {
     control,
     handleSubmit,
@@ -33,11 +36,22 @@ export function PhoneAuthForm() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (!auth.isInitializing && auth.isAuthenticated) {
+      router.replace(auth.isProfileComplete ? "/" : "/auth/register");
+    }
+  }, [
+    auth.isAuthenticated,
+    auth.isInitializing,
+    auth.isProfileComplete,
+    router,
+  ]);
+
   const submitPhone = async ({ phone }: PhoneFormValues) => {
     const normalizedPhone = normalizeIranianPhone(phone);
 
     try {
-      await requestOtp(normalizedPhone);
+      await auth.requestOtp(normalizedPhone);
       storePendingPhone(normalizedPhone);
       router.push("/auth/verify");
     } catch (error) {
@@ -47,6 +61,21 @@ export function PhoneAuthForm() {
       });
     }
   };
+
+  if (
+    auth.isInitializing ||
+    auth.isAuthenticated ||
+    auth.initializationError
+  ) {
+    return (
+      <AuthStateScreen
+        error={auth.initializationError}
+        onRetry={() => {
+          auth.refreshCurrentUser().catch(() => undefined);
+        }}
+      />
+    );
+  }
 
   return (
     <AuthShell>

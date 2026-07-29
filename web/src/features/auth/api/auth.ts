@@ -1,48 +1,26 @@
-import {
-  apiRequest,
-  readBrowserCookie,
-} from "@/lib/api/client";
+import { apiRequest } from "@/lib/api/client";
+import type {
+  CompleteRegistrationPayload,
+  OtpRequestPayload,
+  OtpVerificationPayload,
+  User,
+} from "@/features/auth/types";
 
-export interface AuthUser {
-  id: number;
-  phone: string;
-  full_name: string;
-  date_joined: string;
-}
+export type AuthUser = User;
 
 export interface UserResponse {
-  user: AuthUser;
+  user: User;
 }
 
 export interface DetailResponse {
   detail: string;
 }
 
-let csrfInitializationPromise: Promise<void> | null = null;
-
-export async function initializeCsrf(): Promise<void> {
-  if (readBrowserCookie("csrftoken")) {
-    return;
-  }
-
-  if (!csrfInitializationPromise) {
-    csrfInitializationPromise = apiRequest<DetailResponse>(
-      "/api/auth/csrf/",
-    )
-      .then(() => undefined)
-      .finally(() => {
-        csrfInitializationPromise = null;
-      });
-  }
-
-  await csrfInitializationPromise;
-}
-
 export async function requestOtp(phone: string): Promise<DetailResponse> {
-  await initializeCsrf();
+  const payload: OtpRequestPayload = { phone };
   return apiRequest<DetailResponse>("/api/auth/request-otp/", {
     method: "POST",
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -50,10 +28,10 @@ export async function verifyOtp(
   phone: string,
   code: string,
 ): Promise<UserResponse> {
-  await initializeCsrf();
+  const payload: OtpVerificationPayload = { phone, code };
   return apiRequest<UserResponse>("/api/auth/verify-otp/", {
     method: "POST",
-    body: JSON.stringify({ phone, code }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -61,8 +39,16 @@ export function getCurrentUser(): Promise<UserResponse> {
   return apiRequest<UserResponse>("/api/auth/me/");
 }
 
+export function completeRegistration(
+  payload: CompleteRegistrationPayload,
+): Promise<UserResponse> {
+  return apiRequest<UserResponse>("/api/auth/complete-registration/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function logout(): Promise<void> {
-  await initializeCsrf();
   return apiRequest<void>("/api/auth/logout/", {
     method: "POST",
   });

@@ -4,12 +4,9 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Edit2 } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import {
-  requestOtp,
-  verifyOtp,
-} from "@/features/auth/api/auth";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
+import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
 import { InlineError } from "@/features/auth/components/InlineError";
 import { OtpInput } from "@/features/auth/components/OtpInput";
 import { ResendTimer } from "@/features/auth/components/ResendTimer";
@@ -17,9 +14,7 @@ import {
   OTP_LENGTH,
   RESEND_DELAY_SECONDS,
 } from "@/features/auth/constants";
-import {
-  setCurrentUserCache,
-} from "@/features/auth/hooks/useCurrentUser";
+import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import type { AuthStatus } from "@/features/auth/types";
 import {
   normalizeDigits,
@@ -36,6 +31,7 @@ const EMPTY_OTP = Array<string>(OTP_LENGTH).fill("");
 
 export function OtpVerifyForm() {
   const router = useRouter();
+  const auth = useAuth();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(EMPTY_OTP);
   const [error, setError] = useState("");
@@ -44,6 +40,15 @@ export function OtpVerifyForm() {
   const isMountedRef = useRef(true);
 
   useEffect(() => {
+    if (auth.isInitializing || auth.initializationError) {
+      return;
+    }
+
+    if (auth.isAuthenticated) {
+      router.replace(auth.isProfileComplete ? "/" : "/auth/register");
+      return;
+    }
+
     const storedPhone = readPendingPhone();
 
     if (!storedPhone) {
@@ -52,7 +57,13 @@ export function OtpVerifyForm() {
     }
 
     setPhone(storedPhone);
-  }, [router]);
+  }, [
+    auth.initializationError,
+    auth.isAuthenticated,
+    auth.isInitializing,
+    auth.isProfileComplete,
+    router,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -83,10 +94,11 @@ export function OtpVerifyForm() {
     setStatus("submitting");
 
     try {
-      const { user } = await verifyOtp(phone, code);
-      setCurrentUserCache(user);
+      const user = await auth.verifyOtp(phone, code);
       clearPendingPhone();
-      router.replace("/");
+      router.replace(
+        user.is_profile_complete ? "/" : "/auth/register",
+      );
     } catch (requestError) {
       if (isMountedRef.current) {
         setStatus("idle");
@@ -99,7 +111,7 @@ export function OtpVerifyForm() {
     setError("");
 
     try {
-      await requestOtp(phone);
+      await auth.requestOtp(phone);
       if (isMountedRef.current) {
         setOtp(Array<string>(OTP_LENGTH).fill(""));
         setOtpRevision((revision) => revision + 1);
@@ -112,8 +124,20 @@ export function OtpVerifyForm() {
     }
   };
 
-  if (!phone) {
-    return <div className="min-h-dvh bg-[#131313]" aria-label="در حال بارگذاری" />;
+  if (
+    auth.isInitializing ||
+    auth.isAuthenticated ||
+    auth.initializationError ||
+    !phone
+  ) {
+    return (
+      <AuthStateScreen
+        error={auth.initializationError}
+        onRetry={() => {
+          auth.refreshCurrentUser().catch(() => undefined);
+        }}
+      />
+    );
   }
 
   const isLocked = status === "submitting";

@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import type { TabType } from "../types";
 import { toPersianDigits } from "../utils/persian";
-import { normalizeDigits } from "@/features/auth/utils/digits";
 
 type ActiveModal =
   | "edit_profile"
@@ -42,6 +41,7 @@ type ActiveModal =
 interface ProfileViewProps {
   phone: string;
   fullName?: string;
+  email?: string | null;
   onLogout: () => void | Promise<void>;
   logoutPending?: boolean;
   logoutError?: string;
@@ -53,6 +53,7 @@ interface ProfileViewProps {
 export function ProfileView({
   phone,
   fullName = "",
+  email = null,
   onLogout,
   logoutPending = false,
   logoutError = "",
@@ -60,11 +61,9 @@ export function ProfileView({
   onNavigateToTab,
   cartCount = 0,
 }: ProfileViewProps) {
-  const [userName, setUserName] = useState(
-    fullName.trim() || "سینا رضایی",
-  );
-  const [userPhone, setUserPhone] = useState(phone);
-  const [userEmail, setUserEmail] = useState("sina.rezaei@gmail.com");
+  const [userName, setUserName] = useState(fullName.trim());
+  const userPhone = phone;
+  const [userEmail, setUserEmail] = useState(email ?? "");
   const [userAddress] = useState(
     "تهران، نیاوران، خیابان مژده، پلاک ۲۴، واحد ۵",
   );
@@ -120,7 +119,8 @@ export function ProfileView({
       <div className="flex items-center justify-between px-2 py-2">
         <div className="flex flex-col text-right">
           <span className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-zinc-300 sm:text-sm">
-            سلام سینا <span className="text-base">👋</span>
+            سلام {userName.split(/\s+/)[0]}{" "}
+            <span className="text-base">👋</span>
           </span>
           <h2 className="mb-1 text-xl font-black leading-tight text-white sm:text-2xl">
             {userName}
@@ -337,14 +337,8 @@ export function ProfileView({
                   inputMode="numeric"
                   dir="ltr"
                   value={userPhone}
-                  onChange={(event) =>
-                    setUserPhone(
-                      normalizeDigits(event.target.value)
-                        .replace(/\D/g, "")
-                        .slice(0, 11),
-                    )
-                  }
-                  className="numeric-ltr w-full rounded-xl border border-white/10 bg-[#101117] p-3 font-mono text-white focus:border-amber-400 focus:outline-none"
+                  readOnly
+                  className="numeric-ltr w-full cursor-not-allowed rounded-xl border border-white/10 bg-[#101117] p-3 font-mono text-zinc-400"
                 />
               </div>
 

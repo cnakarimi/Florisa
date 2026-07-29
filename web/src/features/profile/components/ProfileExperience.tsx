@@ -2,11 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { logout } from "@/features/auth/api/auth";
-import {
-  clearCurrentUserCache,
-  useCurrentUser,
-} from "@/features/auth/hooks/useCurrentUser";
+import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
+import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { clearPendingPhone } from "@/features/auth/utils/storage";
 import { BottomNav } from "@/features/home/components/BottomNav";
 import { ProfileView } from "@/features/home/components/ProfileView";
@@ -15,7 +12,7 @@ import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
 export function ProfileExperience() {
   const router = useRouter();
-  const currentUser = useCurrentUser();
+  const auth = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const isMountedRef = useRef(true);
@@ -27,10 +24,25 @@ export function ProfileExperience() {
   }, []);
 
   useEffect(() => {
-    if (currentUser.status === "unauthenticated") {
-      router.replace("/auth");
+    if (auth.isInitializing || auth.initializationError) {
+      return;
     }
-  }, [currentUser.status, router]);
+
+    if (!auth.isAuthenticated) {
+      router.replace("/auth");
+      return;
+    }
+
+    if (!auth.isProfileComplete) {
+      router.replace("/auth/register?next=/profile");
+    }
+  }, [
+    auth.initializationError,
+    auth.isAuthenticated,
+    auth.isInitializing,
+    auth.isProfileComplete,
+    router,
+  ]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -41,7 +53,7 @@ export function ProfileExperience() {
     setLogoutError("");
 
     try {
-      await logout();
+      await auth.logout();
     } catch (error) {
       if (
         !(error instanceof ApiError) ||
@@ -56,7 +68,6 @@ export function ProfileExperience() {
     }
 
     clearPendingPhone();
-    clearCurrentUserCache();
     router.replace("/auth");
   };
 
@@ -68,15 +79,19 @@ export function ProfileExperience() {
     router.push("/");
   };
 
-  if (currentUser.status !== "authenticated") {
+  if (
+    auth.isInitializing ||
+    auth.initializationError ||
+    !auth.isAuthenticated ||
+    !auth.isProfileComplete ||
+    !auth.user
+  ) {
     return (
-      <div
-        className="min-h-dvh bg-[#0d0e12]"
-        aria-label={
-          currentUser.status === "error"
-            ? currentUser.error
-            : "در حال بررسی حساب کاربری"
-        }
+      <AuthStateScreen
+        error={auth.initializationError}
+        onRetry={() => {
+          auth.refreshCurrentUser().catch(() => undefined);
+        }}
       />
     );
   }
@@ -85,8 +100,9 @@ export function ProfileExperience() {
     <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] pb-24 text-zinc-100">
       <main className="mx-auto max-w-6xl px-4">
         <ProfileView
-          phone={currentUser.user.phone}
-          fullName={currentUser.user.full_name}
+          phone={auth.user.phone}
+          fullName={auth.user.full_name}
+          email={auth.user.email}
           onLogout={handleLogout}
           logoutPending={isLoggingOut}
           logoutError={logoutError}

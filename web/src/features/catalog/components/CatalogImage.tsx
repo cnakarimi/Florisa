@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { Flower2 } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api/config";
 
 interface CatalogImageProps {
   src: string | null;
@@ -15,7 +14,7 @@ function resolveImageUrl(src: string): string {
     return src;
   }
 
-  return new URL(src, `${API_BASE_URL}/`).toString();
+  return src.startsWith("/") ? src : `/${src}`;
 }
 
 export function CatalogImage({

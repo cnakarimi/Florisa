@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api/config";
+import { browserApiUrl } from "@/lib/api/config";
 
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export const NETWORK_ERROR_MESSAGE =
@@ -149,7 +149,7 @@ export async function apiRequest<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(browserApiUrl(path), {
       ...init,
       method,
       headers,

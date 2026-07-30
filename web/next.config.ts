@@ -1,21 +1,90 @@
 import type { NextConfig } from "next";
 
-const apiUrl = new URL(
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000",
+function deploymentOrigin(name: string, fallback?: string): URL | null {
+  const value = process.env[name]?.trim() || fallback;
+  if (!value) {
+    return null;
+  }
+
+  const url = new URL(value);
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    (url.pathname !== "/" && url.pathname !== "")
+  ) {
+    throw new Error(`${name} must be an HTTP(S) origin without a path.`);
+  }
+  return url;
+}
+
+if (process.env.VERCEL && !process.env.BACKEND_URL) {
+  throw new Error("BACKEND_URL must be configured in Vercel.");
+}
+
+const backendUrl = deploymentOrigin(
+  "BACKEND_URL",
+  "http://127.0.0.1:8000",
 );
+if (!backendUrl) {
+  throw new Error("BACKEND_URL is required.");
+}
+
+const mediaUrl = deploymentOrigin("MEDIA_HOST");
+const remotePatterns: NonNullable<
+  NonNullable<NextConfig["images"]>["remotePatterns"]
+> = [
+  {
+    protocol: backendUrl.protocol.slice(0, -1) as "http" | "https",
+    hostname: backendUrl.hostname,
+    port: backendUrl.port,
+    pathname: "/media/**",
+  },
+];
+
+if (mediaUrl) {
+  remotePatterns.push({
+    protocol: mediaUrl.protocol.slice(0, -1) as "http" | "https",
+    hostname: mediaUrl.hostname,
+    port: mediaUrl.port,
+    pathname: "/**",
+  });
+}
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: process.cwd(),
   images: {
-    remotePatterns: [
+    remotePatterns,
+  },
+  async rewrites() {
+    const origin = backendUrl.origin;
+
+    return {
+      beforeFiles: [],
+      afterFiles: [
+        {
+          source: "/api/:path*",
+          destination: `${origin}/api/:path*`,
+        },
+        {
+          source: "/media/:path*",
+          destination: `${origin}/media/:path*`,
+        },
+      ],
+      fallback: [],
+    };
+  },
+  async headers() {
+    return [
       {
-        protocol: apiUrl.protocol.slice(0, -1) as "http" | "https",
-        hostname: apiUrl.hostname,
-        port: apiUrl.port,
-        pathname: "/media/**",
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0",
+          },
+        ],
       },
-    ],
+    ];
   },
 };
 

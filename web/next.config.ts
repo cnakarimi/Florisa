@@ -51,6 +51,7 @@ if (mediaUrl) {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  skipTrailingSlashRedirect: true,
   outputFileTracingRoot: process.cwd(),
   images: {
     remotePatterns,

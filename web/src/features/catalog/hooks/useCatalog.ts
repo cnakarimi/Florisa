@@ -180,6 +180,14 @@ export function useCatalog({
     ordering,
   ]);
 
+  const retryCategories = useCallback(() => {
+    setCategoriesRetry((value) => value + 1);
+  }, []);
+
+  const retryProducts = useCallback(() => {
+    setProductsRetry((value) => value + 1);
+  }, []);
+
   return {
     categories,
     products,
@@ -190,8 +198,8 @@ export function useCatalog({
     isLoadingMore,
     categoriesError,
     productsError,
-    retryCategories: () => setCategoriesRetry((value) => value + 1),
-    retryProducts: () => setProductsRetry((value) => value + 1),
+    retryCategories,
+    retryProducts,
     loadMore,
   };
 }

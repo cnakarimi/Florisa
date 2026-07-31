@@ -155,9 +155,22 @@ export async function apiRequest<T>(
       headers,
       credentials: "include",
       cache: "no-store",
+      redirect: "manual",
     });
   } catch (error) {
     throw new ApiError(NETWORK_ERROR_MESSAGE, 0, {}, error);
+  }
+
+  if (
+    response.type === "opaqueredirect" ||
+    (response.status >= 300 && response.status < 400)
+  ) {
+    throw new ApiError(
+      NETWORK_ERROR_MESSAGE,
+      response.status,
+      {},
+      response.headers.get("location"),
+    );
   }
 
   if (response.status === 204) {

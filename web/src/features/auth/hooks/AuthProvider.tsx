@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -73,31 +74,51 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, setState] = useState<AuthenticationState>(initialState);
+  const hasInitializedRef = useRef(false);
+  const currentUserRequestRef = useRef<Promise<User | null> | null>(null);
 
-  const refreshCurrentUser = useCallback(async (): Promise<User | null> => {
-    try {
-      const { user } = await getCurrentUser();
-      setState(authenticatedState(user));
-      return user;
-    } catch (error) {
-      if (
-        error instanceof ApiError &&
-        (error.status === 401 || error.status === 403)
-      ) {
-        setState(unauthenticatedState());
-        return null;
-      }
-
-      setState((current) => ({
-        ...current,
-        isInitializing: false,
-        initializationError: getApiErrorMessage(error),
-      }));
-      throw error;
+  const refreshCurrentUser = useCallback((): Promise<User | null> => {
+    if (currentUserRequestRef.current) {
+      return currentUserRequestRef.current;
     }
+
+    const request = getCurrentUser()
+      .then(({ user }) => {
+        setState(authenticatedState(user));
+        return user;
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof ApiError &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          setState(unauthenticatedState());
+          return null;
+        }
+
+        setState((current) => ({
+          ...current,
+          isInitializing: false,
+          initializationError: getApiErrorMessage(error),
+        }));
+        throw error;
+      })
+      .finally(() => {
+        if (currentUserRequestRef.current === request) {
+          currentUserRequestRef.current = null;
+        }
+      });
+
+    currentUserRequestRef.current = request;
+    return request;
   }, []);
 
   useEffect(() => {
+    if (hasInitializedRef.current) {
+      return;
+    }
+
+    hasInitializedRef.current = true;
     refreshCurrentUser().catch(() => undefined);
   }, [refreshCurrentUser]);
 

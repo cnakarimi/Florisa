@@ -63,10 +63,6 @@ const nextConfig: NextConfig = {
       beforeFiles: [],
       afterFiles: [
         {
-          source: "/api/:path*",
-          destination: `${origin}/api/:path*`,
-        },
-        {
           source: "/media/:path*",
           destination: `${origin}/media/:path*`,
         },

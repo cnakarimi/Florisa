@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Flower2 } from "lucide-react";
 
@@ -24,7 +27,10 @@ export function CatalogImage({
   className = "object-cover object-center",
   priority = false,
 }: CatalogImageProps) {
-  if (!src) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const resolvedSrc = src ? resolveImageUrl(src) : null;
+
+  if (!resolvedSrc || failedSrc === resolvedSrc) {
     return (
       <div
         role="img"
@@ -39,11 +45,13 @@ export function CatalogImage({
   return (
     <Image
       fill
-      src={resolveImageUrl(src)}
+      src={resolvedSrc}
       alt={alt}
       sizes={sizes}
       className={className}
       priority={priority}
+      unoptimized
+      onError={() => setFailedSrc(resolvedSrc)}
     />
   );
 }

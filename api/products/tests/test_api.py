@@ -56,7 +56,7 @@ class CatalogAPITests(APITestCase):
         self.assertNotIn("inactive-flowers", returned_slugs)
 
     def test_product_list_returns_active_products(self):
-        product = self.make_product()
+        product = self.make_product(cover_image="dawoodi-white.jpg")
 
         response = self.client.get(reverse("products:product-list"))
 
@@ -64,6 +64,10 @@ class CatalogAPITests(APITestCase):
         self.assertEqual(
             [item["slug"] for item in self.product_results(response)],
             [product.slug],
+        )
+        self.assertEqual(
+            self.product_results(response)[0]["cover_image"],
+            "dawoodi-white.jpg",
         )
 
     def test_inactive_products_are_excluded(self):
@@ -274,6 +278,10 @@ class CatalogAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["images"][0]["id"], image.id)
+        self.assertEqual(
+            response.data["images"][0]["image"],
+            "products/gallery/detail.jpg",
+        )
         self.assertEqual(
             response.data["images"][0]["alt_text"],
             "نمای نزدیک گل",

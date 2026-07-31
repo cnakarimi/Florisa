@@ -19,6 +19,7 @@ import type {
   CatalogProduct,
   CatalogProductDetail,
 } from "@/features/catalog/types";
+import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { formatToman, toPersianDigits } from "@/features/home/utils/persian";
 import { CatalogImage } from "./CatalogImage";
 
@@ -51,23 +52,25 @@ export function ProductDetailView({
     const seen = new Set<string>();
     const images: GalleryImage[] = [];
 
-    if (product.cover_image) {
-      seen.add(product.cover_image);
+    const coverImageUrl = getProductImageUrl(product.cover_image);
+    if (coverImageUrl) {
+      seen.add(coverImageUrl);
       images.push({
         key: "cover",
-        src: product.cover_image,
+        src: coverImageUrl,
         alt: product.name,
       });
     }
 
     for (const image of product.images) {
-      if (seen.has(image.image)) {
+      const imageUrl = getProductImageUrl(image.image);
+      if (!imageUrl || seen.has(imageUrl)) {
         continue;
       }
-      seen.add(image.image);
+      seen.add(imageUrl);
       images.push({
         key: String(image.id),
-        src: image.image,
+        src: imageUrl,
         alt: image.alt_text || product.name,
       });
     }

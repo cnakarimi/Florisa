@@ -2,6 +2,7 @@ import { useState, type MouseEvent } from "react";
 import { Check, Heart, PackageX } from "lucide-react";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
+import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { formatToman, toPersianDigits } from "../utils/persian";
 
 interface ProductCardProps {
@@ -48,7 +49,7 @@ export function ProductCard({
     >
       <div className="relative aspect-square w-full overflow-hidden bg-[#121319]">
         <CatalogImage
-          src={product.cover_image}
+          src={getProductImageUrl(product.cover_image)}
           alt={product.name}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"

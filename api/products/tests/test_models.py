@@ -47,11 +47,12 @@ class CatalogModelTests(TestCase):
         product = self.make_product()
         image = ProductImage.objects.create(
             product=product,
-            image="products/gallery/chrysanthemum.jpg",
+            image="chrysanthemum.jpg",
             alt_text="گل داوودی سفید",
         )
 
         self.assertEqual(image.product, product)
+        self.assertEqual(image.image, "chrysanthemum.jpg")
         self.assertIn(str(product), str(image))
 
     def test_product_string_is_meaningful(self):

@@ -5,6 +5,7 @@ import { ArrowLeft, ShoppingBag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
+import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { formatToman, toPersianDigits } from "../utils/persian";
 
 interface CartDrawerProps {
@@ -93,7 +94,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-black/40">
                     <CatalogImage
-                      src={item.product.cover_image}
+                      src={getProductImageUrl(item.product.cover_image)}
                       alt={item.product.name}
                       sizes="64px"
                     />

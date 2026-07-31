@@ -1,6 +1,7 @@
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
+import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { formatToman, toPersianDigits } from "../utils/persian";
 
 interface FavoritesViewProps {
@@ -51,7 +52,7 @@ export function FavoritesView({
                 className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-black/40"
               >
                 <CatalogImage
-                  src={product.cover_image}
+                  src={getProductImageUrl(product.cover_image)}
                   alt={product.name}
                   sizes="96px"
                 />

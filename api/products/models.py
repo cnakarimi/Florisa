@@ -62,9 +62,9 @@ class Product(models.Model):
         default=1,
         validators=[MinValueValidator(1)],
     )
-    cover_image = models.ImageField(
+    cover_image = models.CharField(
         "تصویر اصلی",
-        upload_to="products/covers/",
+        max_length=255,
         blank=True,
         null=True,
     )
@@ -113,9 +113,9 @@ class ProductImage(models.Model):
         related_name="images",
         verbose_name="محصول",
     )
-    image = models.ImageField(
+    image = models.CharField(
         "تصویر",
-        upload_to="products/gallery/",
+        max_length=255,
     )
     alt_text = models.CharField(
         "متن جایگزین",

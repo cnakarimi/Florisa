@@ -17,6 +17,7 @@ import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CartItem } from "@/features/cart/types";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
+import { getProductImageUrl } from "@/features/catalog/utils/images";
 import {
   formatToman,
   toPersianDigits,
@@ -237,7 +238,7 @@ export function CartPageExperience({
                         aria-label={`مشاهده ${item.product.name}`}
                       >
                         <CatalogImage
-                          src={item.product.cover_image}
+                          src={getProductImageUrl(item.product.cover_image)}
                           alt={item.product.name}
                           sizes="96px"
                         />

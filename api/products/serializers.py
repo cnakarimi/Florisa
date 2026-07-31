@@ -18,6 +18,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.CharField(read_only=True)
+
     class Meta:
         model = ProductImage
         fields = ("id", "image", "alt_text", "sort_order")
@@ -26,6 +28,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySummarySerializer(read_only=True)
+    cover_image = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
     is_in_stock = serializers.BooleanField(read_only=True)
 
     class Meta:

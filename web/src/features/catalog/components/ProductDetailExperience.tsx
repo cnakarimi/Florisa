@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getProductDetail } from "@/features/catalog/api/catalog";
-import type {
-  CatalogProductDetail,
-} from "@/features/catalog/types";
-import { ApiError, getApiErrorMessage } from "@/lib/api/client";
+
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CartDrawer } from "@/features/home/components/CartDrawer";
+import { getProductDetail } from "@/features/catalog/api/catalog";
+import type { CatalogProductDetail } from "@/features/catalog/types";
+import { ApiError, getApiErrorMessage } from "@/lib/api/client";
+
 import { CatalogFeedback } from "./CatalogFeedback";
 import { ProductDetailLoading } from "./ProductDetailLoading";
 import { ProductDetailView } from "./ProductDetailView";
@@ -42,6 +42,7 @@ export function ProductDetailExperience({
       setError(null);
       setIsNotFound(false);
       setProduct(null);
+      setIsFavorite(false);
     });
 
     getProductDetail(slug, retryKey > 0)
@@ -99,30 +100,35 @@ export function ProductDetailExperience({
     return (
       <main
         dir="rtl"
-        className="min-h-screen bg-[#0d0e12] px-4 py-5 text-white sm:px-6"
+        className="min-h-dvh bg-black text-white selection:bg-[#c7a23c]/30"
       >
-        <div className="mx-auto w-full max-w-md">
-          <button
-            type="button"
-            onClick={goBack}
-            className="mb-6 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#191b23] text-zinc-200"
-            aria-label="بازگشت"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </button>
-          <CatalogFeedback
-            kind={isNotFound ? "empty" : "error"}
-            message={
-              isNotFound
-                ? "محصول موردنظر پیدا نشد یا دیگر فعال نیست."
-                : error || "دریافت جزئیات محصول با مشکل روبه‌رو شد."
-            }
-            onRetry={
-              isNotFound
-                ? undefined
-                : () => setRetryKey((current) => current + 1)
-            }
-          />
+        <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] px-4 py-5 shadow-2xl shadow-black sm:px-6 md:px-8 md:py-7">
+          <div className="mx-auto w-full max-w-xl">
+            <button
+              type="button"
+              onClick={goBack}
+              className="mb-8 grid h-11 w-11 place-items-center rounded-full border border-white/[0.08] bg-[#191b19] text-[#ddd9d1] transition hover:border-[#c7a23c]/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
+              aria-label="بازگشت"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+
+            <div className="rounded-[24px] border border-white/[0.06] bg-[#171917] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+              <CatalogFeedback
+                kind={isNotFound ? "empty" : "error"}
+                message={
+                  isNotFound
+                    ? "محصول موردنظر پیدا نشد یا دیگر فعال نیست."
+                    : error || "دریافت جزئیات محصول با مشکل روبه‌رو شد."
+                }
+                onRetry={
+                  isNotFound
+                    ? undefined
+                    : () => setRetryKey((current) => current + 1)
+                }
+              />
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -131,6 +137,7 @@ export function ProductDetailExperience({
   return (
     <>
       <ProductDetailView
+        key={product.id}
         product={product}
         cartCount={cart.totalBundles}
         isFavorite={isFavorite}
@@ -142,10 +149,7 @@ export function ProductDetailExperience({
           setIsCartOpen(true);
         }}
       />
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 }

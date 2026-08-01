@@ -3,17 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
-
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import type { CatalogProduct, ProductOrdering } from "@/features/catalog/types";
-
 import type { Article, TabType } from "../types";
 import { ArticleModal } from "./ArticleModal";
 import { BottomNav } from "./BottomNav";
 import { CategoriesSection } from "./CategoriesSection";
 import { FavoritesView } from "./FavoritesView";
+import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { HeroSection } from "./HeroSection";
 import { MagazineSection } from "./MagazineSection";
@@ -24,7 +23,6 @@ import { ShopCatalog } from "./ShopCatalog";
 export function HomeExperience() {
   const router = useRouter();
   const cart = useCart();
-
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [favorites, setFavorites] = useState<CatalogProduct[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -52,9 +50,8 @@ export function HomeExperience() {
 
   const handleToggleFavorite = (product: CatalogProduct) => {
     setFavorites((current) => {
-      const isFavorite = current.some((item) => item.id === product.id);
-
-      return isFavorite
+      const exists = current.some((item) => item.id === product.id);
+      return exists
         ? current.filter((item) => item.id !== product.id)
         : [...current, product];
     });
@@ -64,7 +61,6 @@ export function HomeExperience() {
     router.push(`/products/${encodeURIComponent(product.slug)}`);
   };
 
-  // تعداد بیشتری نمایش می‌دهیم تا اسلایدر واقعاً قابل حرکت باشد.
   const latestProducts = products.slice(0, 8);
 
   const latestProductsContent = isProductsLoading ? (
@@ -127,14 +123,18 @@ export function HomeExperience() {
               <HeroSection onShopClick={() => setActiveTab("shop")} />
 
               <div className="px-4 sm:px-6 md:px-8">
-                <CategoriesSection
-                  categories={categories}
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                  isLoading={isCategoriesLoading}
-                  error={categoriesError}
-                  onRetry={retryCategories}
-                />
+                {isCategoriesLoading ||
+                Boolean(categoriesError) ||
+                categories.length >= 2 ? (
+                  <CategoriesSection
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={setSelectedCategory}
+                    isLoading={isCategoriesLoading}
+                    error={categoriesError}
+                    onRetry={retryCategories}
+                  />
+                ) : null}
 
                 <section
                   className="pb-2 pt-6 sm:pt-8"
@@ -146,10 +146,8 @@ export function HomeExperience() {
                       className="flex items-center gap-2 text-lg font-extrabold text-[#dedbd5] sm:text-xl md:text-2xl"
                     >
                       <span>جدیدترین محصولات</span>
-
                       <span className="relative grid h-7 w-7 place-items-center text-[#cda62e] sm:h-8 sm:w-8">
                         <Sparkles className="absolute h-full w-full stroke-[1.4]" />
-
                         <span className="relative pt-0.5 text-[7px] font-black tracking-tighter sm:text-[8px]">
                           NEW
                         </span>
@@ -170,6 +168,12 @@ export function HomeExperience() {
 
                 <MagazineSection onSelectArticle={setSelectedArticle} />
               </div>
+
+              <Footer
+                onShopClick={() => setActiveTab("shop")}
+                onCareClick={() => setActiveTab("care_ai")}
+                onFavoritesClick={() => setActiveTab("favorites")}
+              />
             </div>
           ) : null}
 
@@ -220,7 +224,6 @@ export function HomeExperience() {
               router.push("/profile");
               return;
             }
-
             setActiveTab(tab);
           }}
           favoritesCount={favorites.length}

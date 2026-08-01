@@ -22,7 +22,7 @@ export function BottomNav({
   favoritesCount,
 }: BottomNavProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[430px] border-t border-white/[0.06] bg-[#171817]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-screen-lg border-t border-white/[0.06] bg-[#171817]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl">
       <div className="grid h-16 grid-cols-5 px-2" dir="ltr">
         {TABS.map((tab) => {
           const Icon = tab.icon;

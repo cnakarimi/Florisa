@@ -1,6 +1,6 @@
-import React from 'react';
-import { Home, Store, Leaf, Heart, User } from 'lucide-react';
-import type { TabType } from '../types';
+import { Heart, Home, Leaf, Store, User } from "lucide-react";
+import type { TabType } from "../types";
+import { toPersianDigits } from "../utils/persian";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -8,72 +8,59 @@ interface BottomNavProps {
   favoritesCount: number;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({
+const TABS = [
+  { id: "home" as const, label: "خانه", icon: Home },
+  { id: "shop" as const, label: "فروشگاه", icon: Store },
+  { id: "care_ai" as const, label: "گیاه‌پزشک", icon: Leaf },
+  { id: "favorites" as const, label: "علاقه‌مندی‌ها", icon: Heart },
+  { id: "profile" as const, label: "پروفایل", icon: User },
+];
+
+export function BottomNav({
   activeTab,
   setActiveTab,
   favoritesCount,
-}) => {
-  const tabs = [
-    { id: 'home' as TabType, label: 'خانه', icon: Home },
-    { id: 'shop' as TabType, label: 'فروشگاه', icon: Store },
-    { id: 'care_ai' as TabType, label: 'گیاه‌پزشک', icon: Leaf, highlight: true },
-    { id: 'favorites' as TabType, label: 'علاقه‌مندی', icon: Heart, badge: favoritesCount },
-    { id: 'profile' as TabType, label: 'پروفایل', icon: User },
-  ];
-
+}: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 right-0 left-0 z-40 bg-[#121319]/95 backdrop-blur-lg border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-w-2xl mx-auto rounded-t-2xl shadow-2xl">
-      <div className="flex items-center justify-around">
-        {tabs.map((tab) => {
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[430px] border-t border-white/[0.06] bg-[#171817]/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+      <div className="grid h-16 grid-cols-5 px-2" dir="ltr">
+        {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const showBadge = tab.id === "favorites" && favoritesCount > 0;
 
           return (
             <button
               type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              aria-current={isActive ? 'page' : undefined}
+              aria-current={isActive ? "page" : undefined}
               aria-label={tab.label}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
-                isActive
-                  ? 'text-emerald-400 font-bold scale-105'
-                  : 'text-zinc-400 hover:text-zinc-200'
+              className={`relative grid place-items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c7a23c] ${
+                isActive ? "text-[#d1aa2d]" : "text-[#c8c8c4]"
               }`}
             >
-              {/* Highlight Ring for Leaf / AI tab */}
-              {tab.highlight ? (
-                <div
-                  className={`p-2 rounded-full transition-all ${
-                    isActive
-                      ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/30'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              <span className="relative">
+                <Icon
+                  className={`h-[22px] w-[22px] ${
+                    isActive ? "stroke-[2.1]" : "stroke-[1.75]"
                   }`}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-              ) : (
-                <div className="relative">
-                  <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
-                  {tab.badge && tab.badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white font-bold text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                      {tab.badge}
-                    </span>
-                  ) : null}
-                </div>
-              )}
+                />
 
-              <span className={`text-[10px] mt-1 ${isActive ? 'text-emerald-400' : 'text-zinc-400'}`}>
-                {tab.label}
+                {showBadge ? (
+                  <span className="absolute -right-2.5 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-[#c7a23c] px-1 text-[9px] font-black text-black">
+                    {toPersianDigits(favoritesCount)}
+                  </span>
+                ) : null}
               </span>
 
-              {isActive && !tab.highlight && (
-                <span className="absolute bottom-0 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-              )}
+              {isActive ? (
+                <span className="absolute bottom-1.5 h-1 w-1 rounded-full bg-[#d1aa2d]" />
+              ) : null}
             </button>
           );
         })}
       </div>
     </nav>
   );
-};
+}

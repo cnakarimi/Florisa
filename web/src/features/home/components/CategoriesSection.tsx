@@ -1,6 +1,6 @@
-import type { CatalogCategory } from "@/features/catalog/types";
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
+import type { CatalogCategory } from "@/features/catalog/types";
 
 interface CategoriesSectionProps {
   categories: CatalogCategory[];
@@ -20,16 +20,20 @@ export function CategoriesSection({
   onRetry,
 }: CategoriesSectionProps) {
   return (
-    <section className="my-8">
-      <div className="mb-5 flex items-center justify-between px-1">
-        <h3 className="flex items-center gap-2 text-xl font-bold tracking-tight text-white">
-          <span>دسته‌بندی</span>
-        </h3>
+    <section className="px-5 py-6" aria-labelledby="categories-title">
+      <div className="mb-5 flex items-center justify-between">
+        <h2
+          id="categories-title"
+          className="text-lg font-extrabold text-[#dedbd5]"
+        >
+          دسته بندی
+        </h2>
+
         {selectedCategory ? (
           <button
             type="button"
             onClick={() => onSelectCategory(null)}
-            className="text-xs text-amber-400 hover:underline"
+            className="text-[11px] font-medium text-[#c5a33d]"
           >
             نمایش همه
           </button>
@@ -56,7 +60,7 @@ export function CategoriesSection({
           compact
         />
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-7">
           {categories.map((category) => {
             const isSelected = selectedCategory === category.slug;
 
@@ -67,31 +71,28 @@ export function CategoriesSection({
                 onClick={() =>
                   onSelectCategory(isSelected ? null : category.slug)
                 }
-                className="group flex flex-col items-center transition-all focus:outline-none"
+                aria-pressed={isSelected}
+                className="group flex min-w-0 flex-col items-center focus-visible:outline-none"
               >
-                <div
-                  className={`relative h-28 w-28 rounded-full p-1 transition-all duration-300 sm:h-32 sm:w-32 ${
+                <span
+                  className={`relative aspect-square w-full max-w-[138px] overflow-hidden rounded-full border bg-[#151715] transition duration-300 ${
                     isSelected
-                      ? "scale-105 border-2 border-amber-400 shadow-[0_0_20px_rgba(229,193,88,0.4)]"
-                      : "border border-amber-500/40 hover:scale-105 hover:border-amber-400/80"
+                      ? "scale-[1.03] border-[#e1bd4d] shadow-[0_0_0_3px_rgba(199,162,60,0.13)]"
+                      : "border-[#9a7d2d] group-active:scale-[0.98]"
                   }`}
                 >
-                  <div className="relative h-full w-full overflow-hidden rounded-full bg-[#181920]">
-                    <CatalogImage
-                      src={category.image}
-                      alt={category.name}
-                      sizes="(max-width: 640px) 112px, 128px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-                  </div>
-                </div>
+                  <CatalogImage
+                    src={category.image}
+                    alt={category.name}
+                    sizes="138px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                </span>
 
                 <span
-                  className={`mt-3 text-sm font-semibold transition-colors sm:text-base ${
-                    isSelected
-                      ? "text-amber-300"
-                      : "text-zinc-200 group-hover:text-amber-200"
+                  className={`mt-3 text-sm font-bold transition-colors ${
+                    isSelected ? "text-[#e1bd4d]" : "text-[#ddd9d2]"
                   }`}
                 >
                   {category.name}

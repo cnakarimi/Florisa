@@ -5,6 +5,8 @@ import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
+from config.environment import load_demo_otp_config
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -211,6 +213,10 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "accounts.exceptions.persian_exception_handler",
 }
 
+DEFAULT_EXCEPTION_REPORTER_FILTER = (
+    "config.exception_filters.FlorisaExceptionReporterFilter"
+)
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Florisa API",
     "DESCRIPTION": "Florisa Backend API",
@@ -349,3 +355,9 @@ OTP_DELIVERY_BACKEND = os.getenv(
     "OTP_DELIVERY_BACKEND",
     "console" if DEBUG else "sms",
 ).strip().lower()
+
+demo_otp_config = load_demo_otp_config(os.environ)
+DEMO_OTP_ENABLED = demo_otp_config.enabled
+DEMO_OTP_ONLY = demo_otp_config.only
+DEMO_OTP_PHONE = demo_otp_config.phone
+DEMO_OTP_CODE = demo_otp_config.code

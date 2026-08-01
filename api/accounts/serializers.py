@@ -3,6 +3,8 @@ from rest_framework import serializers
 from accounts.models import User
 from accounts.utils import (
     IRANIAN_MOBILE_PATTERN,
+    OTP_CODE_LENGTH,
+    is_valid_otp_code,
     normalize_otp_code,
     normalize_phone,
 )
@@ -29,8 +31,8 @@ class PhoneSerializer(serializers.Serializer):
 
 class VerifyOTPSerializer(PhoneSerializer):
     code = serializers.CharField(
-        min_length=5,
-        max_length=5,
+        min_length=OTP_CODE_LENGTH,
+        max_length=OTP_CODE_LENGTH,
         trim_whitespace=True,
         error_messages={
             "blank": "کد تأیید الزامی است.",
@@ -42,7 +44,7 @@ class VerifyOTPSerializer(PhoneSerializer):
 
     def validate_code(self, value: str) -> str:
         normalized = normalize_otp_code(value)
-        if len(normalized) != 5 or not normalized.isascii() or not normalized.isdigit():
+        if not is_valid_otp_code(normalized):
             raise serializers.ValidationError("کد تأیید باید پنج رقمی باشد.")
         return normalized
 

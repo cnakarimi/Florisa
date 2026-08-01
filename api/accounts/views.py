@@ -1,4 +1,5 @@
 from django.contrib.auth import login, logout
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -18,7 +19,12 @@ from accounts.serializers import (
     UserSerializer,
     VerifyOTPSerializer,
 )
-from accounts.services.otp import OTPError, create_otp, verify_otp
+from accounts.services.otp import (
+    OTPDemoAccountError,
+    OTPError,
+    create_otp,
+    verify_otp,
+)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -50,7 +56,13 @@ class RequestOTPView(APIView):
     def post(self, request: Request) -> Response:
         serializer = PhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        create_otp(serializer.validated_data["phone"])
+        try:
+            create_otp(serializer.validated_data["phone"])
+        except OTPError as error:
+            return Response(
+                {"detail": error.message},
+                status=error.status_code,
+            )
         return Response(
             {"detail": "کد تأیید ارسال شد."},
             status=status.HTTP_200_OK,
@@ -78,22 +90,38 @@ class VerifyOTPView(APIView):
         phone = serializer.validated_data["phone"]
 
         try:
-            verify_otp(phone, serializer.validated_data["code"])
+            otp_request = verify_otp(
+                phone,
+                serializer.validated_data["code"],
+            )
         except OTPError as error:
             return Response(
                 {"detail": error.message},
                 status=error.status_code,
             )
 
-        try:
-            user = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            user = User.objects.create_user(phone=phone)
-        login(
-            request,
-            user,
-            backend="django.contrib.auth.backends.ModelBackend",
-        )
+        with transaction.atomic():
+            try:
+                user = User.objects.select_for_update().get(phone=phone)
+            except User.DoesNotExist:
+                user = User.objects.create_user(
+                    phone=phone,
+                    is_staff=False,
+                    is_superuser=False,
+                )
+
+            if otp_request.is_demo and (user.is_staff or user.is_superuser):
+                error = OTPDemoAccountError()
+                return Response(
+                    {"detail": error.message},
+                    status=error.status_code,
+                )
+
+            login(
+                request,
+                user,
+                backend="django.contrib.auth.backends.ModelBackend",
+            )
         return Response(
             {"user": UserSerializer(user).data},
             status=status.HTTP_200_OK,

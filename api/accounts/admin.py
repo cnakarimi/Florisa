@@ -59,11 +59,12 @@ class OTPRequestAdmin(admin.ModelAdmin):
     list_display = (
         "phone",
         "status_label",
+        "is_demo",
         "attempts",
         "expires_at",
         "created_at",
     )
-    list_filter = ("is_used", "created_at", "expires_at")
+    list_filter = ("is_demo", "is_used", "created_at", "expires_at")
     search_fields = ("phone",)
     readonly_fields = (
         "phone",
@@ -71,6 +72,7 @@ class OTPRequestAdmin(admin.ModelAdmin):
         "expires_at",
         "attempts",
         "is_used",
+        "is_demo",
         "created_at",
     )
     fields = readonly_fields

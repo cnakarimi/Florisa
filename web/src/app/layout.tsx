@@ -13,8 +13,8 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "گیاهان خانگی | برگ و گلدان",
-  description: "فروشگاه تخصصی گیاهان خانگی، گل‌ها و گلدان‌های آپارتمانی",
+  title: "فلوریسا | گل و گیاه برای لحظه‌های شما",
+  description: "خرید آنلاین گل، گیاهان خانگی و هدیه‌های سبز از فلوریسا",
 };
 
 export const viewport: Viewport = {

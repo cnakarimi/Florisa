@@ -1,9 +1,12 @@
-import { useState, type MouseEvent } from "react";
-import { Check, Heart, PackageX } from "lucide-react";
+"use client";
+
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { Check, Heart, PackageX, ShoppingBag } from "lucide-react";
+
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { formatToman, toPersianDigits } from "../utils/persian";
+import { formatToman } from "../utils/persian";
 
 interface ProductCardProps {
   product: CatalogProduct;
@@ -20,136 +23,169 @@ export function ProductCard({
   onAddToCart,
   onSelectProduct,
 }: ProductCardProps) {
-  const [addedAnimation, setAddedAnimation] = useState(false);
-  const productTags = [product.flower_type, product.color].filter(Boolean);
-  const canAddToCart =
+  const [isAdded, setIsAdded] = useState(false);
+  const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isAvailable =
     product.is_in_stock &&
     product.stock_bundles >= product.minimum_order_bundles;
 
-  const handleAddToCartClick = (event: MouseEvent) => {
+  const visibleTag = product.flower_type || product.color;
+
+  useEffect(() => {
+    return () => {
+      if (animationTimer.current) {
+        clearTimeout(animationTimer.current);
+      }
+    };
+  }, []);
+
+  const handleAddToCart = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    if (!canAddToCart) {
-      return;
-    }
+
+    if (!isAvailable) return;
 
     onAddToCart(product);
-    setAddedAnimation(true);
-    window.setTimeout(() => setAddedAnimation(false), 1500);
+    setIsAdded(true);
+
+    if (animationTimer.current) {
+      clearTimeout(animationTimer.current);
+    }
+
+    animationTimer.current = setTimeout(() => {
+      setIsAdded(false);
+    }, 1400);
   };
 
-  const handleFavoriteClick = (event: MouseEvent) => {
+  const handleToggleFavorite = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onToggleFavorite(product);
   };
 
   return (
     <article
-      onClick={() => onSelectProduct(product)}
-      className="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#181a22] transition-all duration-300 hover:border-emerald-500/40 hover:shadow-xl hover:shadow-black/50"
+      dir="rtl"
+      className="group relative min-w-0 overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#181a18] shadow-[0_14px_40px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-[#c7a23c]/20 hover:shadow-[0_18px_50px_rgba(0,0,0,0.34)]"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-[#121319]">
-        <CatalogImage
-          src={getProductImageUrl(product.cover_image)}
-          alt={product.name}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
-        />
-
+      {/* بخش تصویر */}
+      <div className="relative p-1.5 pb-0">
         <button
           type="button"
-          onClick={handleFavoriteClick}
-          className={`absolute left-3 top-3 z-10 rounded-full border p-2 backdrop-blur-md transition-all ${
+          onClick={() => onSelectProduct(product)}
+          className="relative block aspect-[4/4.7] w-full overflow-hidden rounded-[17px] bg-[#0e110f] text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
+          aria-label={`مشاهده محصول ${product.name}`}
+        >
+          <CatalogImage
+            src={getProductImageUrl(product.cover_image)}
+            alt={product.name}
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 280px"
+            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.055]"
+          />
+
+          <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
+
+          {visibleTag ? (
+            <span className="absolute bottom-2 right-2 max-w-[calc(100%-1rem)] truncate rounded-full border border-white/10 bg-[#161916]/75 px-2.5 py-1 text-[9px] font-medium text-white/80 backdrop-blur-md sm:text-[10px]">
+              {visibleTag}
+            </span>
+          ) : null}
+        </button>
+
+        {/* علاقه‌مندی */}
+        <button
+          type="button"
+          onClick={handleToggleFavorite}
+          aria-pressed={isFavorite}
+          aria-label={
             isFavorite
-              ? "border-rose-500/40 bg-rose-500/20 text-rose-400"
-              : "border-white/10 bg-black/40 text-zinc-400 hover:text-white"
+              ? `حذف ${product.name} از علاقه‌مندی‌ها`
+              : `افزودن ${product.name} به علاقه‌مندی‌ها`
+          }
+          className={`absolute left-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full border shadow-lg backdrop-blur-md transition duration-200 active:scale-90 sm:h-9 sm:w-9 ${
+            isFavorite
+              ? "border-rose-300/30 bg-rose-500/20 text-rose-300"
+              : "border-white/15 bg-black/35 text-white/85 hover:bg-black/55"
           }`}
-          title="افزودن به علاقه‌مندی‌ها"
-          aria-label="افزودن به علاقه‌مندی‌ها"
         >
           <Heart
-            className={`h-4 w-4 ${
-              isFavorite ? "fill-rose-500 text-rose-500" : ""
+            className={`h-4 w-4 transition-transform ${
+              isFavorite ? "scale-105 fill-current" : ""
             }`}
           />
         </button>
-
-        {product.is_featured ? (
-          <span className="absolute right-3 top-3 z-10 rounded-full border border-amber-300/40 bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-black">
-            ویژه
-          </span>
-        ) : null}
-
-        <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1">
-          <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
-            {productTags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-[#12131a]/85 px-2.5 py-1 text-[10px] text-zinc-200 backdrop-blur-md sm:text-[11px]"
-              >
-                <Check className="h-3 w-3 stroke-[2.5] text-emerald-400" />
-                <span>{tag}</span>
-              </span>
-            ))}
-          </div>
-
-          <span
-            className={`rounded-full border bg-[#12131a]/85 px-2 py-1 text-[10px] backdrop-blur-md ${
-              product.is_in_stock
-                ? "border-emerald-500/30 text-emerald-300"
-                : "border-rose-500/30 text-rose-300"
-            }`}
-          >
-            {product.is_in_stock ? "موجود" : "ناموجود"}
-          </span>
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between p-4">
-        <div>
-          <h4 className="mb-1 text-sm font-bold leading-tight text-white transition-colors group-hover:text-emerald-400 sm:text-base">
+      {/* اطلاعات محصول */}
+      <div className="px-3 pb-3 pt-3 sm:px-3.5 sm:pb-3.5">
+        <button
+          type="button"
+          onClick={() => onSelectProduct(product)}
+          className="block w-full text-right focus-visible:outline-none"
+        >
+          <h3 className="truncate text-[13px] font-extrabold leading-6 text-[#efede8] sm:text-sm">
             {product.name}
-          </h4>
-          <p className="mb-3 text-xs font-light text-zinc-400">
-            {toPersianDigits(product.stems_per_bundle)} شاخه در هر دسته
-          </p>
-        </div>
+          </h3>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
-          <div className="flex flex-col">
-            <span className="text-xs font-extrabold text-white sm:text-sm">
+          <p className="mt-0.5 truncate text-[10px] text-[#898d87] sm:text-[11px]">
+            {product.category.name}
+          </p>
+        </button>
+
+        <div className="my-3 h-px bg-gradient-to-l from-white/10 via-white/[0.05] to-transparent" />
+
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="block truncate text-xs font-black text-[#e2c86f] sm:text-sm">
               {formatToman(product.price_per_bundle)}
             </span>
-            <span className="text-[10px] text-zinc-500">هر دسته</span>
+
+            <span className="mt-0.5 block text-[8px] text-white/35 sm:text-[9px]">
+              هر دسته
+            </span>
           </div>
 
           <button
             type="button"
-            onClick={handleAddToCartClick}
-            disabled={!canAddToCart}
-            className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[11px] font-medium transition-all sm:text-xs ${
-              !canAddToCart
-                ? "cursor-not-allowed border-white/5 bg-[#1a1b22] text-zinc-600"
-                : addedAnimation
-                  ? "border-emerald-500 bg-emerald-600 text-white"
-                  : "border-white/10 bg-[#222430] text-zinc-200 hover:border-emerald-500/50 hover:bg-emerald-600/30 hover:text-white"
+            onClick={handleAddToCart}
+            disabled={!isAvailable}
+            aria-label={
+              isAvailable
+                ? `افزودن ${product.name} به سبد خرید`
+                : `${product.name} ناموجود است`
+            }
+            className={`inline-flex h-9 shrink-0 items-center justify-center overflow-hidden rounded-xl px-2.5 text-[10px] font-bold transition-all duration-300 active:scale-95 sm:h-10 sm:px-3 sm:text-[11px] ${
+              !isAvailable
+                ? "cursor-not-allowed bg-white/[0.05] text-white/30"
+                : isAdded
+                  ? "bg-[#d3b555] text-[#171811]"
+                  : "bg-[#213b2e] text-[#b7d7c1] hover:bg-[#2b4c3a]"
             }`}
           >
-            {!canAddToCart ? (
+            {!isAvailable ? (
               <>
-                <PackageX className="h-3.5 w-3.5" />
+                <PackageX className="ml-1 h-3.5 w-3.5" />
                 <span>ناموجود</span>
               </>
-            ) : addedAnimation ? (
+            ) : isAdded ? (
               <>
-                <Check className="h-3.5 w-3.5 text-white" />
+                <Check className="ml-1 h-3.5 w-3.5" />
                 <span>اضافه شد</span>
               </>
             ) : (
-              <span>اضافه به سبد خرید</span>
+              <>
+                <ShoppingBag className="ml-1 h-3.5 w-3.5" />
+                <span>افزودن</span>
+              </>
             )}
           </button>
         </div>
       </div>
+
+      {/* امضای بصری کارت */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-6 h-[2px] w-10 rounded-full bg-[#c7a23c]/70 shadow-[0_0_12px_rgba(199,162,60,0.4)]"
+      />
     </article>
   );
 }

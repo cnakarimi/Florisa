@@ -5,11 +5,14 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
+from django.views.decorators.debug import sensitive_variables
 
-from accounts.models import OTPRequest
+from accounts.models import OTPRequest, User
 from accounts.services.providers import send_otp
 from accounts.utils import (
+    OTP_CODE_LENGTH,
     normalize_otp_code,
     normalize_phone,
     validate_iranian_phone,
@@ -42,35 +45,62 @@ class OTPAttemptLimitError(OTPError):
     status_code = 429
 
 
+class OTPDemoOnlyError(OTPError):
+    message = "این نسخه نمایشی است و در حال حاضر فقط شماره نمایشی پشتیبانی می‌شود."
+
+
+class OTPDemoAccountError(OTPError):
+    message = "ورود نمایشی برای این حساب مجاز نیست."
+    status_code = 403
+
+
 @dataclass(frozen=True)
 class CreatedOTP:
     request: OTPRequest
-    code: str
 
 
 def generate_otp() -> str:
-    return f"{secrets.randbelow(100_000):05d}"
+    upper_bound = 10**OTP_CODE_LENGTH
+    return f"{secrets.randbelow(upper_bound):0{OTP_CODE_LENGTH}d}"
 
 
+def _is_privileged_user(phone: str) -> bool:
+    return User.objects.filter(phone=phone).filter(
+        Q(is_staff=True) | Q(is_superuser=True),
+    ).exists()
+
+
+@sensitive_variables()
 @transaction.atomic
 def create_otp(phone: str) -> CreatedOTP:
     normalized_phone = normalize_phone(phone)
     validate_iranian_phone(normalized_phone)
+    is_demo = (
+        settings.DEMO_OTP_ENABLED
+        and normalized_phone == settings.DEMO_OTP_PHONE
+    )
+
+    if settings.DEMO_OTP_ENABLED and settings.DEMO_OTP_ONLY and not is_demo:
+        raise OTPDemoOnlyError
+    if is_demo and _is_privileged_user(normalized_phone):
+        raise OTPDemoAccountError
 
     OTPRequest.objects.filter(
         phone=normalized_phone,
         is_used=False,
     ).update(is_used=True)
 
-    code = generate_otp()
+    code = settings.DEMO_OTP_CODE if is_demo else generate_otp()
     otp_request = OTPRequest.objects.create(
         phone=normalized_phone,
         code_hash=make_password(code),
         expires_at=timezone.now()
         + timedelta(seconds=settings.OTP_EXPIRATION_SECONDS),
+        is_demo=is_demo,
     )
-    send_otp(normalized_phone, code)
-    return CreatedOTP(request=otp_request, code=code)
+    if not is_demo:
+        send_otp(normalized_phone, code)
+    return CreatedOTP(request=otp_request)
 
 
 def verify_otp(phone: str, code: str) -> OTPRequest:

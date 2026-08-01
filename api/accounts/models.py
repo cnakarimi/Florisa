@@ -62,6 +62,11 @@ class OTPRequest(models.Model):
     expires_at = models.DateTimeField("زمان انقضا")
     attempts = models.PositiveSmallIntegerField("تعداد تلاش", default=0)
     is_used = models.BooleanField("استفاده شده", default=False)
+    is_demo = models.BooleanField(
+        "درخواست نمایشی",
+        default=False,
+        editable=False,
+    )
     created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
 
     class Meta:

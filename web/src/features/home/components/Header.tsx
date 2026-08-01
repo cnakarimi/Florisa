@@ -1,6 +1,6 @@
-import React from 'react';
-import { ShoppingBag, Heart, Search, Leaf } from 'lucide-react';
-import { toPersianDigits } from '../utils/persian';
+import React from "react";
+import { ShoppingBag, Heart, Search, Leaf } from "lucide-react";
+import { toPersianDigits } from "../utils/persian";
 
 interface HeaderProps {
   cartCount: number;
@@ -30,12 +30,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="font-bold text-lg text-white flex items-center gap-1.5 leading-tight">
-              برگ و گلدان
+              فلوریسا
               <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-medium">
                 ویترین آنلاین
               </span>
             </h1>
-            <p className="text-[11px] text-zinc-400">فروشگاه تخصصی گیاهان خانگی</p>
+            <p className="text-[11px] text-zinc-400">
+              گل و گیاه برای لحظه‌های شما
+            </p>
           </div>
         </div>
 

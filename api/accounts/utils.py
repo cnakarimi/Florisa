@@ -7,6 +7,7 @@ PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹"
 ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩"
 ASCII_DIGITS = "0123456789"
 IRANIAN_MOBILE_PATTERN = re.compile(r"^09\d{9}$")
+OTP_CODE_LENGTH = 5
 
 _DIGIT_TRANSLATION = str.maketrans(
     PERSIAN_DIGITS + ARABIC_DIGITS,
@@ -39,3 +40,12 @@ def validate_iranian_phone(value: object) -> None:
 
 def normalize_otp_code(value: object) -> str:
     return normalize_digits(value).strip()
+
+
+def is_valid_otp_code(value: object) -> bool:
+    code = normalize_otp_code(value)
+    return (
+        len(code) == OTP_CODE_LENGTH
+        and code.isascii()
+        and code.isdigit()
+    )

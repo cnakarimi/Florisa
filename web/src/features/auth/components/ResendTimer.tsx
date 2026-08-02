@@ -49,16 +49,16 @@ export function ResendTimer({
   const formattedTime = `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(timeLeft % 60).padStart(2, "0")}`;
 
   return (
-    <div className="flex min-h-[68px] flex-col items-center gap-3">
+    <div className="flex min-h-[58px] flex-col items-center gap-2.5">
       <div
-        className="numeric-ltr flex h-5 items-center gap-2 text-[#c3c7c5]"
+        className="numeric-ltr flex h-5 items-center gap-2 text-white/40"
         dir="ltr"
         aria-live="polite"
       >
         {timeLeft > 0 ? (
           <>
-            <Clock className="size-4 text-[#8d9290]" aria-hidden="true" />
-            <span className="font-mono text-sm font-semibold tabular-nums">
+            <Clock className="size-3.5 text-white/30" aria-hidden="true" />
+            <span className="text-sm font-semibold tabular-nums">
               {toPersianDigits(formattedTime)}
             </span>
           </>
@@ -69,7 +69,7 @@ export function ResendTimer({
         onClick={handleResend}
         disabled={timeLeft > 0 || isResending || disabled}
         aria-busy={isResending}
-        className="h-5 cursor-pointer text-sm font-semibold text-[#e9c349] transition-opacity hover:underline disabled:cursor-not-allowed disabled:text-[#8d9290] disabled:opacity-50 disabled:no-underline"
+        className="h-5 cursor-pointer text-xs font-bold text-[#D4AF37] transition hover:text-[#E3C45D] disabled:cursor-not-allowed disabled:text-white/30 disabled:no-underline"
       >
         {isResending ? "در حال ارسال..." : "ارسال مجدد کد"}
       </button>

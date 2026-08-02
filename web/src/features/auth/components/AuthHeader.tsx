@@ -1,4 +1,5 @@
-import { ArrowRight, Leaf } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 
 interface AuthHeaderProps {
   title?: string;
@@ -8,32 +9,48 @@ interface AuthHeaderProps {
 export function AuthHeader({ title, onBack }: AuthHeaderProps) {
   if (title && onBack) {
     return (
-      <header className="relative z-10 mb-8 grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex size-10 cursor-pointer items-center justify-center rounded-full bg-[#20201f] text-[#e5e2e1] transition-[background-color,transform] hover:bg-[#353535] active:scale-95"
-          aria-label="بازگشت"
-        >
-          <ArrowRight className="size-5" aria-hidden="true" />
-        </button>
-        <h1 className="truncate text-center text-xl font-semibold text-[#e5e2e1]">
+      <header className="relative z-10 mb-7">
+        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-white/70 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] active:scale-95"
+            aria-label="بازگشت"
+          >
+            <ArrowRight className="size-5" aria-hidden="true" />
+          </button>
+
+          <Image
+            src="/images/brand/florisa-logo.svg"
+            alt="فلوریسا"
+            width={116}
+            height={42}
+            priority
+            className="mx-auto h-10 w-auto object-contain"
+          />
+          <div className="size-10" aria-hidden="true" />
+        </div>
+
+        <h1 className="mt-4 text-center text-sm font-bold text-white/55">
           {title}
         </h1>
-        <div className="size-10" aria-hidden="true" />
       </header>
     );
   }
 
   return (
-    <header className="relative z-10 mb-8 flex items-center gap-2">
-      <div className="flex size-9 items-center justify-center rounded-full border border-[#434846] bg-[#20201f] text-[#e9c349]">
-        <Leaf className="size-5" aria-hidden="true" />
-      </div>
-      <span className="text-lg font-bold tracking-tight text-[#e5e2e1]">
-        برگ سبز
-      </span>
+    <header className="relative z-10 mb-8 flex flex-col items-center text-center">
+      <Image
+        src="/images/brand/florisa-logo.svg"
+        alt="فلوریسا"
+        width={164}
+        height={60}
+        priority
+        className="h-14 w-auto object-contain"
+      />
+      <p className="mt-2 text-[10px] font-medium tracking-[0.16em] text-white/35">
+        زندگی را سبزتر کن
+      </p>
     </header>
   );
 }
-

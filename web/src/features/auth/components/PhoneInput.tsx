@@ -1,10 +1,7 @@
 import type { ChangeEvent } from "react";
-import { Phone } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { cn } from "@/lib/cn";
-import {
-  normalizeDigits,
-  toPersianDigits,
-} from "@/features/auth/utils/digits";
+import { normalizeDigits, toPersianDigits } from "@/features/auth/utils/digits";
 
 interface PhoneInputProps {
   value: string;
@@ -26,10 +23,10 @@ export function PhoneInput({
 
   return (
     <div className="numeric-ltr relative flex items-center" dir="ltr">
-      <div className="pointer-events-none absolute left-3 flex items-center gap-1 text-xs text-[#8d9290]">
-        <Phone className="size-4" aria-hidden="true" />
-        <span>+۹۸</span>
-      </div>
+      <Smartphone
+        className="pointer-events-none absolute right-4 size-[18px] text-white/30"
+        aria-hidden="true"
+      />
       <input
         id="phone"
         type="tel"
@@ -37,15 +34,15 @@ export function PhoneInput({
         autoComplete="tel-national"
         value={toPersianDigits(value)}
         onChange={handleChange}
-        placeholder="۰۹۱۲۱۲۳۴۵۶۷"
+        placeholder="۰۹۰۰۰۰۰۰۰۰۰"
         disabled={disabled}
         aria-invalid={hasError}
         aria-describedby={hasError ? "phone-error" : undefined}
         className={cn(
-          "h-[52px] w-full rounded-xl border bg-[#20201f] pl-16 pr-4 text-left font-mono text-base text-[#e5e2e1] outline-none transition-colors placeholder:text-[#686d6b] focus:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60",
+          "h-14 w-full rounded-2xl border bg-white/[0.035] pl-4 pr-12 text-left font-mono text-base tracking-[0.08em] text-[#F2F0EA] outline-none transition-[border-color,background-color,box-shadow] placeholder:text-white/20 focus:bg-white/[0.055] disabled:cursor-not-allowed disabled:opacity-60",
           hasError
-            ? "border-[#ffb4ab] focus:border-[#ffb4ab]"
-            : "border-[#434846] focus:border-[#e9c349]",
+            ? "border-[#FF8A80]/70 focus:border-[#FF8A80] focus:ring-4 focus:ring-[#FF8A80]/[0.06]"
+            : "border-white/[0.09] hover:border-white/[0.14] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/[0.07]",
         )}
         dir="ltr"
         autoFocus

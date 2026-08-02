@@ -6,6 +6,11 @@ import { Check, Heart, PackageX, ShoppingBag } from "lucide-react";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
+import {
+  getPriceUnitLabel,
+  getProductColor,
+  getProductIdentity,
+} from "@/features/catalog/utils/product";
 import { formatToman } from "../utils/persian";
 
 interface ProductCardProps {
@@ -28,25 +33,16 @@ export function ProductCard({
 
   const isAvailable =
     product.is_in_stock &&
-    product.stock_bundles >= product.minimum_order_bundles;
+    product.stock_quantity >= product.minimum_order_quantity;
 
-  const visibleTag = product.flower_type || product.color;
-  const isPlantProduct =
-    product.category.slug === "indoor-plants" ||
-    Boolean(
-      product.plant_size ||
-        product.plant_height_cm ||
-        product.quality_grade ||
-        product.light_requirement ||
-        product.care_difficulty,
-    );
-  const plantBadges = isPlantProduct
+  const visibleTag = getProductIdentity(product) || getProductColor(product);
+  const plantBadges = product.product_type === "plant" && product.details
     ? [
-        product.quality_grade_display
-          ? `کیفیت ${product.quality_grade_display}`
+        product.details.quality_grade_display
+          ? `کیفیت ${product.details.quality_grade_display}`
           : null,
-        product.care_difficulty === "easy" ? "نگهداری آسان" : null,
-        product.pot_included ? "گلدان همراه" : null,
+        product.details.care_difficulty === "easy" ? "نگهداری آسان" : null,
+        product.details.pot_included ? "گلدان همراه" : null,
       ].filter((badge): badge is string => Boolean(badge))
     : [];
 
@@ -168,11 +164,14 @@ export function ProductCard({
         <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
           <div className="min-w-0">
             <span className="mb-1 block text-[9px] font-medium text-white/35 sm:text-[10px]">
-              {isPlantProduct ? "قیمت" : "قیمت هر دسته"}
+              قیمت هر واحد فروش
             </span>
 
             <span className="block whitespace-nowrap text-[13px] font-black tracking-tight text-[#e2c86f] sm:text-[15px]">
-              {formatToman(product.price_per_bundle)}
+              {formatToman(product.price)}
+            </span>
+            <span className="mt-1 block text-[8px] text-white/35 sm:text-[9px]">
+              {getPriceUnitLabel(product)}
             </span>
           </div>
 

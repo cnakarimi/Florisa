@@ -28,6 +28,7 @@ export function ScrollNavbar({
   useEffect(() => {
     const updateVisibility = () => {
       animationFrame.current = null;
+
       const progress = Math.min(
         Math.max((window.scrollY - FADE_START) / FADE_DISTANCE, 0),
         1,
@@ -39,9 +40,7 @@ export function ScrollNavbar({
     };
 
     const handleScroll = () => {
-      if (animationFrame.current !== null) {
-        return;
-      }
+      if (animationFrame.current !== null) return;
 
       animationFrame.current = window.requestAnimationFrame(updateVisibility);
     };
@@ -72,11 +71,11 @@ export function ScrollNavbar({
       aria-hidden={!isInteractive}
     >
       <div
-        className="mx-auto flex h-[62px] items-center gap-2.5 rounded-[20px] border border-white/[0.09] bg-[#111512]/90 p-2 shadow-[0_16px_50px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:h-[68px] sm:gap-4 sm:rounded-[22px] sm:p-2.5"
+        className="mx-auto flex h-14 items-center gap-3 rounded-2xl border border-white/[0.07] bg-[#111512]/85 px-3 backdrop-blur-xl sm:h-16 sm:px-4"
         style={{
           opacity: visibility,
           pointerEvents: isInteractive ? "auto" : "none",
-          transform: `translateY(${(1 - visibility) * -18}px) scale(${0.985 + visibility * 0.015})`,
+          transform: `translateY(${(1 - visibility) * -14}px)`,
           transition:
             "opacity 120ms linear, transform 180ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
@@ -84,14 +83,14 @@ export function ScrollNavbar({
         <button
           type="button"
           onClick={onLogoClick}
-          className="group flex h-full w-[92px] shrink-0 items-center justify-center rounded-[14px] px-1.5 transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]/70 sm:w-[126px] sm:px-2"
+          className="flex w-[82px] shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]/60 sm:w-[108px]"
           aria-label="بازگشت به ابتدای صفحه فلوریسا"
           tabIndex={isInteractive ? 0 : -1}
         >
           <img
             src="/images/brand/florisa-logo.svg"
             alt="فلوریسا"
-            className="h-auto w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+            className="h-auto w-full object-contain"
           />
         </button>
 
@@ -106,7 +105,7 @@ export function ScrollNavbar({
 
           <Search
             aria-hidden="true"
-            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#91a296] sm:right-4 sm:h-[18px] sm:w-[18px]"
+            className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-white/35"
           />
 
           <input
@@ -118,17 +117,9 @@ export function ScrollNavbar({
             value={draftQuery}
             onChange={(event) => setDraftQuery(event.target.value)}
             placeholder="جست‌وجوی گل و گیاه..."
-            className="h-11 w-full rounded-[14px] border border-white/[0.08] bg-black/20 pr-10 pl-[70px] text-[11px] text-[#f0eee9] outline-none transition placeholder:text-white/35 hover:border-white/[0.13] focus:border-[#bfa34b]/45 focus:bg-black/30 focus:ring-4 focus:ring-[#bfa34b]/[0.06] sm:h-12 sm:rounded-[16px] sm:pr-12 sm:pl-24 sm:text-xs"
+            className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.035] pr-10 pl-3 text-xs text-[#f0eee9] outline-none transition placeholder:text-white/30 hover:border-white/[0.12] focus:border-[#c7a23c]/35 focus:bg-white/[0.05] sm:h-11"
             tabIndex={isInteractive ? 0 : -1}
           />
-
-          <button
-            type="submit"
-            className="absolute left-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center justify-center rounded-[10px] bg-[#c7a23c] px-3 text-[10px] font-extrabold text-[#18170f] shadow-[0_6px_18px_rgba(199,162,60,0.16)] transition hover:bg-[#d7b64b] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0d77e] sm:left-2 sm:h-9 sm:px-4 sm:text-[11px]"
-            tabIndex={isInteractive ? 0 : -1}
-          >
-            جست‌وجو
-          </button>
         </form>
       </div>
     </header>

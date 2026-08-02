@@ -68,10 +68,10 @@ export function FavoritesView({
                     {product.name}
                   </button>
                   <p className="mb-2 text-[11px] text-zinc-400">
-                    {toPersianDigits(product.stems_per_bundle)} شاخه در هر دسته
+                    {toPersianDigits(product.unit_size)} عدد در هر واحد فروش
                   </p>
                   <span className="block text-xs font-extrabold text-amber-400">
-                    {formatToman(product.price_per_bundle)}
+                    {formatToman(product.price)} / {product.sale_unit_display}
                   </span>
                 </div>
 
@@ -81,16 +81,16 @@ export function FavoritesView({
                     onClick={() => onAddToCart(product)}
                     disabled={
                       !product.is_in_stock ||
-                      product.stock_bundles <
-                        product.minimum_order_bundles
+                      product.stock_quantity <
+                        product.minimum_order_quantity
                     }
                     className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
                   >
                     <ShoppingBag className="h-3.5 w-3.5" />
                     <span>
                       {product.is_in_stock &&
-                      product.stock_bundles >=
-                        product.minimum_order_bundles
+                      product.stock_quantity >=
+                        product.minimum_order_quantity
                         ? "خرید"
                         : "ناموجود"}
                     </span>

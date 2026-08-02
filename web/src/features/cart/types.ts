@@ -1,4 +1,8 @@
 import type { CatalogProduct } from "@/features/catalog/types";
+import {
+  getProductColor,
+  getProductIdentity,
+} from "@/features/catalog/utils/product";
 
 export const CART_STORAGE_KEY = "florisa_cart_v1";
 export const CART_STORAGE_VERSION = 1;
@@ -42,12 +46,12 @@ export function productToCartSnapshot(
     slug: product.slug,
     name: product.name,
     cover_image: product.cover_image,
-    price_per_bundle: product.price_per_bundle,
-    stems_per_bundle: product.stems_per_bundle,
-    stock_bundles: product.stock_bundles,
-    minimum_order_bundles: product.minimum_order_bundles,
-    flower_type: product.flower_type,
-    color: product.color,
+    price_per_bundle: product.price,
+    stems_per_bundle: product.unit_size,
+    stock_bundles: product.stock_quantity,
+    minimum_order_bundles: product.minimum_order_quantity,
+    flower_type: getProductIdentity(product),
+    color: getProductColor(product),
     is_in_stock: product.is_in_stock,
     is_available: true,
   };

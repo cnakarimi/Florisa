@@ -2,7 +2,7 @@ from typing import Any
 
 
 CUT_FLOWERS_SLUG = "cut-flowers"
-CUT_FLOWERS_NAME = "گل شاخه‌بریده"
+CUT_FLOWERS_NAME = "گل شاخه‌ای"
 INDOOR_PLANTS_SLUG = "indoor-plants"
 INDOOR_PLANTS_NAME = "گیاهان آپارتمانی"
 INDOOR_PLANTS_DESCRIPTION = "انواع گیاهان طبیعی مناسب خانه و محل کار"
@@ -182,20 +182,67 @@ def ensure_indoor_plants_category(category_model: Any):
 
 
 def ensure_indoor_plant_products(product_model: Any, category: Any):
+    plant_details_model = product_model._meta.apps.get_model(
+        "products",
+        "PlantDetails",
+    )
+    size_map = {
+        "کوچک": "small",
+        "متوسط": "medium",
+        "بزرگ": "large",
+    }
     products = []
     for seed in INDOOR_PLANT_PRODUCTS:
+        plant_defaults = {
+            "plant_type": seed["flower_type"],
+            "color": seed["color"],
+            "plant_size": size_map.get(seed["plant_size"], seed["plant_size"]),
+            "approximate_height_cm": seed["plant_height_cm"],
+            "quality_grade": seed["quality_grade"],
+            "pet_friendly": seed["is_pet_friendly"],
+            "pot_included": seed["pot_included"],
+            "pot_material": seed["pot_material"],
+            "pot_color": seed["pot_color"],
+            "pot_size_cm": seed["pot_size_cm"],
+            "has_drainage": seed["pot_has_drainage"],
+            "light_requirement": "indirect",
+            "watering_requirement": "low",
+            "care_difficulty": seed["care_difficulty"],
+            "ideal_temperature_min": 16,
+            "ideal_temperature_max": 30,
+            "care_notes": "\n".join(
+                (
+                    seed["care_tips"],
+                    f"نیاز نوری: {seed['light_requirement']}",
+                    f"نیاز آبیاری: {seed['watering_requirement']}",
+                    f"دمای ایده‌آل: {seed['ideal_temperature']}",
+                )
+            ),
+            "shipping_notes": seed["delivery_notes"],
+        }
         defaults = {
-            **seed,
+            "name": seed["name"],
             "category": category,
-            "stems_per_bundle": 1,
-            "minimum_order_bundles": 1,
+            "product_type": "plant",
+            "short_description": seed["short_description"],
+            "description": seed["description"],
+            "price": seed["price_per_bundle"],
+            "stock_quantity": seed["stock_bundles"],
+            "sale_unit": "pot",
+            "unit_size": 1,
+            "minimum_order_quantity": 1,
             "cover_image": None,
             "is_active": True,
+            "is_featured": seed["is_featured"],
         }
-        slug = defaults.pop("slug")
+        slug = seed["slug"]
         product, _ = product_model.objects.get_or_create(
             slug=slug,
             defaults=defaults,
+        )
+        plant_details_model.objects.get_or_create(
+            product=product,
+            defaults=plant_defaults,
         )
         products.append(product)
     return products

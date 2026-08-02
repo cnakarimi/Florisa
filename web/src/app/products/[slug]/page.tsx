@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProductDetailExperience } from "@/features/catalog/components/ProductDetailExperience";
+import { ShopNavigationScrollNavbar } from "@/features/home/components/ShopNavigationScrollNavbar";
 
 export const metadata: Metadata = {
   title: "جزئیات محصول | فلوریسا",
@@ -12,5 +13,10 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  return <ProductDetailExperience slug={slug} />;
+  return (
+    <>
+      <ShopNavigationScrollNavbar />
+      <ProductDetailExperience slug={slug} />
+    </>
+  );
 }

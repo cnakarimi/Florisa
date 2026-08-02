@@ -14,14 +14,10 @@ interface WelcomeExperienceProps {
   flowToken: string | null;
 }
 
-export function WelcomeExperience({
-  flowToken,
-}: WelcomeExperienceProps) {
+export function WelcomeExperience({ flowToken }: WelcomeExperienceProps) {
   const router = useRouter();
   const auth = useAuth();
-  const [hasValidFlow] = useState(() =>
-    isRegistrationSuccessToken(flowToken),
-  );
+  const [hasValidFlow] = useState(() => isRegistrationSuccessToken(flowToken));
 
   useEffect(() => {
     if (auth.isInitializing || auth.initializationError) {

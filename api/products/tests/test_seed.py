@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from products.models import Category, Product
+from products.models import Category, PlantDetails, Product
 from products.seeding import (
     CUT_FLOWERS_NAME,
     CUT_FLOWERS_SLUG,
@@ -61,11 +61,11 @@ class InitialCategoryTests(TestCase):
             dict(
                 Product.objects.filter(
                     category__slug=INDOOR_PLANTS_SLUG,
-                ).values_list("slug", "price_per_bundle"),
+                ).values_list("slug", "price"),
             ),
             expected_prices,
         )
         self.assertEqual(
-            Product.objects.get(slug="fiddle-leaf-fig").quality_grade,
-            Product.QualityGrade.LUXURY,
+            Product.objects.get(slug="fiddle-leaf-fig").plant_details.quality_grade,
+            PlantDetails.QualityGrade.LUXURY,
         )

@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { AuthDemoHint } from "@/features/auth/components/AuthDemoHint";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
@@ -31,7 +32,9 @@ export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
   const {
     control,
     handleSubmit,
+    clearErrors,
     setError,
+    setValue,
     formState: { errors, isSubmitting, isValid },
   } = useForm<PhoneFormValues>({
     resolver: zodResolver(phoneFormSchema),
@@ -72,11 +75,7 @@ export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
     }
   };
 
-  if (
-    auth.isInitializing ||
-    auth.isAuthenticated ||
-    auth.initializationError
-  ) {
+  if (auth.isInitializing || auth.isAuthenticated || auth.initializationError) {
     return (
       <AuthStateScreen
         error={auth.initializationError}
@@ -89,28 +88,22 @@ export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
 
   return (
     <AuthShell>
-      <div className="relative z-10 flex flex-1 flex-col">
+      <div className="relative z-10 flex w-full min-h-0 flex-col">
         <AuthHeader />
-
-        <div className="mb-8 space-y-2 text-right">
-          <h1 className="text-2xl font-bold text-[#e5e2e1]">
-            ورود / ثبت‌نام
+        <div className="mb-4 space-y-1.5 text-center sm:mb-6 sm:space-y-2">
+          <h1 className="text-2xl font-black tracking-tight text-[#F2F0EA] sm:text-[28px]">
+            ورود یا ثبت‌نام
           </h1>
-          <p className="text-sm leading-relaxed text-[#c3c7c5]">
-            جهت احراز هویت و دسترسی به خدمات فروشگاه botanical، شماره همراه
-            خود را وارد نمایید.
-          </p>
         </div>
-
         <form
           onSubmit={handleSubmit(submitPhone)}
-          className="space-y-6"
+          className="space-y-3 sm:space-y-4"
           noValidate
         >
-          <div className="space-y-2">
+          <div className="space-y-2.5 mt-6">
             <label
               htmlFor="phone"
-              className="block text-right text-xs font-medium text-[#c3c7c5]"
+              className="block pr-1 text-right text-xs font-bold text-white/65"
             >
               شماره تلفن همراه
             </label>
@@ -126,7 +119,7 @@ export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
                 />
               )}
             />
-            <div className="min-h-5">
+            <div className="min-h-5 px-1">
               {errors.phone ? (
                 <InlineError
                   id="phone-error"
@@ -139,29 +132,39 @@ export function PhoneAuthForm({ nextPath = "/" }: PhoneAuthFormProps) {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-xl border border-[#434846]/50 bg-[#20201f]/70 p-3">
-            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#e9c349]" />
-            <p className="text-right text-xs leading-relaxed text-[#c3c7c5]">
-              کد یکبار مصرف ۵ رقمی از طریق پیامک برای این شماره ارسال خواهد
-              شد.
-            </p>
-          </div>
+          <AuthDemoHint
+            label="شماره موبایل دمو"
+            value="09000000000"
+            description="برای تست پروژه بدون پیامک واقعی، از این شماره استفاده کن."
+            disabled={isSubmitting}
+            onUse={() => {
+              setValue("phone", "09000000000", {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+              clearErrors("phone");
+            }}
+          />
 
           <PrimaryButton
             type="submit"
             isLoading={isSubmitting}
             disabled={!isValid}
+            className="mt-2 h-14 rounded-2xl bg-[#D4AF37] font-extrabold text-[#11130F] shadow-[0_12px_32px_rgba(212,175,55,0.14)] hover:bg-[#E3C45D]"
           >
-            {isSubmitting ? "در حال انتقال" : "دریافت کد تایید"}
+            {isSubmitting ? "در حال ارسال..." : "دریافت کد تأیید"}
             {!isSubmitting ? (
               <ArrowLeft className="size-5" aria-hidden="true" />
             ) : null}
           </PrimaryButton>
         </form>
-
-        <footer className="mt-auto border-t border-[#434846]/30 pt-6 text-center">
-          <p className="text-[11px] text-[#8d9290]">
-            با ورود به برگ سبز، قوانین و حریم خصوصی را می‌پذیرید.
+        <footer className="pt-4 text-center sm:pt-6">
+          <p className="inline-flex items-center justify-center gap-1.5 text-[10px] leading-5 text-white/30">
+            <LockKeyhole
+              className="size-3.5 text-[#D4AF37]/60"
+              aria-hidden="true"
+            />
+            با ورود به فلوریسا، قوانین و حریم خصوصی را می‌پذیری.
           </p>
         </footer>
       </div>

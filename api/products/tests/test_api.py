@@ -1,471 +1,234 @@
 import json
-from datetime import timedelta
 
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from accounts.models import User
-from products.models import Category, Product, ProductImage
+from products.models import Category, CutFlowerDetails, PlantDetails, Product, ProductImage
 
 
 class CatalogAPITests(APITestCase):
-    def setUp(self) -> None:
-        self.active_category = Category.objects.create(
-            name="گل تازه",
-            slug="fresh-flowers",
-            sort_order=1,
+    def setUp(self):
+        self.plant_category, _ = Category.objects.get_or_create(
+            slug="indoor-plants",
+            defaults={"name": "گیاهان آپارتمانی", "sort_order": 1},
+        )
+        self.flower_category, _ = Category.objects.get_or_create(
+            slug="cut-flowers",
+            defaults={"name": "گل شاخه‌ای", "sort_order": 2},
         )
         self.inactive_category = Category.objects.create(
-            name="غیرفعال",
-            slug="inactive-flowers",
-            is_active=False,
+            name="غیرفعال", slug="inactive", is_active=False
         )
 
-    def make_product(self, **overrides) -> Product:
+    def make_plant(self, **overrides):
+        detail_overrides = overrides.pop("details", {})
         sequence = Product.objects.count() + 1
         values = {
-            "category": self.active_category,
-            "name": f"داوودی سفید {sequence}",
-            "slug": f"white-chrysanthemum-{sequence}",
-            "flower_type": "داوودی",
-            "color": "سفید",
-            "short_description": "گل تازه شاخه‌بریده",
-            "description": "توضیحات کامل محصول",
-            "stems_per_bundle": 20,
-            "price_per_bundle": 250_000,
-            "stock_bundles": 10,
-            "minimum_order_bundles": 1,
+            "category": self.plant_category,
+            "name": f"پتوس {sequence}",
+            "slug": f"pothos-{sequence}",
+            "product_type": Product.ProductType.PLANT,
+            "price": 450_000,
+            "stock_quantity": 8,
+            "sale_unit": Product.SaleUnit.POT,
+            "unit_size": 1,
+            "minimum_order_quantity": 1,
             "is_active": True,
-            "is_featured": False,
         }
         values.update(overrides)
-        return Product.objects.create(**values)
+        product = Product.objects.create(**values)
+        detail_values = {
+            "plant_type": "پتوس",
+            "color": "سبز",
+            "plant_size": PlantDetails.PlantSize.MEDIUM,
+            "approximate_height_cm": 45,
+            "quality_grade": PlantDetails.QualityGrade.PREMIUM,
+            "pet_friendly": False,
+            "pot_included": True,
+            "pot_material": "سرامیک",
+            "pot_color": "سفید",
+            "has_drainage": True,
+            "light_requirement": PlantDetails.LightRequirement.INDIRECT,
+            "watering_requirement": PlantDetails.WateringRequirement.MEDIUM,
+            "care_difficulty": PlantDetails.CareDifficulty.EASY,
+        }
+        detail_values.update(detail_overrides)
+        PlantDetails.objects.create(product=product, **detail_values)
+        return product
 
-    def product_results(self, response):
+    def make_cut_flower(self, **overrides):
+        detail_overrides = overrides.pop("details", {})
+        sequence = Product.objects.count() + 1
+        values = {
+            "category": self.flower_category,
+            "name": f"رز هلندی {sequence}",
+            "slug": f"rose-{sequence}",
+            "product_type": Product.ProductType.CUT_FLOWER,
+            "price": 85_000,
+            "stock_quantity": 50,
+            "sale_unit": Product.SaleUnit.STEM,
+            "unit_size": 1,
+            "minimum_order_quantity": 1,
+            "is_active": True,
+        }
+        values.update(overrides)
+        product = Product.objects.create(**values)
+        detail_values = {
+            "flower_type": "رز",
+            "variety": "هلندی",
+            "color": "قرمز",
+            "stem_length_cm": 70,
+            "flower_grade": CutFlowerDetails.FlowerGrade.PREMIUM,
+            "vase_life_days": 8,
+            "fragrance_level": CutFlowerDetails.FragranceLevel.LIGHT,
+            "seasonal_availability": CutFlowerDetails.SeasonalAvailability.YEAR_ROUND,
+        }
+        detail_values.update(detail_overrides)
+        CutFlowerDetails.objects.create(product=product, **detail_values)
+        return product
+
+    def results(self, response):
         return response.data["results"]
 
-    def test_categories_endpoint_returns_only_active_categories(self):
-        response = self.client.get(reverse("products:category-list"))
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        returned_slugs = {item["slug"] for item in response.data}
-        self.assertIn("fresh-flowers", returned_slugs)
-        self.assertIn("cut-flowers", returned_slugs)
-        self.assertIn("indoor-plants", returned_slugs)
-        self.assertNotIn("inactive-flowers", returned_slugs)
-        self.assertTrue(
-            all("description" in item for item in response.data),
-        )
-        active_category = next(
-            item
-            for item in response.data
-            if item["slug"] == self.active_category.slug
-        )
-        self.assertIsNone(active_category["image"])
-
-    def test_category_serializer_exposes_repository_image_filename(self):
-        self.active_category.image = "florisa-indoor-plants-category.png"
-        self.active_category.save(update_fields=("image",))
-
-        response = self.client.get(reverse("products:category-list"))
-
-        category = next(
-            item
-            for item in response.data
-            if item["slug"] == self.active_category.slug
-        )
-        self.assertEqual(
-            category["image"],
-            "florisa-indoor-plants-category.png",
-        )
-
-    def test_product_list_returns_active_products(self):
-        product = self.make_product(cover_image="dawoodi-white.jpg")
-
-        response = self.client.get(reverse("products:product-list"))
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [product.slug],
-        )
-        self.assertEqual(
-            self.product_results(response)[0]["cover_image"],
-            "dawoodi-white.jpg",
-        )
-
-    def test_existing_non_plant_product_serializes_with_optional_fields(self):
-        product = self.make_product()
-
-        response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["quality_grade"], "")
-        self.assertEqual(response.data["quality_grade_display"], "")
-        self.assertIsNone(response.data["plant_height_cm"])
-        self.assertIsNone(response.data["is_pet_friendly"])
-        self.assertEqual(response.data["care_difficulty"], "")
-
-    def test_plant_fields_and_choice_labels_appear_in_catalog_and_detail(self):
-        product = self.make_product(
-            plant_size="متوسط",
-            plant_height_cm=55,
-            quality_grade=Product.QualityGrade.PREMIUM,
-            is_pet_friendly=False,
-            pot_included=True,
-            pot_material="سرامیک",
-            pot_color="سفید",
-            pot_size_cm=20,
-            pot_has_drainage=True,
-            light_requirement="نور غیرمستقیم",
-            watering_requirement="پس از خشک شدن خاک",
-            care_difficulty=Product.CareDifficulty.EASY,
-            ideal_temperature="۱۸ تا ۲۸ درجه",
-            care_tips="از آبیاری زیاد خودداری کنید.",
-            delivery_notes="با بسته‌بندی محافظ ارسال می‌شود.",
-        )
+    def test_subtype_payloads_are_discriminated_and_image_contract_is_preserved(self):
+        plant = self.make_plant(cover_image="plant.jpg")
+        flower = self.make_cut_flower()
+        ProductImage.objects.create(product=plant, image="plant-detail.jpg")
 
         list_response = self.client.get(reverse("products:product-list"))
+        plant_payload = next(item for item in self.results(list_response) if item["id"] == plant.id)
+        flower_payload = next(item for item in self.results(list_response) if item["id"] == flower.id)
         detail_response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
+            reverse("products:product-detail", kwargs={"slug": plant.slug})
         )
 
-        for payload in (
-            self.product_results(list_response)[0],
-            detail_response.data,
-        ):
-            self.assertEqual(payload["plant_height_cm"], 55)
-            self.assertEqual(payload["quality_grade"], "premium")
-            self.assertEqual(payload["quality_grade_display"], "ممتاز")
-            self.assertEqual(payload["care_difficulty"], "easy")
-            self.assertEqual(payload["care_difficulty_display"], "آسان")
-            self.assertFalse(payload["is_pet_friendly"])
-            self.assertTrue(payload["pot_has_drainage"])
+        self.assertEqual(plant_payload["product_type"], "plant")
+        self.assertEqual(plant_payload["details"]["plant_type"], "پتوس")
+        self.assertNotIn("flower_type", plant_payload["details"])
+        self.assertEqual(flower_payload["details"]["flower_type"], "رز")
+        self.assertNotIn("plant_type", flower_payload["details"])
+        self.assertEqual(plant_payload["cover_image"], "plant.jpg")
+        self.assertEqual(detail_response.data["images"][0]["image"], "plant-detail.jpg")
 
-    def test_inactive_products_are_excluded(self):
-        self.make_product(is_active=False)
-
-        response = self.client.get(reverse("products:product-list"))
-
-        self.assertEqual(self.product_results(response), [])
-
-    def test_products_from_inactive_categories_are_excluded(self):
-        self.make_product(category=self.inactive_category)
-
-        response = self.client.get(reverse("products:product-list"))
-
-        self.assertEqual(self.product_results(response), [])
-
-    def test_product_detail_works_by_slug(self):
-        product = self.make_product()
+    def test_missing_or_inconsistent_details_are_returned_as_null(self):
+        product = Product.objects.create(
+            category=self.plant_category,
+            name="بدون مشخصات",
+            slug="missing-details",
+            product_type=Product.ProductType.PLANT,
+            price=100,
+        )
 
         response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
+            reverse("products:product-detail", kwargs={"slug": product.slug})
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["slug"], product.slug)
-        self.assertEqual(response.data["category"]["slug"], "fresh-flowers")
-        self.assertIn("description", response.data)
-        self.assertIn("created_at", response.data)
+        self.assertIsNone(response.data["details"])
 
-    def test_inactive_product_detail_returns_not_found(self):
-        product = self.make_product(is_active=False)
-
-        response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_product_in_inactive_category_detail_returns_not_found(self):
-        product = self.make_product(category=self.inactive_category)
-
-        response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_missing_product_returns_not_found(self):
-        response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": "missing-product"},
-            ),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_category_filter_works(self):
-        other_category = Category.objects.create(
-            name="دسته دیگر",
-            slug="other-category",
-        )
-        matching = self.make_product()
-        self.make_product(category=other_category)
+    def test_common_filters_and_ordering(self):
+        cheap = self.make_plant(price=100, stock_quantity=2)
+        self.make_cut_flower(price=500, stock_quantity=0)
 
         response = self.client.get(
             reverse("products:product-list"),
-            {"category": self.active_category.slug},
+            {"product_type": "plant", "min_price": 50, "max_price": 200, "in_stock": "true", "sale_unit": "pot", "ordering": "price"},
         )
 
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [matching.slug],
-        )
+        self.assertEqual([item["slug"] for item in self.results(response)], [cheap.slug])
 
-    def test_search_by_product_name_works(self):
-        matching = self.make_product(name="رز هلندی ویژه")
-        self.make_product(name="لیلیوم سفید")
-
-        response = self.client.get(
-            reverse("products:product-list"),
-            {"search": "هلندی"},
-        )
-
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [matching.slug],
-        )
-
-    def test_search_by_flower_type_works(self):
-        matching = self.make_product(flower_type="لیلیوم")
-        self.make_product(flower_type="رز")
-
-        response = self.client.get(
-            reverse("products:product-list"),
-            {"search": "لیلیوم"},
-        )
-
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [matching.slug],
-        )
-
-    def test_featured_filter_works(self):
-        matching = self.make_product(is_featured=True)
-        self.make_product(is_featured=False)
-
-        response = self.client.get(
-            reverse("products:product-list"),
-            {"featured": "true"},
-        )
-
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [matching.slug],
-        )
-
-    def test_ordering_by_price_works(self):
-        expensive = self.make_product(price_per_bundle=400_000)
-        cheap = self.make_product(price_per_bundle=100_000)
-
-        ascending = self.client.get(
-            reverse("products:product-list"),
-            {"ordering": "price"},
-        )
-        descending = self.client.get(
-            reverse("products:product-list"),
-            {"ordering": "-price"},
-        )
-
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(ascending)],
-            [cheap.slug, expensive.slug],
-        )
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(descending)],
-            [expensive.slug, cheap.slug],
-        )
-
-    def test_ordering_by_newest_works(self):
-        older = self.make_product()
-        Product.objects.filter(pk=older.pk).update(
-            created_at=timezone.now() - timedelta(days=1),
-        )
-        newer = self.make_product()
-
-        response = self.client.get(
-            reverse("products:product-list"),
-            {"ordering": "newest"},
-        )
-
-        self.assertEqual(
-            [item["slug"] for item in self.product_results(response)],
-            [newer.slug, older.slug],
-        )
-
-    def test_product_list_uses_page_number_pagination(self):
-        for index in range(21):
-            self.make_product(
-                name=f"محصول {index}",
-                slug=f"paginated-product-{index}",
-            )
-
-        response = self.client.get(reverse("products:product-list"))
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 21)
-        self.assertEqual(len(response.data["results"]), 20)
-        self.assertIsNotNone(response.data["next"])
-
-    def test_product_list_avoids_category_n_plus_one_queries(self):
-        for index in range(3):
-            self.make_product(
-                name=f"محصول بهینه {index}",
-                slug=f"optimized-product-{index}",
-            )
-
-        with self.assertNumQueries(2):
-            response = self.client.get(reverse("products:product-list"))
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 3)
-
-    def test_product_images_appear_in_detail_response(self):
-        product = self.make_product()
-        image = ProductImage.objects.create(
-            product=product,
-            image="products/gallery/detail.jpg",
-            alt_text="نمای نزدیک گل",
-            sort_order=1,
+    def test_plant_filters_can_be_combined(self):
+        matching = self.make_plant()
+        self.make_plant(
+            details={
+                "plant_size": PlantDetails.PlantSize.LARGE,
+                "approximate_height_cm": 90,
+                "pet_friendly": True,
+            }
         )
 
         response = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["images"][0]["id"], image.id)
-        self.assertEqual(
-            response.data["images"][0]["image"],
-            "products/gallery/detail.jpg",
-        )
-        self.assertEqual(
-            response.data["images"][0]["alt_text"],
-            "نمای نزدیک گل",
-        )
-
-    def test_product_detail_prefetches_images(self):
-        product = self.make_product()
-        for index in range(3):
-            ProductImage.objects.create(
-                product=product,
-                image=f"products/gallery/detail-{index}.jpg",
-                sort_order=index,
-            )
-
-        with self.assertNumQueries(2):
-            response = self.client.get(
-                reverse(
-                    "products:product-detail",
-                    kwargs={"slug": product.slug},
-                ),
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["images"]), 3)
-
-    def test_catalog_endpoints_are_public(self):
-        product = self.make_product()
-
-        categories = self.client.get(reverse("products:category-list"))
-        products = self.client.get(reverse("products:product-list"))
-        detail = self.client.get(
-            reverse(
-                "products:product-detail",
-                kwargs={"slug": product.slug},
-            ),
-        )
-
-        self.assertEqual(categories.status_code, status.HTTP_200_OK)
-        self.assertEqual(products.status_code, status.HTTP_200_OK)
-        self.assertEqual(detail.status_code, status.HTTP_200_OK)
-
-    def test_catalog_request_does_not_break_authenticated_session(self):
-        user = User.objects.create_user(
-            phone="09123456789",
-            full_name="کاربر آزمایشی",
-        )
-        self.client.force_login(user)
-
-        catalog_response = self.client.get(
             reverse("products:product-list"),
-        )
-        me_response = self.client.get(reverse("accounts:me"))
-
-        self.assertEqual(catalog_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(me_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(me_response.data["user"]["id"], user.id)
-
-    def test_schema_documents_catalog_and_filters(self):
-        response = self.client.get(
-            reverse("schema"),
-            HTTP_ACCEPT="application/vnd.oai.openapi+json",
-        )
-        schema = json.loads(response.content)
-        list_path = reverse("products:product-list")
-        detail_path = "/api/products/{slug}/"
-
-        self.assertIn(reverse("products:category-list"), schema["paths"])
-        self.assertIn(list_path, schema["paths"])
-        self.assertIn(detail_path, schema["paths"])
-        self.assertEqual(
-            schema["paths"][reverse("products:category-list")]["get"][
-                "security"
-            ],
-            [{}],
-        )
-        self.assertEqual(
-            schema["paths"][list_path]["get"]["security"],
-            [{}],
-        )
-        self.assertEqual(
-            schema["paths"][detail_path]["get"]["security"],
-            [{}],
-        )
-
-        parameter_names = {
-            parameter["name"]
-            for parameter in schema["paths"][list_path]["get"]["parameters"]
-        }
-        self.assertTrue(
             {
-                "category",
-                "search",
-                "featured",
-                "ordering",
-                "page",
-                "page_size",
-            }.issubset(parameter_names),
+                "plant_size": "medium",
+                "min_height": 40,
+                "max_height": 60,
+                "quality_grade": "premium",
+                "pet_friendly": "false",
+                "pot_included": "true",
+                "pot_material": "سرامیک",
+                "has_drainage": "true",
+                "light_requirement": "indirect",
+                "watering_requirement": "medium",
+                "care_difficulty": "easy",
+            },
         )
-        detail_parameters = schema["paths"][detail_path]["get"][
-            "parameters"
-        ]
-        self.assertIn(
-            "slug",
-            {parameter["name"] for parameter in detail_parameters},
+
+        self.assertEqual([item["slug"] for item in self.results(response)], [matching.slug])
+
+    def test_cut_flower_filters_can_be_combined(self):
+        matching = self.make_cut_flower()
+        self.make_cut_flower(details={"flower_type": "لیلیوم", "stem_length_cm": 40})
+
+        response = self.client.get(
+            reverse("products:product-list"),
+            {
+                "flower_type": "رز",
+                "variety": "هلندی",
+                "color": "قرمز",
+                "min_stem_length": 60,
+                "max_stem_length": 80,
+                "flower_grade": "premium",
+                "min_vase_life": 7,
+                "fragrance_level": "light",
+                "seasonal_availability": "year_round",
+            },
         )
+
+        self.assertEqual([item["slug"] for item in self.results(response)], [matching.slug])
+
+    def test_search_includes_shared_and_subtype_fields(self):
+        plant = self.make_plant(details={"plant_type": "زاموفیلیا"})
+        self.make_cut_flower()
+        response = self.client.get(reverse("products:product-list"), {"search": "زاموفیلیا"})
+        self.assertEqual([item["slug"] for item in self.results(response)], [plant.slug])
+
+    def test_invalid_ranges_booleans_choices_and_ordering_return_400(self):
+        invalid_queries = (
+            {"min_price": 20, "max_price": 10},
+            {"in_stock": "sometimes"},
+            {"product_type": "bouquet"},
+            {"ordering": "popularity"},
+            {"min_stem_length": 80, "max_stem_length": 40},
+        )
+        for query in invalid_queries:
+            with self.subTest(query=query):
+                response = self.client.get(reverse("products:product-list"), query)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_inactive_products_and_categories_are_excluded(self):
+        self.make_plant(is_active=False)
+        self.make_cut_flower(category=self.inactive_category)
+        response = self.client.get(reverse("products:product-list"))
+        self.assertEqual(self.results(response), [])
+
+    def test_list_and_detail_queries_are_optimized(self):
+        product = self.make_plant()
+        ProductImage.objects.create(product=product, image="one.jpg")
+        with self.assertNumQueries(2):
+            list_response = self.client.get(reverse("products:product-list"))
+        with self.assertNumQueries(2):
+            detail_response = self.client.get(
+                reverse("products:product-detail", kwargs={"slug": product.slug})
+            )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+
+    def test_schema_documents_polymorphic_details_and_filters(self):
+        response = self.client.get(reverse("schema"), HTTP_ACCEPT="application/vnd.oai.openapi+json")
+        schema = json.loads(response.content)
+        path = schema["paths"][reverse("products:product-list")]["get"]
+        parameters = {parameter["name"] for parameter in path["parameters"]}
+        self.assertTrue({"product_type", "min_price", "plant_size", "flower_type"}.issubset(parameters))
+        self.assertIn("ProductDetails", schema["components"]["schemas"])

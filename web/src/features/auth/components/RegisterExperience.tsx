@@ -23,16 +23,11 @@ export function RegisterExperience({
   const router = useRouter();
   const auth = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fieldErrors, setFieldErrors] =
-    useState<RegistrationFieldErrors>({});
+  const [fieldErrors, setFieldErrors] = useState<RegistrationFieldErrors>({});
   const [generalError, setGeneralError] = useState("");
 
   useEffect(() => {
-    if (
-      auth.isInitializing ||
-      auth.initializationError ||
-      isSubmitting
-    ) {
+    if (auth.isInitializing || auth.initializationError || isSubmitting) {
       return;
     }
 
@@ -54,10 +49,7 @@ export function RegisterExperience({
     router,
   ]);
 
-  const handleComplete = async ({
-    fullName,
-    email,
-  }: RegistrationFormData) => {
+  const handleComplete = async ({ fullName, email }: RegistrationFormData) => {
     if (isSubmitting) {
       return;
     }
@@ -73,9 +65,7 @@ export function RegisterExperience({
       });
 
       if (!user.is_profile_complete) {
-        setGeneralError(
-          "تکمیل حساب کاربری تأیید نشد. دوباره تلاش کنید.",
-        );
+        setGeneralError("تکمیل حساب کاربری تأیید نشد. دوباره تلاش کنید.");
         setIsSubmitting(false);
         return;
       }

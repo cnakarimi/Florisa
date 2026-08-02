@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
-import type { CatalogProduct, ProductOrdering } from "@/features/catalog/types";
+import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 import type { Article } from "../types";
@@ -28,20 +28,37 @@ type PlatformView = "home" | "shop" | "care" | "favorites";
 interface HomeExperienceProps {
   view?: PlatformView;
   initialSearch?: string;
+  initialQuery?: ProductQuery;
 }
 
 export function HomeExperience({
   view = "home",
   initialSearch = "",
+  initialQuery = {},
 }: HomeExperienceProps) {
   const router = useRouter();
   const cart = useCart();
   const { favorites, toggleFavorite } = useFavorites();
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [ordering, setOrdering] = useState<ProductOrdering>("newest");
+  const [catalogQuery, setCatalogQuery] = useState<ProductQuery>({
+    ...initialQuery,
+    search: initialQuery.search ?? initialSearch,
+    ordering: initialQuery.ordering ?? "newest",
+  });
+  const selectedCategory = catalogQuery.category ?? null;
+  const searchQuery = catalogQuery.search ?? "";
+  const ordering = catalogQuery.ordering ?? "newest";
+  const catalogFilters = { ...catalogQuery };
+  delete catalogFilters.category;
+  delete catalogFilters.search;
+  delete catalogFilters.ordering;
+  delete catalogFilters.page;
+  delete catalogFilters.page_size;
+  const setSelectedCategory = (category: string | null) =>
+    setCatalogQuery((current) => ({ ...current, category }));
+  const setSearchQuery = (search: string) =>
+    setCatalogQuery((current) => ({ ...current, search }));
 
   const {
     categories,
@@ -55,11 +72,19 @@ export function HomeExperience({
     retryCategories,
     retryProducts,
     loadMore,
-  } = useCatalog({
-    category: selectedCategory,
-    search: searchQuery,
-    ordering,
-  });
+  } = useCatalog(catalogQuery);
+
+  useEffect(() => {
+    if (view !== "shop") return;
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(catalogQuery)) {
+      if (value === undefined || value === null || value === "") continue;
+      if (key === "ordering" && value === "newest") continue;
+      params.set(key, String(value));
+    }
+    const query = params.toString();
+    router.replace(`/shop${query ? `?${query}` : ""}`, { scroll: false });
+  }, [catalogQuery, router, view]);
 
   const handleNavbarSearch = (query: string) => {
     const normalizedQuery = query.trim();
@@ -123,17 +148,6 @@ export function HomeExperience({
   return (
     <div className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
       <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] pb-24 shadow-2xl shadow-black">
-        <ScrollNavbar
-          searchQuery={searchQuery}
-          onSearch={handleNavbarSearch}
-          onLogoClick={() => {
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth",
-            });
-          }}
-        />
-
         <main className={view === "home" ? "" : "px-4 sm:px-6 md:px-8"}>
           {view === "home" ? (
             <div className="animate-in fade-in duration-300">
@@ -199,26 +213,53 @@ export function HomeExperience({
           ) : null}
 
           {view === "shop" ? (
-            <ShopCatalog
-              products={products}
-              categories={categories}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-              onAddToCart={cart.addItem}
-              onSelectProduct={openProduct}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              ordering={ordering}
-              onOrderingChange={setOrdering}
-              isLoading={isProductsLoading}
-              error={productsError}
-              onRetry={retryProducts}
-              hasNextPage={hasNextPage}
-              isLoadingMore={isLoadingMore}
-              onLoadMore={loadMore}
-            />
+            <>
+              <ScrollNavbar
+                searchQuery={searchQuery}
+                onSearch={handleNavbarSearch}
+                onLogoClick={() => {
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
+                }}
+              />
+
+              <ShopCatalog
+                products={products}
+                categories={categories}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+                onAddToCart={cart.addItem}
+                onSelectProduct={openProduct}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                ordering={ordering}
+                onOrderingChange={(nextOrdering) =>
+                  setCatalogQuery((current) => ({
+                    ...current,
+                    ordering: nextOrdering,
+                  }))
+                }
+                filters={catalogFilters}
+                onFiltersChange={(filters) =>
+                  setCatalogQuery((current) => ({
+                    search: current.search,
+                    category: current.category,
+                    ordering: current.ordering,
+                    ...filters,
+                  }))
+                }
+                isLoading={isProductsLoading}
+                error={productsError}
+                onRetry={retryProducts}
+                hasNextPage={hasNextPage}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={loadMore}
+              />
+            </>
           ) : null}
 
           {view === "care" ? <PlantAICare /> : null}

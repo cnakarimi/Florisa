@@ -1,5 +1,7 @@
+import Image from "next/image";
 import React from "react";
-import { ArrowLeft, Check, Leaf } from "lucide-react";
+import { ArrowLeft, Check, Leaf, UserRound } from "lucide-react";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 
 interface WelcomeViewProps {
   onGoToShop: () => void;
@@ -11,53 +13,66 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
   onGoToProfile,
 }) => {
   return (
-    <div className="dir-rtl relative mx-auto flex min-h-screen max-w-md select-none flex-col justify-between bg-[#0d0e12] p-6 text-center font-['Vazirmatn',sans-serif] text-white">
-      <div className="my-auto flex flex-1 flex-col items-center justify-center space-y-8 py-6">
-        <div className="relative my-2 flex h-60 w-60 items-center justify-center sm:h-64 sm:w-64">
-          <div className="absolute inset-0 flex -rotate-12 transform items-center justify-center rounded-[42%_0_42%_0] border border-white/5 bg-[#171921] shadow-2xl">
-            <Leaf className="h-40 w-40 stroke-[1] text-zinc-800 opacity-25" />
-          </div>
+    <AuthShell>
+      <div className="relative z-10 flex flex-1 flex-col items-center text-center">
+        <Image
+          src="/images/brand/florisa-logo.svg"
+          alt="فلوریسا"
+          width={150}
+          height={54}
+          priority
+          className="h-12 w-auto object-contain"
+        />
 
-          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border border-amber-500/30 bg-[#272314] shadow-2xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ebc351] text-black">
-              <Check className="h-8 w-8 stroke-[3.5]" />
+        <div className="my-auto flex w-full flex-col items-center py-8">
+          <div className="relative grid size-44 place-items-center sm:size-48">
+            <div
+              className="absolute inset-3 rotate-12 rounded-[42%_58%_45%_55%] border border-[#D4AF37]/10 bg-gradient-to-br from-[#D4AF37]/[0.09] to-transparent"
+              aria-hidden="true"
+            />
+            <Leaf
+              className="absolute size-36 -rotate-[28deg] stroke-[0.7] text-[#D4AF37]/10"
+              aria-hidden="true"
+            />
+            <div className="relative grid size-24 place-items-center rounded-full border border-[#D4AF37]/25 bg-[#171913] shadow-[0_20px_60px_rgba(212,175,55,0.12)]">
+              <span className="grid size-14 place-items-center rounded-full bg-[#D4AF37] text-[#11130F]">
+                <Check className="size-8 stroke-[3.5]" aria-hidden="true" />
+              </span>
             </div>
           </div>
 
-          <div className="absolute right-7 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/30 bg-[#1c221e] text-emerald-400 shadow-lg">
-            <Leaf className="h-5 w-5 fill-emerald-500/20 stroke-[2]" />
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-xs space-y-3 px-2">
-          <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-            تبریک!
-          </h2>
-          <p className="text-xs font-light leading-relaxed text-zinc-300 sm:text-sm">
-            حساب کاربری شما با موفقیت تکمیل شد. اکنون می‌توانید از تمامی
-            امکانات فلورال استفاده کنید.
+          <p className="mt-5 text-[10px] font-extrabold tracking-[0.12em] text-[#D4AF37]">
+            همه‌چیز آماده است
+          </p>
+          <h1 className="mt-2 text-2xl font-black tracking-tight text-[#F2F0EA] sm:text-3xl">
+            به فلوریسا خوش آمدی
+          </h1>
+          <p className="mx-auto mt-3 max-w-xs text-xs leading-6 text-white/45 sm:text-sm">
+            حساب کاربری‌ات با موفقیت تکمیل شد. حالا می‌توانی گل‌ها و گیاهان
+            فلوریسا را کشف کنی.
           </p>
         </div>
 
-        <div className="w-full space-y-4 pt-4">
+        <div className="w-full space-y-3">
           <button
             type="button"
             onClick={onGoToShop}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#ebc351] py-4 text-sm font-extrabold text-black shadow-xl shadow-amber-500/10 transition-all hover:bg-[#dfb43b] active:scale-[0.99] sm:text-base"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#D4AF37] text-sm font-extrabold text-[#11130F] shadow-[0_12px_32px_rgba(212,175,55,0.14)] transition hover:bg-[#E3C45D] active:scale-[0.99]"
           >
-            <ArrowLeft className="h-5 w-5 stroke-[2.5] text-black" />
-            <span>ورود به فروشگاه</span>
+            ورود به فروشگاه
+            <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
 
           <button
             type="button"
             onClick={onGoToProfile}
-            className="w-full py-3 text-xs font-semibold text-zinc-300 transition-colors hover:text-white sm:text-sm"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] text-xs font-bold text-white/55 transition hover:border-white/[0.14] hover:text-white/80"
           >
+            <UserRound className="size-4" aria-hidden="true" />
             مشاهده پروفایل من
           </button>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 };

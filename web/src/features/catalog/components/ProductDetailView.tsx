@@ -12,13 +12,10 @@ import {
   Minus,
   Package,
   Plus,
-  Ruler,
   Share2,
   ShoppingBag,
   Sparkles,
-  Sun,
   Tag,
-  Truck,
   X,
 } from "lucide-react";
 
@@ -27,9 +24,19 @@ import type {
   CatalogProductDetail,
 } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
+import {
+  getPriceUnitLabel,
+  getProductColor,
+  getProductIdentity,
+  getSaleUnitLabel,
+} from "@/features/catalog/utils/product";
 import { formatToman, toPersianDigits } from "@/features/home/utils/persian";
 
 import { CatalogImage } from "./CatalogImage";
+import {
+  CutFlowerSpecifications,
+  PlantSpecifications,
+} from "./ProductSpecifications";
 
 interface ProductDetailViewProps {
   product: CatalogProductDetail;
@@ -45,11 +52,6 @@ interface GalleryImage {
   key: string;
   src: string | null;
   alt: string;
-}
-
-interface ProductInfoItem {
-  label: string;
-  value: string;
 }
 
 export function ProductDetailView({
@@ -97,10 +99,10 @@ export function ProductDetailView({
     return images;
   }, [product]);
 
-  const minimumQuantity = Math.max(1, product.minimum_order_bundles);
-  const maximumQuantity = Math.max(minimumQuantity, product.stock_bundles);
+  const minimumQuantity = Math.max(1, product.minimum_order_quantity);
+  const maximumQuantity = Math.max(minimumQuantity, product.stock_quantity);
   const canBuy =
-    product.is_in_stock && product.stock_bundles >= minimumQuantity;
+    product.is_in_stock && product.stock_quantity >= minimumQuantity;
 
   const [quantity, setQuantity] = useState(minimumQuantity);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -109,82 +111,13 @@ export function ProductDetailView({
   const shareTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeImage = gallery[selectedImage] ?? gallery[0];
-  const totalPrice = product.price_per_bundle * quantity;
+  const totalPrice = product.price * quantity;
   const isLowStock =
-    canBuy && product.stock_bundles <= Math.max(minimumQuantity + 3, 5);
-  const isPlantProduct =
-    product.category.slug === "indoor-plants" ||
-    Boolean(
-      product.plant_size ||
-        product.plant_height_cm ||
-        product.quality_grade ||
-        product.light_requirement ||
-        product.care_difficulty ||
-        product.care_tips,
-    );
-  const salesUnit = isPlantProduct ? "عدد" : "دسته";
-  const plantDetails: ProductInfoItem[] = [
-    product.quality_grade_display
-      ? { label: "درجه کیفیت", value: product.quality_grade_display }
-      : null,
-    product.plant_size
-      ? { label: "اندازه گیاه", value: product.plant_size }
-      : null,
-    product.plant_height_cm
-      ? {
-          label: "ارتفاع تقریبی",
-          value: `${toPersianDigits(product.plant_height_cm)} سانتی‌متر`,
-        }
-      : null,
-    product.is_pet_friendly !== null &&
-    product.is_pet_friendly !== undefined
-      ? {
-          label: "ایمنی حیوانات خانگی",
-          value: product.is_pet_friendly ? "سازگار" : "مناسب نیست",
-        }
-      : null,
-  ].filter((item): item is ProductInfoItem => item !== null);
-  const potDetails: ProductInfoItem[] = isPlantProduct
-    ? [
-        {
-          label: "گلدان همراه",
-          value: product.pot_included ? "دارد" : "ندارد",
-        },
-        product.pot_included && product.pot_material
-          ? { label: "جنس", value: product.pot_material }
-          : null,
-        product.pot_included && product.pot_color
-          ? { label: "رنگ", value: product.pot_color }
-          : null,
-        product.pot_included && product.pot_size_cm
-          ? {
-              label: "اندازه",
-              value: `${toPersianDigits(product.pot_size_cm)} سانتی‌متر`,
-            }
-          : null,
-        product.pot_included && product.pot_has_drainage !== null &&
-        product.pot_has_drainage !== undefined
-          ? {
-              label: "زهکشی",
-              value: product.pot_has_drainage ? "دارد" : "ندارد",
-            }
-          : null,
-      ].filter((item): item is ProductInfoItem => item !== null)
-    : [];
-  const careDetails: ProductInfoItem[] = [
-    product.light_requirement
-      ? { label: "نور", value: product.light_requirement }
-      : null,
-    product.watering_requirement
-      ? { label: "آبیاری", value: product.watering_requirement }
-      : null,
-    product.care_difficulty_display
-      ? { label: "سختی نگهداری", value: product.care_difficulty_display }
-      : null,
-    product.ideal_temperature
-      ? { label: "دمای ایده‌آل", value: product.ideal_temperature }
-      : null,
-  ].filter((item): item is ProductInfoItem => item !== null);
+    canBuy && product.stock_quantity <= Math.max(minimumQuantity + 3, 5);
+  const isPlantProduct = product.product_type === "plant";
+  const salesUnit = getSaleUnitLabel(product);
+  const productIdentity = getProductIdentity(product);
+  const productColor = getProductColor(product);
 
   useEffect(() => {
     return () => {
@@ -445,19 +378,19 @@ export function ProductDetailView({
               </p>
             ) : null}
 
-            {product.flower_type || product.color ? (
+            {productIdentity || productColor ? (
               <div className="mt-5 flex flex-wrap gap-2">
-                {product.flower_type ? (
+                {productIdentity ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-[#9fc0aa]/15 bg-[#203329]/70 px-3 py-1.5 text-[10px] font-semibold text-[#afd0b8] sm:text-[11px]">
                     <Leaf className="h-3.5 w-3.5" />
-                    {product.flower_type}
+                    {productIdentity}
                   </span>
                 ) : null}
 
-                {product.color ? (
+                {productColor ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.035] px-3 py-1.5 text-[10px] font-semibold text-white/60 sm:text-[11px]">
                     <span className="h-2 w-2 rounded-full bg-[#d9d5c9] ring-2 ring-white/10" />
-                    {product.color}
+                    {productColor}
                   </span>
                 ) : null}
               </div>
@@ -467,10 +400,13 @@ export function ProductDetailView({
               <div className="flex items-center justify-between gap-4 p-4 sm:p-5">
                 <div>
                   <p className="text-[10px] text-white/35">
-                    {isPlantProduct ? "قیمت محصول" : "قیمت هر دسته"}
+                    قیمت هر واحد فروش
                   </p>
                   <p className="mt-1.5 text-lg font-black text-[#ddc362] sm:text-xl">
-                    {formatToman(product.price_per_bundle)}
+                    {formatToman(product.price)}
+                  </p>
+                  <p className="mt-1 text-[9px] text-white/35">
+                    {getPriceUnitLabel(product)}
                   </p>
                 </div>
 
@@ -556,19 +492,17 @@ export function ProductDetailView({
                    <Flower2 className="h-[18px] w-[18px]" />
                  )
                }
-               label={isPlantProduct ? "تعداد در هر بسته" : "شاخه در هر دسته"}
-               value={
-                 isPlantProduct
-                   ? `${toPersianDigits(product.stems_per_bundle)} عدد`
-                   : `${toPersianDigits(product.stems_per_bundle)} شاخه`
-               }
+               label="تعداد در هر واحد فروش"
+               value={`${toPersianDigits(product.unit_size)} ${
+                 product.product_type === "cut_flower" ? "شاخه" : "عدد"
+               }`}
             />
             <DetailStat
               icon={<Package className="h-[18px] w-[18px]" />}
               label="موجودی"
               value={
                 canBuy
-                   ? `${toPersianDigits(product.stock_bundles)} ${salesUnit}`
+                   ? `${toPersianDigits(product.stock_quantity)} ${salesUnit}`
                   : "ناموجود"
               }
             />
@@ -585,42 +519,10 @@ export function ProductDetailView({
           </div>
         </section>
 
-        {plantDetails.length > 0 ? (
-          <ProductInfoSection
-            id="plant-information"
-            title="مشخصات گیاه"
-            icon={<Ruler className="h-5 w-5" />}
-            items={plantDetails}
-          />
-        ) : null}
-
-        {potDetails.length > 0 ? (
-          <ProductInfoSection
-            id="included-pot"
-            title="گلدان همراه"
-            icon={<Package className="h-5 w-5" />}
-            items={potDetails}
-          />
-        ) : null}
-
-        {careDetails.length > 0 || product.care_tips ? (
-          <ProductInfoSection
-            id="plant-care"
-            title="راهنمای نگهداری"
-            icon={<Sun className="h-5 w-5" />}
-            items={careDetails}
-            body={product.care_tips}
-          />
-        ) : null}
-
-        {product.delivery_notes ? (
-          <ProductInfoSection
-            id="delivery-notes"
-            title="نکات ارسال"
-            icon={<Truck className="h-5 w-5" />}
-            items={[]}
-            body={product.delivery_notes}
-          />
+        {product.product_type === "plant" && product.details ? (
+          <PlantSpecifications details={product.details} />
+        ) : product.product_type === "cut_flower" && product.details ? (
+          <CutFlowerSpecifications details={product.details} />
         ) : null}
 
         {product.description || product.short_description ? (
@@ -701,56 +603,6 @@ export function ProductDetailView({
         </div>
       ) : null}
     </main>
-  );
-}
-
-function ProductInfoSection({
-  id,
-  title,
-  icon,
-  items,
-  body,
-}: {
-  id: string;
-  title: string;
-  icon: ReactNode;
-  items: ProductInfoItem[];
-  body?: string;
-}) {
-  return (
-    <section
-      className="mx-4 mt-7 rounded-[22px] border border-white/[0.06] bg-[#181a18] p-4 sm:mx-6 sm:p-5 md:mx-8"
-      aria-labelledby={id}
-    >
-      <div className="flex items-center gap-2 text-[#9fc0aa]">
-        {icon}
-        <h2 id={id} className="text-sm font-extrabold text-[#e8e5df] sm:text-base">
-          {title}
-        </h2>
-      </div>
-
-      {items.length > 0 ? (
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-white/[0.05] bg-black/15 p-3.5"
-            >
-              <dt className="text-[10px] text-white/35">{item.label}</dt>
-              <dd className="mt-1.5 text-xs font-bold leading-6 text-white/75">
-                {item.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-
-      {body ? (
-        <p className="mt-4 whitespace-pre-line text-xs leading-7 text-white/50 sm:text-[13px]">
-          {body}
-        </p>
-      ) : null}
-    </section>
   );
 }
 

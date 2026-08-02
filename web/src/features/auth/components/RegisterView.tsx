@@ -1,7 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState } from "react";
-import { X, Check, User, Mail } from "lucide-react";
+import { ArrowLeft, Check, Mail, User, X } from "lucide-react";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 
 export interface RegistrationFormData {
   fullName: string;
@@ -36,8 +39,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
 }) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [localErrors, setLocalErrors] =
-    useState<RegistrationFieldErrors>({});
+  const [localErrors, setLocalErrors] = useState<RegistrationFieldErrors>({});
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -50,8 +52,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
     const validationErrors: RegistrationFieldErrors = {};
 
     if (!trimmedName) {
-      validationErrors.full_name =
-        "نام و نام خانوادگی را وارد کنید.";
+      validationErrors.full_name = "نام و نام خانوادگی را وارد کنید.";
     }
     if (trimmedEmail && !EMAIL_PATTERN.test(trimmedEmail)) {
       validationErrors.email = "یک ایمیل معتبر وارد کنید.";
@@ -72,54 +73,66 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   const emailError = localErrors.email ?? fieldErrors.email;
 
   return (
-    <div className="dir-rtl relative mx-auto flex min-h-screen max-w-md select-none flex-col justify-between bg-[#0d0e12] p-4 text-right font-['Vazirmatn',sans-serif] text-white sm:p-6">
-      <div className="flex items-center justify-between pb-6 pt-2">
-        <h1 className="text-2xl font-black tracking-tight text-[#ebc351]">
-          فلورال
-        </h1>
+    <AuthShell className="overflow-y-auto pt-6 sm:pt-7">
+      <div className="relative z-10 flex items-center justify-between">
         <button
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="rounded-full p-2 text-zinc-400 transition-colors hover:text-white disabled:opacity-50"
-          title="بستن"
+          className="grid size-10 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-white/50 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-50"
+          aria-label="بستن"
         >
-          <X className="h-6 w-6 stroke-[2]" />
+          <X className="size-5" aria-hidden="true" />
         </button>
+
+        <Image
+          src="/images/brand/florisa-logo.svg"
+          alt="فلوریسا"
+          width={120}
+          height={44}
+          priority
+          className="h-10 w-auto object-contain"
+        />
+
+        <div className="size-10" aria-hidden="true" />
       </div>
 
-      <div className="my-auto flex flex-1 flex-col items-center justify-center space-y-6 py-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/30 bg-[#272314] text-amber-400 shadow-xl">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e3b839] text-black">
-            <Check className="h-5 w-5 stroke-[3]" />
+      <div className="relative z-10 flex flex-1 flex-col pt-7">
+        <div className="text-center">
+          <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/[0.08] shadow-[0_12px_35px_rgba(212,175,55,0.08)]">
+            <span className="grid size-8 place-items-center rounded-xl bg-[#D4AF37] text-[#11130F]">
+              <Check className="size-[18px] stroke-[3]" aria-hidden="true" />
+            </span>
           </div>
-        </div>
 
-        <div className="space-y-2 text-center">
-          <p className="text-xs font-extrabold text-[#ebc351] sm:text-sm">
-            شماره موبایل شما تأیید شد
+          <p className="mt-4 text-[10px] font-extrabold tracking-[0.1em] text-[#D4AF37]">
+            شماره موبایل تأیید شد
           </p>
-          <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
-            حساب کاربری‌تان را تکمیل کنید
-          </h2>
-          <p className="mx-auto max-w-xs text-xs font-light leading-relaxed text-zinc-400">
-            برای ثبت سفارش و استفاده بهتر از فلورال، نام خود را وارد کنید.
+          <h1 className="mt-2 text-xl font-black tracking-tight text-[#F2F0EA] sm:text-2xl">
+            فقط یک قدم تا فلوریسا
+          </h1>
+          <p className="mx-auto mt-2 max-w-xs text-xs leading-6 text-white/40">
+            نامت را وارد کن تا حساب کاربری و تجربه خریدت شخصی‌تر شود.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="w-full space-y-4 pt-2 text-right"
+          className="mt-6 space-y-4 text-right"
           noValidate
         >
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <label
               htmlFor="registration-full-name"
-              className="block pr-1 text-xs font-semibold text-zinc-300"
+              className="block pr-1 text-xs font-bold text-white/65"
             >
               نام و نام خانوادگی
             </label>
             <div className="relative">
+              <User
+                className="pointer-events-none absolute right-4 top-1/2 size-[18px] -translate-y-1/2 text-white/30"
+                aria-hidden="true"
+              />
               <input
                 id="registration-full-name"
                 type="text"
@@ -138,32 +151,37 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                   fullNameError ? "registration-full-name-error" : undefined
                 }
                 placeholder="مثلاً سینا کریمی"
-                className="w-full rounded-2xl border border-white/10 bg-[#161820] py-3.5 pl-4 pr-11 text-xs text-white placeholder-zinc-500 transition-colors focus:border-amber-400 focus:outline-none disabled:opacity-60 sm:text-sm"
+                className="h-14 w-full rounded-2xl border border-white/[0.09] bg-white/[0.035] pl-4 pr-12 text-sm text-[#F2F0EA] outline-none transition placeholder:text-white/20 hover:border-white/[0.14] focus:border-[#D4AF37]/60 focus:bg-white/[0.055] focus:ring-4 focus:ring-[#D4AF37]/[0.07] disabled:opacity-60"
               />
-              <User className="absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
             </div>
             {fullNameError ? (
               <p
                 id="registration-full-name-error"
                 role="alert"
-                className="pr-1 text-[11px] text-rose-300"
+                className="pr-1 text-[11px] text-[#FFAAA2]"
               >
                 {fullNameError}
               </p>
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
               <label
                 htmlFor="registration-email"
-                className="text-xs font-semibold text-zinc-300"
+                className="text-xs font-bold text-white/65"
               >
                 ایمیل
               </label>
-              <span className="text-[11px] text-zinc-500">اختیاری</span>
+              <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[9px] text-white/30">
+                اختیاری
+              </span>
             </div>
             <div className="relative">
+              <Mail
+                className="pointer-events-none absolute right-4 top-1/2 size-[18px] -translate-y-1/2 text-white/30"
+                aria-hidden="true"
+              />
               <input
                 id="registration-email"
                 type="email"
@@ -183,15 +201,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                 }
                 placeholder="example@email.com"
                 dir="ltr"
-                className="w-full rounded-2xl border border-white/10 bg-[#161820] py-3.5 pl-4 pr-11 text-right text-xs text-white placeholder-zinc-500 transition-colors focus:border-amber-400 focus:outline-none disabled:opacity-60 sm:text-sm"
+                className="h-14 w-full rounded-2xl border border-white/[0.09] bg-white/[0.035] pl-4 pr-12 text-left text-sm text-[#F2F0EA] outline-none transition placeholder:text-white/20 hover:border-white/[0.14] focus:border-[#D4AF37]/60 focus:bg-white/[0.055] focus:ring-4 focus:ring-[#D4AF37]/[0.07] disabled:opacity-60"
               />
-              <Mail className="absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
             </div>
             {emailError ? (
               <p
                 id="registration-email-error"
                 role="alert"
-                className="pr-1 text-[11px] text-rose-300"
+                className="pr-1 text-[11px] text-[#FFAAA2]"
               >
                 {emailError}
               </p>
@@ -199,36 +216,36 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           </div>
 
           {generalError ? (
-            <p role="alert" className="text-center text-xs text-rose-300">
+            <p role="alert" className="text-center text-xs text-[#FFAAA2]">
               {generalError}
             </p>
           ) : null}
 
-          <button
+          <PrimaryButton
             type="submit"
-            disabled={isSubmitting}
-            aria-busy={isSubmitting}
-            className="mt-6 w-full rounded-2xl bg-[#ebc351] py-4 text-sm font-extrabold text-black shadow-xl shadow-amber-500/10 transition-all hover:bg-[#dfb43b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
+            isLoading={isSubmitting}
+            className="mt-2 h-14 rounded-2xl bg-[#D4AF37] font-extrabold text-[#11130F] shadow-[0_12px_32px_rgba(212,175,55,0.14)] hover:bg-[#E3C45D]"
           >
-            {isSubmitting ? "در حال تکمیل..." : "تکمیل ثبت‌نام"}
-          </button>
+            {isSubmitting ? "در حال تکمیل..." : "تکمیل حساب کاربری"}
+            {!isSubmitting ? (
+              <ArrowLeft className="size-5" aria-hidden="true" />
+            ) : null}
+          </PrimaryButton>
         </form>
 
         <button
           type="button"
           onClick={onSkip}
           disabled={isSubmitting}
-          className="pt-1 text-xs font-semibold text-zinc-300 transition-colors hover:text-white disabled:opacity-50 sm:text-sm"
+          className="mx-auto mt-4 px-3 py-2 text-[11px] font-bold text-white/35 transition hover:text-white/65 disabled:opacity-50"
         >
           بعداً تکمیل می‌کنم
         </button>
-      </div>
 
-      <div className="border-t border-white/5 py-4 text-center">
-        <p className="mx-auto max-w-xs text-[11px] font-light leading-relaxed text-zinc-500">
-          اطلاعات شما فقط برای ثبت سفارش و ارتباط بهتر استفاده می‌شود.
+        <p className="mt-auto border-t border-white/[0.05] pt-5 text-center text-[10px] leading-5 text-white/25">
+          اطلاعاتت فقط برای ثبت سفارش و ارتباط بهتر استفاده می‌شود.
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 };

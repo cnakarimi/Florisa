@@ -9,10 +9,7 @@ import {
 import { cn } from "@/lib/cn";
 import { OTP_LENGTH } from "@/features/auth/constants";
 import type { OtpInputProps } from "@/features/auth/types";
-import {
-  normalizeDigits,
-  toPersianDigits,
-} from "@/features/auth/utils/digits";
+import { normalizeDigits, toPersianDigits } from "@/features/auth/utils/digits";
 
 export function OtpInput({
   value,
@@ -38,10 +35,7 @@ export function OtpInput({
       });
 
     onChange(nextValue);
-    const focusIndex = Math.min(
-      startIndex + digits.length,
-      OTP_LENGTH - 1,
-    );
+    const focusIndex = Math.min(startIndex + digits.length, OTP_LENGTH - 1);
     inputRefs.current[focusIndex]?.focus();
   };
 
@@ -94,7 +88,7 @@ export function OtpInput({
 
   return (
     <div
-      className="numeric-ltr flex w-full flex-row justify-center gap-3"
+      className="numeric-ltr grid w-full grid-cols-5 gap-2 sm:gap-3"
       dir="ltr"
       role="group"
       aria-label="کد تأیید پنج رقمی"
@@ -119,12 +113,12 @@ export function OtpInput({
           aria-invalid={hasError}
           aria-describedby={hasError ? "otp-error" : undefined}
           className={cn(
-            "size-14 min-w-0 rounded-2xl border bg-[#20201f] text-center font-mono text-2xl font-bold text-[#e5e2e1] outline-none transition-colors focus:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60",
+            "h-14 min-w-0 w-full rounded-2xl border bg-white/[0.035] text-center font-mono text-xl font-extrabold text-[#F2F0EA] outline-none transition-[border-color,background-color,box-shadow,transform] focus:-translate-y-0.5 focus:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60 sm:h-[60px] sm:text-2xl",
             hasError
-              ? "border-[#ffb4ab] focus:border-[#ffb4ab]"
+              ? "border-[#FF8A80]/70 focus:border-[#FF8A80] focus:ring-4 focus:ring-[#FF8A80]/[0.06]"
               : digit
-                ? "border-[#e9c349]"
-                : "border-[#434846] focus:border-[#e9c349]",
+                ? "border-[#D4AF37]/70 bg-[#D4AF37]/[0.07] text-[#F1D56D]"
+                : "border-white/[0.09] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/[0.07]",
           )}
         />
       ))}

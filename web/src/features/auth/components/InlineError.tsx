@@ -17,7 +17,7 @@ export function InlineError({
       id={id}
       role="alert"
       className={cn(
-        "flex min-h-5 items-center gap-1.5 text-xs text-[#ffb4ab]",
+        "flex min-h-5 items-center gap-1.5 text-xs text-[#FFAAA2]",
         centered && "justify-center text-center",
       )}
     >
@@ -26,4 +26,3 @@ export function InlineError({
     </p>
   );
 }
-

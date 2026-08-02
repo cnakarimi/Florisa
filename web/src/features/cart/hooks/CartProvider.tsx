@@ -117,7 +117,7 @@ export function CartProvider({ children }: CartProviderProps) {
     (product: CatalogProduct, requestedQuantity?: number) => {
       if (
         !product.is_in_stock ||
-        product.stock_bundles < product.minimum_order_bundles
+        product.stock_quantity < product.minimum_order_quantity
       ) {
         return;
       }

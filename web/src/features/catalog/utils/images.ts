@@ -29,3 +29,15 @@ export function getCategoryImageUrl(
 ): string | null {
   return getRepositoryImageUrl(CATEGORY_IMAGE_BASE_PATH, filename);
 }
+
+export function resolveCatalogImageUrl(
+  src: string | null | undefined,
+): string | null {
+  if (!src) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(src)) {
+    return src;
+  }
+  return src.startsWith("/") ? src : `/${src}`;
+}

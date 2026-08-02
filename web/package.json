@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types --test src/features/catalog/catalog-images.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "5.5.7",

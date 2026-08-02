@@ -4,20 +4,14 @@ import { useState } from "react";
 import Image from "next/image";
 import { Flower2 } from "lucide-react";
 
+import { resolveCatalogImageUrl } from "@/features/catalog/utils/images";
+
 interface CatalogImageProps {
   src: string | null;
   alt: string;
   sizes: string;
   className?: string;
   priority?: boolean;
-}
-
-function resolveImageUrl(src: string): string {
-  if (/^https?:\/\//i.test(src)) {
-    return src;
-  }
-
-  return src.startsWith("/") ? src : `/${src}`;
 }
 
 export function CatalogImage({
@@ -28,7 +22,7 @@ export function CatalogImage({
   priority = false,
 }: CatalogImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const resolvedSrc = src ? resolveImageUrl(src) : null;
+  const resolvedSrc = resolveCatalogImageUrl(src);
 
   if (!resolvedSrc || failedSrc === resolvedSrc) {
     return (

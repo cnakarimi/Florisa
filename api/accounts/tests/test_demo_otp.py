@@ -38,7 +38,12 @@ class DemoOTPTests(APITestCase):
             format="json",
         )
 
-    def test_demo_request_skips_generation_and_delivery(self):
+    @override_settings(
+        DEBUG=False,
+        OTP_DELIVERY_BACKEND="sms",
+        DEMO_OTP_PHONE="+989012345678",
+    )
+    def test_render_demo_request_skips_sms_delivery(self):
         with patch("accounts.services.otp.generate_otp") as generate, patch(
             "accounts.services.otp.send_otp",
         ) as delivery:
@@ -142,8 +147,12 @@ class DemoOTPTests(APITestCase):
         self.assertEqual(otp_request.attempts, 2)
         self.assertTrue(otp_request.is_used)
 
-    @override_settings(DEMO_OTP_ONLY=True)
-    def test_demo_only_rejects_non_demo_phone_with_existing_error_schema(self):
+    @override_settings(
+        DEBUG=False,
+        OTP_DELIVERY_BACKEND="sms",
+        DEMO_OTP_ONLY=True,
+    )
+    def test_render_demo_only_rejects_before_sms_delivery(self):
         with patch("accounts.services.otp.send_otp") as delivery:
             response = self.request_otp(NON_DEMO_PHONE)
 

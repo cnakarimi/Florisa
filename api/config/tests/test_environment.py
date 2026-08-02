@@ -29,6 +29,20 @@ class DemoOTPEnvironmentTests(SimpleTestCase):
         self.assertEqual(config.code, "73194")
         self.assertNotIn(config.code, repr(config))
 
+    def test_render_style_values_allow_case_and_whitespace(self):
+        environment = {
+            **self.valid_environment,
+            "DEMO_OTP_ENABLED": " True ",
+            "DEMO_OTP_ONLY": " True ",
+            "DEMO_OTP_PHONE": " 09012345678 ",
+        }
+
+        config = load_demo_otp_config(environment)
+
+        self.assertTrue(config.enabled)
+        self.assertTrue(config.only)
+        self.assertEqual(config.phone, "09012345678")
+
     def test_enabled_demo_mode_rejects_missing_values(self):
         invalid_environments = (
             {"DEMO_OTP_ENABLED": "true", "DEMO_OTP_CODE": "73194"},

@@ -74,10 +74,11 @@ def _is_privileged_user(phone: str) -> bool:
 @transaction.atomic
 def create_otp(phone: str) -> CreatedOTP:
     normalized_phone = normalize_phone(phone)
+    normalized_demo_phone = normalize_phone(settings.DEMO_OTP_PHONE)
     validate_iranian_phone(normalized_phone)
     is_demo = (
         settings.DEMO_OTP_ENABLED
-        and normalized_phone == settings.DEMO_OTP_PHONE
+        and normalized_phone == normalized_demo_phone
     )
 
     if settings.DEMO_OTP_ENABLED and settings.DEMO_OTP_ONLY and not is_demo:

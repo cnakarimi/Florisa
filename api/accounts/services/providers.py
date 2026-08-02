@@ -2,12 +2,14 @@ import logging
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.views.decorators.debug import sensitive_variables
 
 
 logger = logging.getLogger("florisa.otp")
 CONSOLE_BACKEND = "console"
 
 
+@sensitive_variables("code")
 def send_otp(phone: str, code: str) -> None:
     backend = settings.OTP_DELIVERY_BACKEND
 

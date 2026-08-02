@@ -88,6 +88,23 @@ function isOptionalNullableBoolean(
   );
 }
 
+function isCatalogCategory(value: unknown): value is CatalogCategory {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === "number" &&
+    typeof value.name === "string" &&
+    typeof value.slug === "string" &&
+    isOptionalString(value, "description") &&
+    (!("image" in value) ||
+      value.image === null ||
+      typeof value.image === "string") &&
+    typeof value.sort_order === "number"
+  );
+}
+
 function isProductDetail(value: unknown): value is CatalogProductDetail {
   if (!isRecord(value) || !isRecord(value.category)) {
     return false;
@@ -142,8 +159,21 @@ function isProductDetail(value: unknown): value is CatalogProductDetail {
   );
 }
 
-export function getCategories(force = false): Promise<CatalogCategory[]> {
-  return cachedRequest<CatalogCategory[]>("/api/categories/", force);
+export async function getCategories(
+  force = false,
+): Promise<CatalogCategory[]> {
+  const data = await cachedRequest<unknown>("/api/categories/", force);
+
+  if (!Array.isArray(data) || !data.every(isCatalogCategory)) {
+    throw new ApiError(
+      "پاسخ دسته‌بندی‌ها از سرور معتبر نیست.",
+      502,
+      {},
+      data,
+    );
+  }
+
+  return data;
 }
 
 export function getProducts(

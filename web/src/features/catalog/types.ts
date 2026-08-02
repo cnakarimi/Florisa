@@ -3,7 +3,7 @@ export interface CatalogCategory {
   name: string;
   slug: string;
   description?: string;
-  image: string | null;
+  image?: string | null;
   sort_order: number;
 }
 

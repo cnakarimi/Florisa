@@ -1,6 +1,8 @@
 const PRODUCT_IMAGE_BASE_PATH = "/images/products";
+const CATEGORY_IMAGE_BASE_PATH = "/images/categories";
 
-export function getProductImageUrl(
+function getRepositoryImageUrl(
+  basePath: string,
   filename: string | null | undefined,
 ): string | null {
   const normalized = filename?.trim().replace(/\\/g, "/").replace(/^\/+/, "");
@@ -13,5 +15,17 @@ export function getProductImageUrl(
     return null;
   }
 
-  return `${PRODUCT_IMAGE_BASE_PATH}/${segments.map(encodeURIComponent).join("/")}`;
+  return `${basePath}/${segments.map(encodeURIComponent).join("/")}`;
+}
+
+export function getProductImageUrl(
+  filename: string | null | undefined,
+): string | null {
+  return getRepositoryImageUrl(PRODUCT_IMAGE_BASE_PATH, filename);
+}
+
+export function getCategoryImageUrl(
+  filename: string | null | undefined,
+): string | null {
+  return getRepositoryImageUrl(CATEGORY_IMAGE_BASE_PATH, filename);
 }

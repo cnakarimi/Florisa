@@ -2,16 +2,23 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from products.validators import validate_repository_image_path
+
 
 class Category(models.Model):
     name = models.CharField("نام", max_length=120)
     slug = models.SlugField("نامک", max_length=140, unique=True)
     description = models.TextField("توضیحات", blank=True)
-    image = models.ImageField(
+    image = models.CharField(
         "تصویر",
-        upload_to="categories/",
+        max_length=255,
         blank=True,
         null=True,
+        validators=[validate_repository_image_path],
+        help_text=(
+            "نام فایل موجود در web/public/images/categories را وارد کنید؛ "
+            "مانند florisa-indoor-plants-category.png"
+        ),
     )
     is_active = models.BooleanField("فعال", default=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)

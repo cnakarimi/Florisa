@@ -58,6 +58,28 @@ class CatalogAPITests(APITestCase):
         self.assertTrue(
             all("description" in item for item in response.data),
         )
+        active_category = next(
+            item
+            for item in response.data
+            if item["slug"] == self.active_category.slug
+        )
+        self.assertIsNone(active_category["image"])
+
+    def test_category_serializer_exposes_repository_image_filename(self):
+        self.active_category.image = "florisa-indoor-plants-category.png"
+        self.active_category.save(update_fields=("image",))
+
+        response = self.client.get(reverse("products:category-list"))
+
+        category = next(
+            item
+            for item in response.data
+            if item["slug"] == self.active_category.slug
+        )
+        self.assertEqual(
+            category["image"],
+            "florisa-indoor-plants-category.png",
+        )
 
     def test_product_list_returns_active_products(self):
         product = self.make_product(cover_image="dawoodi-white.jpg")

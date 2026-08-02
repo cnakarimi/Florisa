@@ -1,6 +1,7 @@
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogCategory } from "@/features/catalog/types";
+import { getCategoryImageUrl } from "@/features/catalog/utils/images";
 
 interface CategoriesSectionProps {
   categories: CatalogCategory[];
@@ -82,7 +83,7 @@ export function CategoriesSection({
                   }`}
                 >
                   <CatalogImage
-                    src={category.image}
+                    src={getCategoryImageUrl(category.image)}
                     alt={category.name}
                     sizes="138px"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"

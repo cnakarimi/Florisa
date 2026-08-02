@@ -11,6 +11,12 @@ class CategorySummarySerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    image = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        read_only=True,
+    )
+
     class Meta:
         model = Category
         fields = (

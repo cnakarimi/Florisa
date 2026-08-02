@@ -36,6 +36,52 @@ class CatalogModelTests(TestCase):
 
         self.assertEqual(str(category), "دسته‌بندی دوم")
 
+    def test_category_image_filename_is_optional(self):
+        category = Category(
+            name="بدون تصویر",
+            slug="without-image",
+            image=None,
+        )
+
+        category.full_clean()
+
+    def test_category_accepts_repository_image_filename(self):
+        category = Category(
+            name="گیاهان آپارتمانی",
+            slug="valid-category-image",
+            image="florisa-indoor-plants-category.png",
+        )
+
+        category.full_clean()
+
+        self.assertEqual(
+            category.image,
+            "florisa-indoor-plants-category.png",
+        )
+
+    def test_category_rejects_unsafe_or_unsupported_image_paths(self):
+        invalid_values = (
+            "../secret.png",
+            "/absolute/category.png",
+            "C:\\images\\category.png",
+            "nested\\category.png",
+            "https://example.com/category.png",
+            "category.exe",
+        )
+
+        for index, value in enumerate(invalid_values):
+            with self.subTest(value=value):
+                category = Category(
+                    name=f"تصویر نامعتبر {index}",
+                    slug=f"invalid-category-image-{index}",
+                    image=value,
+                )
+
+                with self.assertRaises(ValidationError) as error:
+                    category.full_clean()
+
+                self.assertIn("image", error.exception.message_dict)
+
     def test_product_can_be_created(self):
         product = self.make_product()
 

@@ -31,6 +31,24 @@ export function ProductCard({
     product.stock_bundles >= product.minimum_order_bundles;
 
   const visibleTag = product.flower_type || product.color;
+  const isPlantProduct =
+    product.category.slug === "indoor-plants" ||
+    Boolean(
+      product.plant_size ||
+        product.plant_height_cm ||
+        product.quality_grade ||
+        product.light_requirement ||
+        product.care_difficulty,
+    );
+  const plantBadges = isPlantProduct
+    ? [
+        product.quality_grade_display
+          ? `کیفیت ${product.quality_grade_display}`
+          : null,
+        product.care_difficulty === "easy" ? "نگهداری آسان" : null,
+        product.pot_included ? "گلدان همراه" : null,
+      ].filter((badge): badge is string => Boolean(badge))
+    : [];
 
   useEffect(() => {
     return () => {
@@ -129,6 +147,19 @@ export function ProductCard({
           <p className="mt-0.5 truncate text-[10px] text-[#898d87] sm:text-[11px]">
             {product.category.name}
           </p>
+
+          {plantBadges.length > 0 ? (
+            <span className="mt-2 flex flex-wrap gap-1.5">
+              {plantBadges.map((badge) => (
+                <span
+                  key={badge}
+                  className="rounded-full border border-[#9fc0aa]/15 bg-[#203329]/60 px-2 py-1 text-[8px] font-semibold text-[#afd0b8] sm:text-[9px]"
+                >
+                  {badge}
+                </span>
+              ))}
+            </span>
+          ) : null}
         </button>
 
         <div className="my-3 h-px bg-gradient-to-l from-white/10 via-white/[0.05] to-transparent" />
@@ -137,7 +168,7 @@ export function ProductCard({
         <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
           <div className="min-w-0">
             <span className="mb-1 block text-[9px] font-medium text-white/35 sm:text-[10px]">
-              قیمت هر دسته
+              {isPlantProduct ? "قیمت" : "قیمت هر دسته"}
             </span>
 
             <span className="block whitespace-nowrap text-[13px] font-black tracking-tight text-[#e2c86f] sm:text-[15px]">

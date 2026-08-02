@@ -13,7 +13,14 @@ class CategorySummarySerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ("id", "name", "slug", "image", "sort_order")
+        fields = (
+            "id",
+            "name",
+            "slug",
+            "description",
+            "image",
+            "sort_order",
+        )
         read_only_fields = fields
 
 
@@ -34,6 +41,14 @@ class ProductListSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     is_in_stock = serializers.BooleanField(read_only=True)
+    quality_grade_display = serializers.CharField(
+        source="get_quality_grade_display",
+        read_only=True,
+    )
+    care_difficulty_display = serializers.CharField(
+        source="get_care_difficulty_display",
+        read_only=True,
+    )
 
     class Meta:
         model = Product
@@ -44,6 +59,23 @@ class ProductListSerializer(serializers.ModelSerializer):
             "flower_type",
             "color",
             "short_description",
+            "plant_size",
+            "plant_height_cm",
+            "quality_grade",
+            "quality_grade_display",
+            "is_pet_friendly",
+            "pot_included",
+            "pot_material",
+            "pot_color",
+            "pot_size_cm",
+            "pot_has_drainage",
+            "light_requirement",
+            "watering_requirement",
+            "care_difficulty",
+            "care_difficulty_display",
+            "ideal_temperature",
+            "care_tips",
+            "delivery_notes",
             "stems_per_bundle",
             "price_per_bundle",
             "stock_bundles",

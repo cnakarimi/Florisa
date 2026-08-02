@@ -59,6 +59,35 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isOptionalString(
+  value: Record<string, unknown>,
+  key: string,
+): boolean {
+  return !(key in value) || typeof value[key] === "string";
+}
+
+function isOptionalNullableNumber(
+  value: Record<string, unknown>,
+  key: string,
+): boolean {
+  return (
+    !(key in value) ||
+    value[key] === null ||
+    typeof value[key] === "number"
+  );
+}
+
+function isOptionalNullableBoolean(
+  value: Record<string, unknown>,
+  key: string,
+): boolean {
+  return (
+    !(key in value) ||
+    value[key] === null ||
+    typeof value[key] === "boolean"
+  );
+}
+
 function isProductDetail(value: unknown): value is CatalogProductDetail {
   if (!isRecord(value) || !isRecord(value.category)) {
     return false;
@@ -71,6 +100,23 @@ function isProductDetail(value: unknown): value is CatalogProductDetail {
     typeof value.flower_type === "string" &&
     typeof value.color === "string" &&
     typeof value.short_description === "string" &&
+    isOptionalString(value, "plant_size") &&
+    isOptionalNullableNumber(value, "plant_height_cm") &&
+    isOptionalString(value, "quality_grade") &&
+    isOptionalString(value, "quality_grade_display") &&
+    isOptionalNullableBoolean(value, "is_pet_friendly") &&
+    (!("pot_included" in value) || typeof value.pot_included === "boolean") &&
+    isOptionalString(value, "pot_material") &&
+    isOptionalString(value, "pot_color") &&
+    isOptionalNullableNumber(value, "pot_size_cm") &&
+    isOptionalNullableBoolean(value, "pot_has_drainage") &&
+    isOptionalString(value, "light_requirement") &&
+    isOptionalString(value, "watering_requirement") &&
+    isOptionalString(value, "care_difficulty") &&
+    isOptionalString(value, "care_difficulty_display") &&
+    isOptionalString(value, "ideal_temperature") &&
+    isOptionalString(value, "care_tips") &&
+    isOptionalString(value, "delivery_notes") &&
     typeof value.description === "string" &&
     typeof value.stems_per_bundle === "number" &&
     typeof value.price_per_bundle === "number" &&

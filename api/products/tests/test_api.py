@@ -53,7 +53,11 @@ class CatalogAPITests(APITestCase):
         returned_slugs = {item["slug"] for item in response.data}
         self.assertIn("fresh-flowers", returned_slugs)
         self.assertIn("cut-flowers", returned_slugs)
+        self.assertIn("indoor-plants", returned_slugs)
         self.assertNotIn("inactive-flowers", returned_slugs)
+        self.assertTrue(
+            all("description" in item for item in response.data),
+        )
 
     def test_product_list_returns_active_products(self):
         product = self.make_product(cover_image="dawoodi-white.jpg")
@@ -69,6 +73,62 @@ class CatalogAPITests(APITestCase):
             self.product_results(response)[0]["cover_image"],
             "dawoodi-white.jpg",
         )
+
+    def test_existing_non_plant_product_serializes_with_optional_fields(self):
+        product = self.make_product()
+
+        response = self.client.get(
+            reverse(
+                "products:product-detail",
+                kwargs={"slug": product.slug},
+            ),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["quality_grade"], "")
+        self.assertEqual(response.data["quality_grade_display"], "")
+        self.assertIsNone(response.data["plant_height_cm"])
+        self.assertIsNone(response.data["is_pet_friendly"])
+        self.assertEqual(response.data["care_difficulty"], "")
+
+    def test_plant_fields_and_choice_labels_appear_in_catalog_and_detail(self):
+        product = self.make_product(
+            plant_size="متوسط",
+            plant_height_cm=55,
+            quality_grade=Product.QualityGrade.PREMIUM,
+            is_pet_friendly=False,
+            pot_included=True,
+            pot_material="سرامیک",
+            pot_color="سفید",
+            pot_size_cm=20,
+            pot_has_drainage=True,
+            light_requirement="نور غیرمستقیم",
+            watering_requirement="پس از خشک شدن خاک",
+            care_difficulty=Product.CareDifficulty.EASY,
+            ideal_temperature="۱۸ تا ۲۸ درجه",
+            care_tips="از آبیاری زیاد خودداری کنید.",
+            delivery_notes="با بسته‌بندی محافظ ارسال می‌شود.",
+        )
+
+        list_response = self.client.get(reverse("products:product-list"))
+        detail_response = self.client.get(
+            reverse(
+                "products:product-detail",
+                kwargs={"slug": product.slug},
+            ),
+        )
+
+        for payload in (
+            self.product_results(list_response)[0],
+            detail_response.data,
+        ):
+            self.assertEqual(payload["plant_height_cm"], 55)
+            self.assertEqual(payload["quality_grade"], "premium")
+            self.assertEqual(payload["quality_grade_display"], "ممتاز")
+            self.assertEqual(payload["care_difficulty"], "easy")
+            self.assertEqual(payload["care_difficulty_display"], "آسان")
+            self.assertFalse(payload["is_pet_friendly"])
+            self.assertTrue(payload["pot_has_drainage"])
 
     def test_inactive_products_are_excluded(self):
         self.make_product(is_active=False)

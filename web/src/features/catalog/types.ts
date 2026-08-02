@@ -2,9 +2,13 @@ export interface CatalogCategory {
   id: number;
   name: string;
   slug: string;
+  description?: string;
   image: string | null;
   sort_order: number;
 }
+
+export type QualityGrade = "standard" | "premium" | "luxury";
+export type CareDifficulty = "easy" | "medium" | "hard";
 
 export interface ProductCategorySummary {
   id: number;
@@ -19,6 +23,23 @@ export interface CatalogProduct {
   flower_type: string;
   color: string;
   short_description: string;
+  plant_size?: string;
+  plant_height_cm?: number | null;
+  quality_grade?: QualityGrade | "";
+  quality_grade_display?: string;
+  is_pet_friendly?: boolean | null;
+  pot_included?: boolean;
+  pot_material?: string;
+  pot_color?: string;
+  pot_size_cm?: number | null;
+  pot_has_drainage?: boolean | null;
+  light_requirement?: string;
+  watering_requirement?: string;
+  care_difficulty?: CareDifficulty | "";
+  care_difficulty_display?: string;
+  ideal_temperature?: string;
+  care_tips?: string;
+  delivery_notes?: string;
   stems_per_bundle: number;
   price_per_bundle: number;
   stock_bundles: number;

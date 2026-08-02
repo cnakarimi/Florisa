@@ -12,10 +12,13 @@ import {
   Minus,
   Package,
   Plus,
+  Ruler,
   Share2,
   ShoppingBag,
   Sparkles,
+  Sun,
   Tag,
+  Truck,
   X,
 } from "lucide-react";
 
@@ -42,6 +45,11 @@ interface GalleryImage {
   key: string;
   src: string | null;
   alt: string;
+}
+
+interface ProductInfoItem {
+  label: string;
+  value: string;
 }
 
 export function ProductDetailView({
@@ -104,6 +112,79 @@ export function ProductDetailView({
   const totalPrice = product.price_per_bundle * quantity;
   const isLowStock =
     canBuy && product.stock_bundles <= Math.max(minimumQuantity + 3, 5);
+  const isPlantProduct =
+    product.category.slug === "indoor-plants" ||
+    Boolean(
+      product.plant_size ||
+        product.plant_height_cm ||
+        product.quality_grade ||
+        product.light_requirement ||
+        product.care_difficulty ||
+        product.care_tips,
+    );
+  const salesUnit = isPlantProduct ? "عدد" : "دسته";
+  const plantDetails: ProductInfoItem[] = [
+    product.quality_grade_display
+      ? { label: "درجه کیفیت", value: product.quality_grade_display }
+      : null,
+    product.plant_size
+      ? { label: "اندازه گیاه", value: product.plant_size }
+      : null,
+    product.plant_height_cm
+      ? {
+          label: "ارتفاع تقریبی",
+          value: `${toPersianDigits(product.plant_height_cm)} سانتی‌متر`,
+        }
+      : null,
+    product.is_pet_friendly !== null &&
+    product.is_pet_friendly !== undefined
+      ? {
+          label: "ایمنی حیوانات خانگی",
+          value: product.is_pet_friendly ? "سازگار" : "مناسب نیست",
+        }
+      : null,
+  ].filter((item): item is ProductInfoItem => item !== null);
+  const potDetails: ProductInfoItem[] = isPlantProduct
+    ? [
+        {
+          label: "گلدان همراه",
+          value: product.pot_included ? "دارد" : "ندارد",
+        },
+        product.pot_included && product.pot_material
+          ? { label: "جنس", value: product.pot_material }
+          : null,
+        product.pot_included && product.pot_color
+          ? { label: "رنگ", value: product.pot_color }
+          : null,
+        product.pot_included && product.pot_size_cm
+          ? {
+              label: "اندازه",
+              value: `${toPersianDigits(product.pot_size_cm)} سانتی‌متر`,
+            }
+          : null,
+        product.pot_included && product.pot_has_drainage !== null &&
+        product.pot_has_drainage !== undefined
+          ? {
+              label: "زهکشی",
+              value: product.pot_has_drainage ? "دارد" : "ندارد",
+            }
+          : null,
+      ].filter((item): item is ProductInfoItem => item !== null)
+    : [];
+  const careDetails: ProductInfoItem[] = [
+    product.light_requirement
+      ? { label: "نور", value: product.light_requirement }
+      : null,
+    product.watering_requirement
+      ? { label: "آبیاری", value: product.watering_requirement }
+      : null,
+    product.care_difficulty_display
+      ? { label: "سختی نگهداری", value: product.care_difficulty_display }
+      : null,
+    product.ideal_temperature
+      ? { label: "دمای ایده‌آل", value: product.ideal_temperature }
+      : null,
+  ].filter((item): item is ProductInfoItem => item !== null);
 
   useEffect(() => {
     return () => {
@@ -385,7 +466,9 @@ export function ProductDetailView({
             <div className="mt-7 overflow-hidden rounded-[22px] border border-white/[0.06] bg-[#181a18] shadow-[0_16px_45px_rgba(0,0,0,0.2)]">
               <div className="flex items-center justify-between gap-4 p-4 sm:p-5">
                 <div>
-                  <p className="text-[10px] text-white/35">قیمت هر دسته</p>
+                  <p className="text-[10px] text-white/35">
+                    {isPlantProduct ? "قیمت محصول" : "قیمت هر دسته"}
+                  </p>
                   <p className="mt-1.5 text-lg font-black text-[#ddc362] sm:text-xl">
                     {formatToman(product.price_per_bundle)}
                   </p>
@@ -404,9 +487,11 @@ export function ProductDetailView({
 
               <div className="flex items-center justify-between gap-4 border-t border-white/[0.05] px-4 py-3.5 sm:px-5">
                 <div>
-                  <p className="text-xs font-bold text-white/85">تعداد دسته</p>
+                  <p className="text-xs font-bold text-white/85">
+                    تعداد {salesUnit}
+                  </p>
                   <p className="mt-1 text-[9px] text-white/35 sm:text-[10px]">
-                    حداقل سفارش {toPersianDigits(minimumQuantity)} دسته
+                    حداقل سفارش {toPersianDigits(minimumQuantity)} {salesUnit}
                   </p>
                 </div>
 
@@ -464,23 +549,33 @@ export function ProductDetailView({
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <DetailStat
-              icon={<Flower2 className="h-[18px] w-[18px]" />}
-              label="شاخه در هر دسته"
-              value={`${toPersianDigits(product.stems_per_bundle)} شاخه`}
+               icon={
+                 isPlantProduct ? (
+                   <Leaf className="h-[18px] w-[18px]" />
+                 ) : (
+                   <Flower2 className="h-[18px] w-[18px]" />
+                 )
+               }
+               label={isPlantProduct ? "تعداد در هر بسته" : "شاخه در هر دسته"}
+               value={
+                 isPlantProduct
+                   ? `${toPersianDigits(product.stems_per_bundle)} عدد`
+                   : `${toPersianDigits(product.stems_per_bundle)} شاخه`
+               }
             />
             <DetailStat
               icon={<Package className="h-[18px] w-[18px]" />}
               label="موجودی"
               value={
                 canBuy
-                  ? `${toPersianDigits(product.stock_bundles)} دسته`
+                   ? `${toPersianDigits(product.stock_bundles)} ${salesUnit}`
                   : "ناموجود"
               }
             />
             <DetailStat
               icon={<Layers3 className="h-[18px] w-[18px]" />}
               label="حداقل سفارش"
-              value={`${toPersianDigits(minimumQuantity)} دسته`}
+               value={`${toPersianDigits(minimumQuantity)} ${salesUnit}`}
             />
             <DetailStat
               icon={<Tag className="h-[18px] w-[18px]" />}
@@ -490,26 +585,66 @@ export function ProductDetailView({
           </div>
         </section>
 
-        <section
-          className="mx-4 mt-9 border-t border-white/[0.06] pt-7 sm:mx-6 md:mx-8 md:mt-11"
-          aria-labelledby="product-description"
-        >
-          <h2
-            id="product-description"
-            className="text-base font-extrabold text-[#e8e5df] sm:text-lg"
+        {plantDetails.length > 0 ? (
+          <ProductInfoSection
+            id="plant-information"
+            title="مشخصات گیاه"
+            icon={<Ruler className="h-5 w-5" />}
+            items={plantDetails}
+          />
+        ) : null}
+
+        {potDetails.length > 0 ? (
+          <ProductInfoSection
+            id="included-pot"
+            title="گلدان همراه"
+            icon={<Package className="h-5 w-5" />}
+            items={potDetails}
+          />
+        ) : null}
+
+        {careDetails.length > 0 || product.care_tips ? (
+          <ProductInfoSection
+            id="plant-care"
+            title="راهنمای نگهداری"
+            icon={<Sun className="h-5 w-5" />}
+            items={careDetails}
+            body={product.care_tips}
+          />
+        ) : null}
+
+        {product.delivery_notes ? (
+          <ProductInfoSection
+            id="delivery-notes"
+            title="نکات ارسال"
+            icon={<Truck className="h-5 w-5" />}
+            items={[]}
+            body={product.delivery_notes}
+          />
+        ) : null}
+
+        {product.description || product.short_description ? (
+          <section
+            className="mx-4 mt-9 border-t border-white/[0.06] pt-7 sm:mx-6 md:mx-8 md:mt-11"
+            aria-labelledby="product-description"
           >
-            درباره این محصول
-          </h2>
-          <p className="mt-3 max-w-3xl whitespace-pre-line text-[13px] leading-7 text-white/45 sm:text-sm sm:leading-8">
-            {product.description || product.short_description}
-          </p>
-        </section>
+            <h2
+              id="product-description"
+              className="text-base font-extrabold text-[#e8e5df] sm:text-lg"
+            >
+              درباره این محصول
+            </h2>
+            <p className="mt-3 max-w-3xl whitespace-pre-line text-[13px] leading-7 text-white/45 sm:text-sm sm:leading-8">
+              {product.description || product.short_description}
+            </p>
+          </section>
+        ) : null}
 
         <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-screen-lg border-t border-white/[0.07] bg-[#111211]/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_35px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:px-6 md:px-8">
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="min-w-0 shrink-0">
               <p className="text-[9px] text-white/35 sm:text-[10px]">
-                جمع {toPersianDigits(quantity)} دسته
+                جمع {toPersianDigits(quantity)} {salesUnit}
               </p>
               <p className="mt-1 whitespace-nowrap text-sm font-black text-[#ddc362] sm:text-base">
                 {formatToman(totalPrice)}
@@ -566,6 +701,56 @@ export function ProductDetailView({
         </div>
       ) : null}
     </main>
+  );
+}
+
+function ProductInfoSection({
+  id,
+  title,
+  icon,
+  items,
+  body,
+}: {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  items: ProductInfoItem[];
+  body?: string;
+}) {
+  return (
+    <section
+      className="mx-4 mt-7 rounded-[22px] border border-white/[0.06] bg-[#181a18] p-4 sm:mx-6 sm:p-5 md:mx-8"
+      aria-labelledby={id}
+    >
+      <div className="flex items-center gap-2 text-[#9fc0aa]">
+        {icon}
+        <h2 id={id} className="text-sm font-extrabold text-[#e8e5df] sm:text-base">
+          {title}
+        </h2>
+      </div>
+
+      {items.length > 0 ? (
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+          {items.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/[0.05] bg-black/15 p-3.5"
+            >
+              <dt className="text-[10px] text-white/35">{item.label}</dt>
+              <dd className="mt-1.5 text-xs font-bold leading-6 text-white/75">
+                {item.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      {body ? (
+        <p className="mt-4 whitespace-pre-line text-xs leading-7 text-white/50 sm:text-[13px]">
+          {body}
+        </p>
+      ) : null}
+    </section>
   );
 }
 

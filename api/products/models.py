@@ -6,6 +6,7 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField("نام", max_length=120)
     slug = models.SlugField("نامک", max_length=140, unique=True)
+    description = models.TextField("توضیحات", blank=True)
     image = models.ImageField(
         "تصویر",
         upload_to="categories/",
@@ -27,6 +28,16 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    class QualityGrade(models.TextChoices):
+        STANDARD = "standard", "استاندارد"
+        PREMIUM = "premium", "ممتاز"
+        LUXURY = "luxury", "لوکس"
+
+    class CareDifficulty(models.TextChoices):
+        EASY = "easy", "آسان"
+        MEDIUM = "medium", "متوسط"
+        HARD = "hard", "حساس"
+
     category = models.ForeignKey(
         Category,
         on_delete=models.PROTECT,
@@ -43,6 +54,77 @@ class Product(models.Model):
         blank=True,
     )
     description = models.TextField("توضیحات", blank=True)
+    plant_size = models.CharField(
+        "اندازه گیاه",
+        max_length=50,
+        blank=True,
+    )
+    plant_height_cm = models.PositiveSmallIntegerField(
+        "ارتفاع تقریبی گیاه (سانتی‌متر)",
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
+    )
+    quality_grade = models.CharField(
+        "درجه کیفیت",
+        max_length=20,
+        choices=QualityGrade.choices,
+        blank=True,
+    )
+    is_pet_friendly = models.BooleanField(
+        "سازگار با حیوانات خانگی",
+        blank=True,
+        null=True,
+    )
+    pot_included = models.BooleanField("گلدان همراه", default=True)
+    pot_material = models.CharField(
+        "جنس گلدان",
+        max_length=50,
+        blank=True,
+    )
+    pot_color = models.CharField(
+        "رنگ گلدان",
+        max_length=50,
+        blank=True,
+    )
+    pot_size_cm = models.PositiveSmallIntegerField(
+        "اندازه گلدان (سانتی‌متر)",
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
+    )
+    pot_has_drainage = models.BooleanField(
+        "دارای زهکشی",
+        blank=True,
+        null=True,
+    )
+    light_requirement = models.CharField(
+        "نیاز نوری",
+        max_length=100,
+        blank=True,
+    )
+    watering_requirement = models.CharField(
+        "نیاز آبیاری",
+        max_length=100,
+        blank=True,
+    )
+    care_difficulty = models.CharField(
+        "سختی نگهداری",
+        max_length=20,
+        choices=CareDifficulty.choices,
+        blank=True,
+    )
+    ideal_temperature = models.CharField(
+        "دمای ایده‌آل",
+        max_length=50,
+        blank=True,
+    )
+    care_tips = models.TextField("نکات نگهداری", blank=True)
+    delivery_notes = models.CharField(
+        "نکات ارسال",
+        max_length=250,
+        blank=True,
+    )
     stems_per_bundle = models.PositiveIntegerField(
         "تعداد شاخه در دسته",
         default=20,

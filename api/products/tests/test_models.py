@@ -43,6 +43,49 @@ class CatalogModelTests(TestCase):
         self.assertEqual(product.stems_per_bundle, 20)
         self.assertEqual(product.price_per_bundle, 250_000)
 
+    def test_plant_fields_are_optional_for_existing_products(self):
+        product = self.make_product()
+
+        product.full_clean()
+
+        self.assertEqual(product.quality_grade, "")
+        self.assertIsNone(product.plant_height_cm)
+        self.assertIsNone(product.is_pet_friendly)
+        self.assertTrue(product.pot_included)
+
+    def test_plant_choice_values_and_labels_are_stable(self):
+        product = self.make_product(
+            quality_grade=Product.QualityGrade.PREMIUM,
+            care_difficulty=Product.CareDifficulty.EASY,
+        )
+
+        product.full_clean()
+
+        self.assertEqual(product.quality_grade, "premium")
+        self.assertEqual(product.get_quality_grade_display(), "ممتاز")
+        self.assertEqual(product.care_difficulty, "easy")
+        self.assertEqual(product.get_care_difficulty_display(), "آسان")
+
+    def test_plant_dimensions_must_be_positive_when_provided(self):
+        product = self.make_product(plant_height_cm=0, pot_size_cm=0)
+
+        with self.assertRaises(ValidationError) as error:
+            product.full_clean()
+
+        self.assertIn("plant_height_cm", error.exception.message_dict)
+        self.assertIn("pot_size_cm", error.exception.message_dict)
+
+    def test_pot_details_are_optional_when_pot_is_not_included(self):
+        product = self.make_product(
+            pot_included=False,
+            pot_material="",
+            pot_color="",
+            pot_size_cm=None,
+            pot_has_drainage=None,
+        )
+
+        product.full_clean()
+
     def test_product_image_can_be_created(self):
         product = self.make_product()
         image = ProductImage.objects.create(

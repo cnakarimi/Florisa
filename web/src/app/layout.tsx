@@ -3,6 +3,7 @@ import { Vazirmatn } from "next/font/google";
 import type { ReactNode } from "react";
 import { AuthProvider } from "@/features/auth/hooks/AuthProvider";
 import { CartProvider } from "@/features/cart/hooks/CartProvider";
+import { FavoritesProvider } from "@/features/favorites/hooks/FavoritesProvider";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="fa" dir="rtl">
       <body className={vazirmatn.variable}>
         <CartProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <FavoritesProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </FavoritesProvider>
         </CartProvider>
       </body>
     </html>

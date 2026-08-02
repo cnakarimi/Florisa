@@ -8,7 +8,6 @@ import { clearPendingPhone } from "@/features/auth/utils/storage";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { BottomNav } from "@/features/home/components/BottomNav";
 import { ProfileView } from "@/features/home/components/ProfileView";
-import type { TabType } from "@/features/home/types";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
 export function ProfileExperience() {
@@ -73,14 +72,6 @@ export function ProfileExperience() {
     router.replace("/auth");
   };
 
-  const handleNavigation = (tab: TabType) => {
-    if (tab === "profile") {
-      return;
-    }
-
-    router.push("/");
-  };
-
   if (
     auth.isInitializing ||
     auth.initializationError ||
@@ -110,15 +101,13 @@ export function ProfileExperience() {
           logoutError={logoutError}
           cartCount={cart.totalBundles}
           onNavigateToCart={() => router.push("/cart")}
-          onNavigateToTab={handleNavigation}
+          onNavigateToTab={(tab) =>
+            router.push(tab === "home" ? "/" : `/${tab}`)
+          }
         />
       </main>
 
-      <BottomNav
-        activeTab="profile"
-        setActiveTab={handleNavigation}
-        favoritesCount={0}
-      />
+      <BottomNav />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CartItem } from "@/features/cart/types";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
+import { BottomNav } from "@/features/home/components/BottomNav";
 import {
   formatToman,
   toPersianDigits,
@@ -52,7 +53,12 @@ export function CartPageExperience({
   }, [cart]);
 
   if (!cart.isHydrated) {
-    return <CartPageLoading />;
+    return (
+      <>
+        <CartPageLoading />
+        <BottomNav />
+      </>
+    );
   }
 
   const goBack = () => {
@@ -117,10 +123,11 @@ export function CartPageExperience({
   };
 
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen bg-[#0d0e12] pb-36 text-right text-zinc-100 animate-in fade-in duration-300"
-    >
+    <>
+      <main
+        dir="rtl"
+        className="min-h-screen bg-[#0d0e12] pb-36 text-right text-zinc-100 animate-in fade-in duration-300"
+      >
       <header className="relative z-20 mx-auto mb-6 flex w-full max-w-md items-center justify-between px-4 pt-4">
         <button
           type="button"
@@ -193,7 +200,7 @@ export function CartPageExperience({
             </p>
             <button
               type="button"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/shop")}
               className="mt-4 rounded-xl bg-amber-400 px-6 py-3 text-xs font-extrabold text-black shadow-lg shadow-amber-500/10 transition hover:bg-amber-300"
             >
               مشاهده فروشگاه
@@ -392,7 +399,7 @@ export function CartPageExperience({
       </div>
 
       {cart.items.length > 0 ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md border-t border-white/10 bg-[#121319]/95 px-4 py-3.5 shadow-2xl backdrop-blur-xl">
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md border-t border-white/10 bg-[#121319]/95 px-4 py-3.5 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4">
             <button
               type="button"
@@ -419,7 +426,7 @@ export function CartPageExperience({
           </div>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/shop")}
             className="mt-2 flex w-full items-center justify-center gap-1 py-1 text-[11px] text-zinc-400 hover:text-white"
           >
             ادامه خرید
@@ -427,7 +434,9 @@ export function CartPageExperience({
           </button>
         </div>
       ) : null}
-    </main>
+      </main>
+      <BottomNav />
+    </>
   );
 }
 

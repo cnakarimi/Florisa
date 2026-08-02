@@ -40,4 +40,4 @@ export interface Article {
   tags: string[];
 }
 
-export type TabType = 'home' | 'shop' | 'care_ai' | 'favorites' | 'profile';
+export type TabType = "home" | "shop" | "cart" | "favorites" | "profile";

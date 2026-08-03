@@ -20,5 +20,5 @@ export function getSaleUnitLabel(product: CatalogProduct): string {
 }
 
 export function getPriceUnitLabel(product: CatalogProduct): string {
-  return `تومان / ${getSaleUnitLabel(product)}`;
+  return `${getSaleUnitLabel(product)}`;
 }

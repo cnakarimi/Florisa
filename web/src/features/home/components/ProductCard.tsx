@@ -36,15 +36,16 @@ export function ProductCard({
     product.stock_quantity >= product.minimum_order_quantity;
 
   const visibleTag = getProductIdentity(product) || getProductColor(product);
-  const plantBadges = product.product_type === "plant" && product.details
-    ? [
-        product.details.quality_grade_display
-          ? `کیفیت ${product.details.quality_grade_display}`
-          : null,
-        product.details.care_difficulty === "easy" ? "نگهداری آسان" : null,
-        product.details.pot_included ? "گلدان همراه" : null,
-      ].filter((badge): badge is string => Boolean(badge))
-    : [];
+  const plantBadges =
+    product.product_type === "plant" && product.details
+      ? [
+          product.details.quality_grade_display
+            ? `کیفیت ${product.details.quality_grade_display}`
+            : null,
+          product.details.care_difficulty === "easy" ? "نگهداری آسان" : null,
+          product.details.pot_included ? "گلدان همراه" : null,
+        ].filter((badge): badge is string => Boolean(badge))
+      : [];
 
   useEffect(() => {
     return () => {
@@ -139,50 +140,22 @@ export function ProductCard({
           <h3 className="truncate text-[13px] font-extrabold leading-6 text-[#efede8] sm:text-sm">
             {product.name}
           </h3>
-
-          <p className="mt-0.5 truncate text-[10px] text-[#898d87] sm:text-[11px]">
-            {product.category.name}
-          </p>
-
-          {plantBadges.length > 0 ? (
-            <span className="mt-2 flex flex-wrap gap-1.5">
-              {plantBadges.map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-full border border-[#9fc0aa]/15 bg-[#203329]/60 px-2 py-1 text-[8px] font-semibold text-[#afd0b8] sm:text-[9px]"
-                >
-                  {badge}
-                </span>
-              ))}
-            </span>
-          ) : null}
         </button>
 
         <div className="my-3 h-px bg-gradient-to-l from-white/10 via-white/[0.05] to-transparent" />
 
         {/* قیمت در یک ردیف مستقل */}
         <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
-          <div className="min-w-0">
-            <span className="mb-1 block text-[9px] font-medium text-white/35 sm:text-[10px]">
-              قیمت هر واحد فروش
+          <div className="flex items-center justify-between w-full">
+            <span className=" block text-[9px] font-medium text-white/35 sm:text-[10px]">
+              قیمت هر {getPriceUnitLabel(product)}
             </span>
 
+            <span className="mt-1 block text-[8px] text-white/35 sm:text-[9px]"></span>
             <span className="block whitespace-nowrap text-[13px] font-black tracking-tight text-[#e2c86f] sm:text-[15px]">
               {formatToman(product.price)}
             </span>
-            <span className="mt-1 block text-[8px] text-white/35 sm:text-[9px]">
-              {getPriceUnitLabel(product)}
-            </span>
           </div>
-
-          <span
-            className={`mb-0.5 h-2 w-2 shrink-0 rounded-full ${
-              isAvailable
-                ? "bg-emerald-400 shadow-[0_0_9px_rgba(52,211,153,0.55)]"
-                : "bg-white/20"
-            }`}
-            aria-hidden="true"
-          />
         </div>
 
         {/* دکمه تمام‌عرض */}
@@ -221,12 +194,6 @@ export function ProductCard({
           )}
         </button>
       </div>
-
-      {/* خط طلایی پایین کارت */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-6 h-[2px] w-10 rounded-full bg-[#c7a23c]/70 shadow-[0_0_12px_rgba(199,162,60,0.4)]"
-      />
     </article>
   );
 }

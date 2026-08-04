@@ -74,11 +74,11 @@ export function ProductCard({
       className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#181a18] shadow-[0_14px_40px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-[#c7a23c]/20 hover:shadow-[0_20px_55px_rgba(0,0,0,0.35)]"
     >
       {/* تصویر محصول */}
-      <div className="relative p-1.5 pb-0">
+      <div className="relative  pb-0">
         <button
           type="button"
           onClick={() => onSelectProduct(product)}
-          className="relative block aspect-square w-full overflow-hidden rounded-[17px] bg-[#0e110f] text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
+          className="relative block aspect-square w-full overflow-hidden rounded-t-[17px] bg-[#0e110f] text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
           aria-label={`مشاهده محصول ${product.name}`}
         >
           <CatalogImage

@@ -77,7 +77,7 @@ export function CartPageExperience({
   };
 
   const decreaseItem = (item: CartItem) => {
-    if (item.quantity <= item.product.minimum_order_bundles) {
+    if (item.quantity <= item.product.minimum_order_quantity) {
       confirmRemove(item);
       return;
     }
@@ -213,16 +213,16 @@ export function CartPageExperience({
                 const isUnavailable =
                   !item.product.is_available ||
                   !item.product.is_in_stock ||
-                  item.product.stock_bundles <
-                    item.product.minimum_order_bundles;
+                  item.product.stock_quantity <
+                    item.product.minimum_order_quantity;
                 const isAtMinimum =
-                  item.quantity <= item.product.minimum_order_bundles;
+                  item.quantity <= item.product.minimum_order_quantity;
                 const isAtMaximum =
-                  item.quantity >= item.product.stock_bundles;
-                const itemStems =
-                  item.quantity * item.product.stems_per_bundle;
+                  item.quantity >= item.product.stock_quantity;
+                const itemUnits =
+                  item.quantity * item.product.unit_size;
                 const itemSubtotal =
-                  item.quantity * item.product.price_per_bundle;
+                  item.quantity * item.product.price;
 
                 return (
                   <article
@@ -258,7 +258,7 @@ export function CartPageExperience({
                               {item.product.name}
                             </h2>
                             <p className="mt-1 truncate text-[11px] text-zinc-400">
-                              {item.product.flower_type}
+                              {item.product.product_identity}
                               {item.product.color
                                 ? `، ${item.product.color}`
                                 : ""}
@@ -293,7 +293,7 @@ export function CartPageExperience({
                               aria-label={
                                 isAtMinimum
                                   ? `حذف ${item.product.name}`
-                                  : "کاهش یک دسته"
+                                  : `کاهش یک ${item.product.sale_unit_display}`
                               }
                             >
                               {isAtMinimum ? (
@@ -312,7 +312,7 @@ export function CartPageExperience({
                               }
                               disabled={isUnavailable || isAtMaximum}
                               className="flex h-6 w-6 items-center justify-center rounded-md font-bold text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-                              aria-label="افزایش یک دسته"
+                              aria-label={`افزایش یک ${item.product.sale_unit_display}`}
                             >
                               +
                             </button>
@@ -323,18 +323,18 @@ export function CartPageExperience({
 
                     <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
                       <CartItemFact
-                        label="تعداد دسته"
-                        value={toPersianDigits(item.quantity)}
+                        label={`تعداد ${item.product.sale_unit_display}`}
+                        value={`${toPersianDigits(item.quantity)} ${item.product.sale_unit_display}`}
                       />
                       <CartItemFact
-                        label="شاخه در هر دسته"
+                        label="تعداد در هر واحد"
                         value={toPersianDigits(
-                          item.product.stems_per_bundle,
+                          item.product.unit_size,
                         )}
                       />
                       <CartItemFact
-                        label="مجموع شاخه"
-                        value={toPersianDigits(itemStems)}
+                        label="مجموع تعداد"
+                        value={toPersianDigits(itemUnits)}
                       />
                     </div>
 
@@ -345,13 +345,13 @@ export function CartPageExperience({
                       </p>
                     ) : (
                       <p className="mt-2 text-[10px] text-zinc-500">
-                        قیمت هر دسته:{" "}
-                        {formatToman(item.product.price_per_bundle)} · حداقل{" "}
+                        قیمت هر {item.product.sale_unit_display}:{" "}
+                        {formatToman(item.product.price)} · حداقل{" "}
                         {toPersianDigits(
-                          item.product.minimum_order_bundles,
+                          item.product.minimum_order_quantity,
                         )}{" "}
-                        دسته · موجودی{" "}
-                        {toPersianDigits(item.product.stock_bundles)} دسته
+                        {item.product.sale_unit_display} · موجودی{" "}
+                        {toPersianDigits(item.product.stock_quantity)} {item.product.sale_unit_display}
                       </p>
                     )}
                   </article>
@@ -370,12 +370,8 @@ export function CartPageExperience({
                   value={`${toPersianDigits(cart.totalItems)} مورد`}
                 />
                 <SummaryRow
-                  label="مجموع دسته‌ها"
-                  value={`${toPersianDigits(cart.totalBundles)} دسته`}
-                />
-                <SummaryRow
-                  label="مجموع شاخه‌ها"
-                  value={`${toPersianDigits(cart.totalStems)} شاخه`}
+                  label="مجموع واحدهای فروش"
+                  value={toPersianDigits(cart.totalQuantity)}
                 />
                 <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-bold">
                   <span className="text-zinc-300">مبلغ کل محصولات</span>

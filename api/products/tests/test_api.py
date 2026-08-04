@@ -92,7 +92,7 @@ class CatalogAPITests(APITestCase):
         return response.data["results"]
 
     def test_subtype_payloads_are_discriminated_and_image_contract_is_preserved(self):
-        plant = self.make_plant(cover_image="golden-pothos.jpg")
+        plant = self.make_plant(cover_image="golden-pothos.webp")
         flower = self.make_cut_flower()
         ProductImage.objects.create(product=plant, image="plant-detail.jpg")
 
@@ -108,8 +108,8 @@ class CatalogAPITests(APITestCase):
         self.assertNotIn("flower_type", plant_payload["details"])
         self.assertEqual(flower_payload["details"]["flower_type"], "رز")
         self.assertNotIn("plant_type", flower_payload["details"])
-        self.assertEqual(plant_payload["cover_image"], "golden-pothos.jpg")
-        self.assertEqual(detail_response.data["cover_image"], "golden-pothos.jpg")
+        self.assertEqual(plant_payload["cover_image"], "golden-pothos.webp")
+        self.assertEqual(detail_response.data["cover_image"], "golden-pothos.webp")
         self.assertEqual(detail_response.data["images"][0]["image"], "plant-detail.jpg")
 
     def test_missing_or_inconsistent_details_are_returned_as_null(self):

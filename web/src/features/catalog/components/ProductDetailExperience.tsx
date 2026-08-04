@@ -139,7 +139,7 @@ export function ProductDetailExperience({
       <ProductDetailView
         key={product.id}
         product={product}
-        cartCount={cart.totalBundles}
+        cartCount={cart.isHydrated ? cart.totalQuantity : 0}
         isFavorite={isFavorite}
         onBack={goBack}
         onNavigateToCart={() => router.push("/cart")}

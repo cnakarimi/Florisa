@@ -2,8 +2,10 @@ from django.test import TestCase
 
 from products.models import Category, PlantDetails, Product
 from products.seeding import (
+    CUT_FLOWERS_CATEGORY_IMAGE,
     CUT_FLOWERS_NAME,
     CUT_FLOWERS_SLUG,
+    INDOOR_PLANTS_CATEGORY_IMAGE,
     INDOOR_PLANTS_DESCRIPTION,
     INDOOR_PLANTS_NAME,
     INDOOR_PLANTS_SLUG,
@@ -18,6 +20,7 @@ class InitialCategoryTests(TestCase):
         category = Category.objects.get(slug=CUT_FLOWERS_SLUG)
 
         self.assertEqual(category.name, CUT_FLOWERS_NAME)
+        self.assertEqual(category.image, CUT_FLOWERS_CATEGORY_IMAGE)
         self.assertTrue(category.is_active)
         self.assertEqual(category.sort_order, 0)
 
@@ -36,6 +39,7 @@ class InitialCategoryTests(TestCase):
 
         self.assertEqual(category.name, INDOOR_PLANTS_NAME)
         self.assertEqual(category.description, INDOOR_PLANTS_DESCRIPTION)
+        self.assertEqual(category.image, INDOOR_PLANTS_CATEGORY_IMAGE)
         self.assertTrue(category.is_active)
 
     def test_indoor_plant_product_seed_is_idempotent(self):
@@ -64,6 +68,20 @@ class InitialCategoryTests(TestCase):
                 ).values_list("slug", "price"),
             ),
             expected_prices,
+        )
+        self.assertEqual(
+            dict(
+                Product.objects.filter(
+                    category__slug=INDOOR_PLANTS_SLUG,
+                ).values_list("slug", "cover_image"),
+            ),
+            {
+                "zamioculcas-green": "green-zz-plant.webp",
+                "sword-sansevieria": "snake-plant.webp",
+                "fiddle-leaf-fig": "parlor-palm.webp",
+                "variegated-pothos": "golden-pothos.webp",
+                "monstera-deliciosa": "variegated-spider-plant.webp",
+            },
         )
         self.assertEqual(
             Product.objects.get(slug="fiddle-leaf-fig").plant_details.quality_grade,

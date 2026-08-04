@@ -21,14 +21,18 @@ import {
   isCartItemValid,
   productToCartSnapshot,
 } from "@/features/cart/types";
+import {
+  addCartSnapshot,
+  calculateCartTotals,
+  normalizeCartQuantity,
+} from "@/features/cart/logic";
 
 const REFRESH_TTL_MS = 60_000;
 
 interface CartContextValue {
   items: CartItem[];
   totalItems: number;
-  totalBundles: number;
-  totalStems: number;
+  totalQuantity: number;
   subtotal: number;
   isHydrated: boolean;
   isRefreshing: boolean;
@@ -46,23 +50,6 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-
-function normalizeQuantity(
-  product: CartItem["product"],
-  quantity: number,
-): number | null {
-  if (!product.is_available || !product.is_in_stock) {
-    return null;
-  }
-
-  const minimum = Math.max(1, Math.trunc(product.minimum_order_bundles));
-  const stock = Math.max(0, Math.trunc(product.stock_bundles));
-  if (stock < minimum) {
-    return null;
-  }
-
-  return Math.min(stock, Math.max(minimum, Math.trunc(quantity)));
-}
 
 function cartResult(
   items: CartItem[],
@@ -123,39 +110,7 @@ export function CartProvider({ children }: CartProviderProps) {
       }
 
       const snapshot = productToCartSnapshot(product);
-      const increment = Math.max(
-        snapshot.minimum_order_bundles,
-        Math.trunc(
-          requestedQuantity ?? snapshot.minimum_order_bundles,
-        ),
-      );
-
-      setItems((current) => {
-        const existing = current.find(
-          (item) => item.product.id === snapshot.id,
-        );
-
-        if (!existing) {
-          const quantity = normalizeQuantity(snapshot, increment);
-          return quantity
-            ? [...current, { product: snapshot, quantity }]
-            : current;
-        }
-
-        const quantity = normalizeQuantity(
-          snapshot,
-          existing.quantity + increment,
-        );
-        if (!quantity) {
-          return current;
-        }
-
-        return current.map((item) =>
-          item.product.id === snapshot.id
-            ? { product: snapshot, quantity }
-            : item,
-        );
-      });
+      setItems((current) => addCartSnapshot(current, snapshot, requestedQuantity));
     },
     [],
   );
@@ -179,14 +134,14 @@ export function CartProvider({ children }: CartProviderProps) {
 
         const minimum = Math.max(
           1,
-          Math.trunc(item.product.minimum_order_bundles),
+          Math.trunc(item.product.minimum_order_quantity),
         );
         const requested = Math.trunc(quantity);
         if (requested < minimum) {
           return [];
         }
 
-        const normalized = normalizeQuantity(item.product, requested);
+        const normalized = normalizeCartQuantity(item.product, requested);
         return normalized ? [{ ...item, quantity: normalized }] : [item];
       }),
     );
@@ -199,7 +154,7 @@ export function CartProvider({ children }: CartProviderProps) {
           return item;
         }
 
-        const quantity = normalizeQuantity(
+        const quantity = normalizeCartQuantity(
           item.product,
           item.quantity + 1,
         );
@@ -217,7 +172,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
         const minimum = Math.max(
           1,
-          Math.trunc(item.product.minimum_order_bundles),
+          Math.trunc(item.product.minimum_order_quantity),
         );
         if (item.quantity - 1 < minimum) {
           return [];
@@ -277,10 +232,10 @@ export function CartProvider({ children }: CartProviderProps) {
                 );
                 const snapshot = productToCartSnapshot(product);
                 const quantity =
-                  normalizeQuantity(snapshot, item.quantity) ??
+                  normalizeCartQuantity(snapshot, item.quantity) ??
                   Math.max(
                     1,
-                    Math.trunc(snapshot.minimum_order_bundles),
+                    Math.trunc(snapshot.minimum_order_quantity),
                   );
 
                 return { product: snapshot, quantity };
@@ -319,22 +274,7 @@ export function CartProvider({ children }: CartProviderProps) {
     [items, refreshError],
   );
 
-  const totals = useMemo(
-    () =>
-      items.reduce(
-        (summary, item) => ({
-          totalBundles: summary.totalBundles + item.quantity,
-          totalStems:
-            summary.totalStems +
-            item.quantity * item.product.stems_per_bundle,
-          subtotal:
-            summary.subtotal +
-            item.quantity * item.product.price_per_bundle,
-        }),
-        { totalBundles: 0, totalStems: 0, subtotal: 0 },
-      ),
-    [items],
-  );
+  const totals = useMemo(() => calculateCartTotals(items), [items]);
 
   const value = useMemo<CartContextValue>(
     () => ({

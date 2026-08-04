@@ -33,7 +33,7 @@ export function BottomNav() {
               : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           const badgeCount =
             tab.id === "cart"
-              ? cart.totalBundles
+              ? cart.totalQuantity
               : tab.id === "favorites"
                 ? favorites.length
                 : 0;
@@ -55,7 +55,7 @@ export function BottomNav() {
                   }`}
                 />
 
-                {badgeCount > 0 ? (
+                {cart.isHydrated && badgeCount > 0 ? (
                   <span className="absolute -right-2.5 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-[#c7a23c] px-1 text-[9px] font-black text-black">
                     {toPersianDigits(badgeCount)}
                   </span>

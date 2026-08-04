@@ -104,15 +104,14 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       {item.product.name}
                     </h3>
                     <p className="mt-1 text-[10px] text-zinc-400">
-                      {toPersianDigits(item.quantity)} دسته،{" "}
-                      {toPersianDigits(
-                        item.quantity * item.product.stems_per_bundle,
-                      )}{" "}
-                      شاخه
+                      {toPersianDigits(item.quantity)} {item.product.sale_unit_display}
+                      {item.product.unit_size > 1
+                        ? `، ${toPersianDigits(item.quantity * item.product.unit_size)} عدد`
+                        : ""}
                     </p>
                     <p className="mt-1 text-xs font-extrabold text-amber-400">
                       {formatToman(
-                        item.product.price_per_bundle * item.quantity,
+                        item.product.price * item.quantity,
                       )}
                     </p>
                     {!item.product.is_available ||

@@ -38,17 +38,6 @@ export function ProductCard({
     product.stock_quantity >= product.minimum_order_quantity;
 
   const visibleTag = getProductIdentity(product) || getProductColor(product);
-  const plantBadges =
-    product.product_type === "plant" && product.details
-      ? [
-          product.details.quality_grade_display
-            ? `کیفیت ${product.details.quality_grade_display}`
-            : null,
-          product.details.care_difficulty === "easy" ? "نگهداری آسان" : null,
-          product.details.pot_included ? "گلدان همراه" : null,
-        ].filter((badge): badge is string => Boolean(badge))
-      : [];
-
   useEffect(() => {
     return () => {
       if (animationTimer.current) {

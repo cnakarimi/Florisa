@@ -18,7 +18,7 @@ class Category(models.Model):
         validators=[validate_repository_image_path],
         help_text=(
             "نام فایل موجود در web/public/images/categories را وارد کنید؛ "
-            "مانند florisa-indoor-plants-category.png"
+            "مانند florisa-indoor-plants-category.webp"
         ),
     )
     is_active = models.BooleanField("فعال", default=True)

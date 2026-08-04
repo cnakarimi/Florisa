@@ -4,7 +4,7 @@ import {
   type CartItem,
   type CartProductSnapshot,
   type StoredCart,
-} from "@/features/cart/types";
+} from "./types.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -26,15 +26,11 @@ function isCartProductSnapshot(value: unknown): value is CartProductSnapshot {
     Boolean(value.slug) &&
     typeof value.name === "string" &&
     (typeof value.cover_image === "string" || value.cover_image === null) &&
-    isFiniteNumber(value.price_per_bundle) &&
-    value.price_per_bundle >= 0 &&
-    isFiniteNumber(value.stems_per_bundle) &&
-    value.stems_per_bundle >= 0 &&
-    isFiniteNumber(value.stock_bundles) &&
-    value.stock_bundles >= 0 &&
-    isFiniteNumber(value.minimum_order_bundles) &&
-    value.minimum_order_bundles >= 1 &&
-    typeof value.flower_type === "string" &&
+    (isFiniteNumber(value.price) || isFiniteNumber(value.price_per_bundle)) &&
+    (isFiniteNumber(value.unit_size) || isFiniteNumber(value.stems_per_bundle)) &&
+    (isFiniteNumber(value.stock_quantity) || isFiniteNumber(value.stock_bundles)) &&
+    (isFiniteNumber(value.minimum_order_quantity) || isFiniteNumber(value.minimum_order_bundles)) &&
+    (typeof value.product_identity === "string" || typeof value.flower_type === "string") &&
     typeof value.color === "string" &&
     typeof value.is_in_stock === "boolean" &&
     typeof value.is_available === "boolean"
@@ -51,11 +47,18 @@ function isCartItem(value: unknown): value is CartItem {
 }
 
 function normalizeStoredItem(item: CartItem): CartItem {
+  const legacy = item.product as CartProductSnapshot & Record<string, unknown>;
+  const price = Number(legacy.price ?? legacy.price_per_bundle);
+  const unitSize = Number(legacy.unit_size ?? legacy.stems_per_bundle);
+  const stockQuantity = Number(legacy.stock_quantity ?? legacy.stock_bundles);
+  const minimumQuantity = Number(
+    legacy.minimum_order_quantity ?? legacy.minimum_order_bundles,
+  );
   const minimum = Math.max(
     1,
-    Math.trunc(item.product.minimum_order_bundles),
+    Math.trunc(minimumQuantity),
   );
-  const stock = Math.max(0, Math.trunc(item.product.stock_bundles));
+  const stock = Math.max(0, Math.trunc(stockQuantity));
   const requested = Math.max(1, Math.trunc(item.quantity));
   const canMeetMinimum =
     item.product.is_available &&
@@ -66,13 +69,22 @@ function normalizeStoredItem(item: CartItem): CartItem {
     product: {
       ...item.product,
       id: Math.trunc(item.product.id),
-      price_per_bundle: Math.max(0, item.product.price_per_bundle),
-      stems_per_bundle: Math.max(
+      price: Math.max(0, price),
+      unit_size: Math.max(
         0,
-        Math.trunc(item.product.stems_per_bundle),
+        Math.trunc(unitSize),
       ),
-      stock_bundles: stock,
-      minimum_order_bundles: minimum,
+      stock_quantity: stock,
+      minimum_order_quantity: minimum,
+      sale_unit: legacy.sale_unit ?? "bunch",
+      sale_unit_display:
+        typeof legacy.sale_unit_display === "string"
+          ? legacy.sale_unit_display
+          : "دسته",
+      product_type: legacy.product_type ?? "cut_flower",
+      product_identity: String(
+        legacy.product_identity ?? legacy.flower_type ?? "",
+      ),
     },
     quantity: canMeetMinimum
       ? Math.min(stock, Math.max(minimum, requested))

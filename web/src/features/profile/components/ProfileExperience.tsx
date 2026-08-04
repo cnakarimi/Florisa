@@ -99,8 +99,9 @@ export function ProfileExperience() {
           onLogout={handleLogout}
           logoutPending={isLoggingOut}
           logoutError={logoutError}
-          cartCount={cart.totalBundles}
+          cartCount={cart.isHydrated ? cart.totalQuantity : 0}
           onNavigateToCart={() => router.push("/cart")}
+          onNavigateToOrders={() => router.push("/orders")}
           onNavigateToTab={(tab) =>
             router.push(tab === "home" ? "/" : `/${tab}`)
           }

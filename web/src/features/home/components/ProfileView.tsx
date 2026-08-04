@@ -47,6 +47,7 @@ interface ProfileViewProps {
   logoutPending?: boolean;
   logoutError?: string;
   onNavigateToCart?: () => void;
+  onNavigateToOrders?: () => void;
   onNavigateToTab?: (tab: TabType) => void;
   cartCount?: number;
 }
@@ -59,6 +60,7 @@ export function ProfileView({
   logoutPending = false,
   logoutError = "",
   onNavigateToCart,
+  onNavigateToOrders,
   onNavigateToTab,
   cartCount = 0,
 }: ProfileViewProps) {
@@ -191,7 +193,10 @@ export function ProfileView({
       <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/5 bg-[#121617] shadow-lg">
         <button
           type="button"
-          onClick={() => setActiveModal("orders")}
+          onClick={() => {
+            if (onNavigateToOrders) onNavigateToOrders();
+            else setActiveModal("orders");
+          }}
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">

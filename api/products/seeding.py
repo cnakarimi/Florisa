@@ -6,6 +6,16 @@ CUT_FLOWERS_NAME = "گل شاخه‌ای"
 INDOOR_PLANTS_SLUG = "indoor-plants"
 INDOOR_PLANTS_NAME = "گیاهان آپارتمانی"
 INDOOR_PLANTS_DESCRIPTION = "انواع گیاهان طبیعی مناسب خانه و محل کار"
+INDOOR_PLANTS_CATEGORY_IMAGE = "florisa-indoor-plants-category.webp"
+CUT_FLOWERS_CATEGORY_IMAGE = "florisa-cut-flowers-category.webp"
+
+INDOOR_PLANT_COVER_IMAGES = {
+    "zamioculcas-green": "green-zz-plant.webp",
+    "sword-sansevieria": "snake-plant.webp",
+    "fiddle-leaf-fig": "parlor-palm.webp",
+    "variegated-pothos": "golden-pothos.webp",
+    "monstera-deliciosa": "variegated-spider-plant.webp",
+}
 
 INDOOR_PLANT_PRODUCTS = (
     {
@@ -161,6 +171,7 @@ def ensure_cut_flowers_category(category_model: Any):
         slug=CUT_FLOWERS_SLUG,
         defaults={
             "name": CUT_FLOWERS_NAME,
+            "image": CUT_FLOWERS_CATEGORY_IMAGE,
             "is_active": True,
             "sort_order": 0,
         },
@@ -174,6 +185,7 @@ def ensure_indoor_plants_category(category_model: Any):
         defaults={
             "name": INDOOR_PLANTS_NAME,
             "description": INDOOR_PLANTS_DESCRIPTION,
+            "image": INDOOR_PLANTS_CATEGORY_IMAGE,
             "is_active": True,
             "sort_order": 1,
         },
@@ -231,7 +243,7 @@ def ensure_indoor_plant_products(product_model: Any, category: Any):
             "sale_unit": "pot",
             "unit_size": 1,
             "minimum_order_quantity": 1,
-            "cover_image": None,
+            "cover_image": INDOOR_PLANT_COVER_IMAGES.get(seed["slug"]),
             "is_active": True,
             "is_featured": seed["is_featured"],
         }

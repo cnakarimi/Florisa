@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const HERO_IMAGE = "/images/hero_living_room_1785179404997.webp";
 
 interface HeroSectionProps {
@@ -7,11 +9,14 @@ interface HeroSectionProps {
 export function HeroSection({ onShopClick }: HeroSectionProps) {
   return (
     <section className="relative isolate aspect-[3/2] w-full overflow-hidden bg-[#111411] sm:aspect-[16/8] md:aspect-[16/7]">
-      <img
+      <Image
+        fill
         src={HERO_IMAGE}
         alt="فضای خانه با گیاهان آپارتمانی"
-        referrerPolicy="no-referrer"
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        sizes="(max-width: 1023px) 100vw, 1024px"
+        quality={80}
+        priority
+        className="object-cover object-center"
       />
 
       <div className="absolute inset-0 bg-black/30" />

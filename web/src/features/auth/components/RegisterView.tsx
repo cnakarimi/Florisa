@@ -90,7 +90,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           alt="فلوریسا"
           width={120}
           height={44}
-          priority
           className="h-10 w-auto object-contain"
         />
 

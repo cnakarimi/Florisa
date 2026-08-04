@@ -18,7 +18,6 @@ export function AuthStateScreen({ error, onRetry }: AuthStateScreenProps) {
           alt="فلوریسا"
           width={146}
           height={52}
-          priority
           className="h-12 w-auto object-contain"
         />
 

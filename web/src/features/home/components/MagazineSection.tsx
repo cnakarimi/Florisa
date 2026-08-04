@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ExternalLink, Leaf } from "lucide-react";
 import { ARTICLES } from "../data/products";
 import type { Article } from "../types";
@@ -28,11 +29,13 @@ export function MagazineSection({ onSelectArticle }: MagazineSectionProps) {
         onClick={() => onSelectArticle(featuredArticle)}
         className="group relative block aspect-[4/3] w-full overflow-hidden rounded-md bg-[#151715] text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
       >
-        <img
+        <Image
+          fill
           src={featuredArticle.image}
           alt={featuredArticle.title}
-          referrerPolicy="no-referrer"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 639px) calc(100vw - 72px), (max-width: 767px) calc(100vw - 88px), (max-width: 1023px) calc(100vw - 104px), 920px"
+          quality={75}
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <span className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 

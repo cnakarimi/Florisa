@@ -20,7 +20,6 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
           alt="فلوریسا"
           width={150}
           height={54}
-          priority
           className="h-12 w-auto object-contain"
         />
 

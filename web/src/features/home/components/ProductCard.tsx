@@ -15,6 +15,7 @@ import { formatToman } from "../utils/persian";
 
 interface ProductCardProps {
   product: CatalogProduct;
+  imageSizes: string;
   isFavorite: boolean;
   onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
@@ -23,6 +24,7 @@ interface ProductCardProps {
 
 export function ProductCard({
   product,
+  imageSizes,
   isFavorite,
   onToggleFavorite,
   onAddToCart,
@@ -93,7 +95,8 @@ export function ProductCard({
           <CatalogImage
             src={getProductImageUrl(product.cover_image)}
             alt={product.name}
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 280px"
+            sizes={imageSizes}
+            quality={75}
             className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.055]"
           />
 

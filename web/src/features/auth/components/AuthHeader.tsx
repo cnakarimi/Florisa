@@ -25,7 +25,6 @@ export function AuthHeader({ title, onBack }: AuthHeaderProps) {
             alt="فلوریسا"
             width={116}
             height={42}
-            priority
             className="mx-auto h-10 w-auto object-contain"
           />
           <div className="size-10" aria-hidden="true" />
@@ -45,7 +44,6 @@ export function AuthHeader({ title, onBack }: AuthHeaderProps) {
         alt="فلوریسا"
         width={164}
         height={60}
-        priority
         className="h-14 w-auto object-contain"
       />
       <p className="mt-2 text-[10px] font-medium tracking-[0.16em] text-white/35">

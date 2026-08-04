@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { X, Clock, User } from 'lucide-react';
 import type { Article } from '../types';
 
@@ -25,11 +26,13 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
 
         {/* Hero Image */}
         <div className="relative h-64 sm:h-80 w-full flex-shrink-0">
-          <img
+          <Image
+            fill
             src={article.image}
             alt={article.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover"
+            sizes="(max-width: 639px) calc(100vw - 24px), (max-width: 703px) calc(100vw - 32px), 672px"
+            quality={75}
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#161822] via-[#161822]/40 to-transparent" />
         </div>

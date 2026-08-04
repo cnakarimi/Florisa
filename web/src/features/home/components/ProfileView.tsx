@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   User,
   MapPin,
@@ -135,9 +136,13 @@ export function ProfileView({
 
         <div className="relative">
           <div className="size-20 rounded-full bg-gradient-to-tr from-amber-400 via-amber-300 to-amber-500 p-0.5 shadow-lg shadow-amber-500/10 sm:size-22">
-            <img
+            <Image
               src={avatarUrl}
               alt={userName}
+              width={88}
+              height={88}
+              sizes="(max-width: 639px) 80px, 88px"
+              quality={75}
               className="size-full rounded-full bg-zinc-800 object-cover"
             />
           </div>

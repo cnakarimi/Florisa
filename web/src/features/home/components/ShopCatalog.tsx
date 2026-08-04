@@ -371,6 +371,7 @@ export function ShopCatalog({
                   <ProductCard
                     key={product.id}
                     product={product}
+                    imageSizes="(max-width: 639px) calc(100vw - 44px), (max-width: 767px) calc(100vw - 60px), (max-width: 1023px) calc(100vw - 76px), 458px"
                     isFavorite={favorites.some(
                       (favorite) => favorite.id === product.id,
                     )}

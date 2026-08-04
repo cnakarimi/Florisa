@@ -38,6 +38,11 @@ const remotePatterns: NonNullable<
     port: backendUrl.port,
     pathname: "/media/**",
   },
+  {
+    protocol: "https",
+    hostname: "images.unsplash.com",
+    pathname: "/**",
+  },
 ];
 
 if (mediaUrl) {
@@ -55,6 +60,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   images: {
     remotePatterns,
+    qualities: [70, 75, 80],
   },
   async rewrites() {
     const origin = backendUrl.origin;

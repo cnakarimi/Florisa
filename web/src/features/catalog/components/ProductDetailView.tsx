@@ -231,7 +231,8 @@ export function ProductDetailView({
               <CatalogImage
                 src={activeImage.src}
                 alt={activeImage.alt}
-                sizes="(max-width: 767px) 100vw, (max-width: 1024px) 55vw, 550px"
+                sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 767px) calc(100vw - 48px), (max-width: 791px) calc(100vw - 416px), (max-width: 1023px) calc(54vw - 52px), 501px"
+                quality={80}
                 className="object-cover object-center transition-transform duration-500"
                 priority
               />
@@ -310,7 +311,8 @@ export function ProductDetailView({
                     <CatalogImage
                       src={image.src}
                       alt={image.alt}
-                      sizes="72px"
+                      sizes="(max-width: 639px) 64px, 72px"
+                      quality={70}
                     />
                   </button>
                 ))}
@@ -596,7 +598,8 @@ export function ProductDetailView({
             <CatalogImage
               src={activeImage.src}
               alt={activeImage.alt}
-              sizes="100vw"
+              sizes="(max-width: 1055px) calc(100vw - 32px), 1024px"
+              quality={80}
               className="object-contain"
             />
           </div>

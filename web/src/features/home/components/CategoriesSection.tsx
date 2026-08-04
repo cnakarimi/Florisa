@@ -85,7 +85,8 @@ export function CategoriesSection({
                   <CatalogImage
                     src={getCategoryImageUrl(category.image)}
                     alt={category.name}
-                    sizes="138px"
+                    sizes="(max-width: 367px) calc(50vw - 46px), 138px"
+                    quality={70}
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />

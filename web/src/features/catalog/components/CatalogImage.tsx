@@ -10,6 +10,7 @@ interface CatalogImageProps {
   src: string | null;
   alt: string;
   sizes: string;
+  quality?: number;
   className?: string;
   priority?: boolean;
 }
@@ -18,6 +19,7 @@ export function CatalogImage({
   src,
   alt,
   sizes,
+  quality = 75,
   className = "object-cover object-center",
   priority = false,
 }: CatalogImageProps) {
@@ -42,9 +44,9 @@ export function CatalogImage({
       src={resolvedSrc}
       alt={alt}
       sizes={sizes}
+      quality={quality}
       className={className}
       priority={priority}
-      unoptimized
       onError={() => setFailedSrc(resolvedSrc)}
     />
   );

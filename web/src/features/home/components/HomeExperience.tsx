@@ -135,7 +135,7 @@ export function HomeExperience({
         >
           <ProductCard
             product={product}
-            imageSizes="(max-width: 333px) 228px, (max-width: 402px) calc(72vw - 12px), (max-width: 639px) 278px, (max-width: 704px) calc(44vw - 12px), (max-width: 767px) 298px, (max-width: 799px) 228px, (max-width: 999px) calc(30vw - 12px), 288px"
+            imageSizes="w-[274px] h-[274px]"
             isFavorite={favorites.some((item) => item.id === product.id)}
             onToggleFavorite={toggleFavorite}
             onAddToCart={cart.addItem}

@@ -11,7 +11,7 @@ import {
   getProductColor,
   getProductIdentity,
 } from "@/features/catalog/utils/product";
-import { formatToman } from "../utils/persian";
+import { formatTomanAmount, toPersianDigits } from "../utils/persian";
 
 interface ProductCardProps {
   product: CatalogProduct;
@@ -38,6 +38,19 @@ export function ProductCard({
     product.stock_quantity >= product.minimum_order_quantity;
 
   const visibleTag = getProductIdentity(product) || getProductColor(product);
+
+  const potMaterial =
+    product.product_type === "plant"
+      ? (product.details?.pot_material ?? "")
+      : "";
+
+  const packageLabel =
+    product.product_type === "plant"
+      ? `گلدان ${potMaterial}`.trim()
+      : product.unit_size > 1
+        ? `${product.sale_unit_display} ${toPersianDigits(product.unit_size)} عددی`
+        : product.sale_unit_display;
+
   useEffect(() => {
     return () => {
       if (animationTimer.current) {
@@ -71,7 +84,7 @@ export function ProductCard({
   return (
     <article
       dir="rtl"
-      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#181a18] shadow-[0_14px_40px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-[#c7a23c]/20 hover:shadow-[0_20px_55px_rgba(0,0,0,0.35)]"
+      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] bg-[#181a18] transition duration-300 hover:-translate-y-1"
     >
       {/* تصویر محصول */}
       <div className="relative  pb-0">
@@ -90,12 +103,6 @@ export function ProductCard({
           />
 
           <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
-
-          {visibleTag ? (
-            <span className="absolute bottom-2 right-2 max-w-[calc(100%-1rem)] truncate rounded-full border border-white/10 bg-[#151815]/80 px-2.5 py-1 text-[9px] font-medium text-white/80 backdrop-blur-md sm:text-[10px]">
-              {visibleTag}
-            </span>
-          ) : null}
         </button>
 
         {/* علاقه‌مندی */}
@@ -123,68 +130,68 @@ export function ProductCard({
       </div>
 
       {/* اطلاعات و خرید */}
-      <div className="flex flex-1 flex-col px-3 pb-3 pt-3 sm:px-3.5 sm:pb-3.5">
+      <div className="flex flex-1 flex-col gap-y-3 px-3 pb-3 pt-3 sm:px-3.5 sm:pb-3.5">
         <button
           type="button"
           onClick={() => onSelectProduct(product)}
           className="block w-full text-right focus-visible:outline-none"
         >
-          <h3 className="truncate text-[13px] font-extrabold leading-6 text-[#efede8] sm:text-sm">
+          <h3 className="truncate text-[16px] font-bold leading-6 text-text-primary sm:text-sm">
             {product.name}
           </h3>
         </button>
 
-        <div className="my-3 h-px bg-gradient-to-l from-white/10 via-white/[0.05] to-transparent" />
-
         {/* قیمت در یک ردیف مستقل */}
         <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
           <div className="flex items-center justify-between w-full">
-            <span className=" block text-[9px] font-medium text-white/35 sm:text-[10px]">
-              قیمت هر {getPriceUnitLabel(product)}
+            <span className=" block text-[12px] font-bold text-border-subtle sm:text-[10px]">
+              {packageLabel}
             </span>
 
             <span className="mt-1 block text-[8px] text-white/35 sm:text-[9px]"></span>
-            <span className="block whitespace-nowrap text-[13px] font-black tracking-tight text-[#e2c86f] sm:text-[15px]">
-              {formatToman(product.price)}
-            </span>
           </div>
         </div>
 
-        {/* دکمه تمام‌عرض */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!isAvailable}
-          aria-label={
-            isAvailable
-              ? `افزودن ${product.name} به سبد خرید`
-              : `${product.name} ناموجود است`
-          }
-          className={`mt-auto inline-flex h-10 w-full items-center justify-center gap-1.5 overflow-hidden rounded-[12px] border text-[10px] font-bold transition-all duration-300 active:scale-[0.98] sm:h-11 sm:text-[11px] ${
-            !isAvailable
-              ? "cursor-not-allowed border-white/[0.04] bg-white/[0.04] text-white/30"
-              : isAdded
-                ? "border-[#e2c86f]/25 bg-[#d3b555] text-[#171811] shadow-[0_8px_20px_rgba(199,162,60,0.16)]"
-                : "border-[#41604e]/25 bg-[#213b2e] text-[#c3ddca] hover:border-[#6f947b]/30 hover:bg-[#2b4c3a]"
-          }`}
-        >
-          {!isAvailable ? (
-            <>
-              <PackageX className="h-3.5 w-3.5 shrink-0" />
-              <span>ناموجود</span>
-            </>
-          ) : isAdded ? (
-            <>
-              <Check className="h-4 w-4 shrink-0" />
-              <span>به سبد اضافه شد</span>
-            </>
-          ) : (
-            <>
-              <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
-              <span>افزودن به سبد</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center justify-between">
+          <span className="block whitespace-nowrap text-[15px] tracking-tight text-text-primary font-bold">
+            {formatTomanAmount(product.price)}
+            <span className="mr-1 text-[10px] font-medium">تومان</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!isAvailable}
+            aria-label={
+              isAvailable
+                ? `افزودن ${product.name} به سبد خرید`
+                : `${product.name} ناموجود است`
+            }
+            className={`mt-auto inline-flex h-10 items-center justify-center gap-1.5 overflow-hidden rounded-[12px] text-[12px] font-bold transition-all duration-300 active:scale-[0.98] sm:h-11 px-4 ${
+              !isAvailable
+                ? "cursor-not-allowed bg-white/[0.04] text-white/30"
+                : isAdded
+                  ? "border-[#e2c86f]/25 bg-[#d3b555] text-[#171811] shadow-[0_8px_20px_rgba(199,162,60,0.16)]"
+                  : "border-[#41604e]/25 bg-text-accent text-background-secondary hover:bg-[#2b4c3a]"
+            }`}
+          >
+            {!isAvailable ? (
+              <>
+                <PackageX className="h-3.5 w-3.5 shrink-0" />
+                <span>ناموجود</span>
+              </>
+            ) : isAdded ? (
+              <>
+                <Check className="h-4 w-4 shrink-0" />
+                <span>به سبد اضافه شد</span>
+              </>
+            ) : (
+              <>
+                <span>افزودن به سبد</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </article>
   );

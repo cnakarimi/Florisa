@@ -61,23 +61,23 @@ const TABS = [
 
 const TAB_SPRING = {
   type: "spring",
-  stiffness: 460,
-  damping: 28,
-  mass: 0.7,
+  stiffness: 420,
+  damping: 30,
+  mass: 0.65,
 } as const;
 
 const ICON_SPRING = {
   type: "spring",
-  stiffness: 600,
-  damping: 18,
-  mass: 0.55,
+  stiffness: 480,
+  damping: 24,
+  mass: 0.5,
 } as const;
 
 const BUBBLE_SPRING = {
   type: "spring",
-  stiffness: 420,
-  damping: 30,
-  mass: 0.75,
+  stiffness: 380,
+  damping: 32,
+  mass: 0.7,
 } as const;
 
 export function BottomNav() {
@@ -93,11 +93,12 @@ export function BottomNav() {
       className={[
         "fixed inset-x-0 bottom-0 z-50",
         "mx-auto w-full max-w-screen-lg",
+        "overflow-visible",
         "bg-background-secondary",
       ].join(" ")}
     >
       <LayoutGroup id="florisa-bottom-navigation">
-        <div className="grid h-12 grid-cols-5 px-2" dir="ltr">
+        <div className="grid h-12 grid-cols-5 overflow-visible px-2" dir="ltr">
           {TABS.map((tab) => {
             const Icon = tab.icon;
 
@@ -127,22 +128,24 @@ export function BottomNav() {
                 aria-label={accessibleLabel}
                 className={[
                   "relative grid place-items-center",
+                  "overflow-visible",
+                  "[-webkit-tap-highlight-color:transparent]",
                   "focus-visible:outline-none",
+                  "focus-visible:ring-2",
+                  "focus-visible:ring-inset",
                   "focus-visible:ring-action-primary",
                 ].join(" ")}
               >
                 <motion.span
-                  layout
                   initial={false}
                   animate={{
-                    y: isActive ? -24 : 0,
-                    scale: isActive ? 1 : 0.92,
+                    y: isActive ? -18 : 0,
                   }}
                   whileTap={
                     shouldReduceMotion
                       ? undefined
                       : {
-                          scale: 0.86,
+                          scale: 0.92,
                         }
                   }
                   transition={
@@ -152,7 +155,10 @@ export function BottomNav() {
                         }
                       : TAB_SPRING
                   }
-                  className="relative grid size-12 place-items-center"
+                  className={[
+                    "relative grid size-12 place-items-center",
+                    "transform-gpu",
+                  ].join(" ")}
                 >
                   {isActive ? (
                     <motion.span
@@ -166,10 +172,13 @@ export function BottomNav() {
                             }
                           : BUBBLE_SPRING
                       }
+                      style={{
+                        borderRadius: 9999,
+                      }}
                       className={[
                         "absolute inset-0",
-                        "rounded-full",
                         "bg-background-secondary",
+                        "transform-gpu",
                       ].join(" ")}
                     />
                   ) : null}
@@ -177,8 +186,8 @@ export function BottomNav() {
                   <motion.span
                     initial={false}
                     animate={{
-                      scale: isActive ? 1.18 : 1,
-                      rotate: isActive ? -2 : 0,
+                      scale: isActive ? 1.1 : 1,
+                      rotate: 0,
                     }}
                     transition={
                       shouldReduceMotion
@@ -187,7 +196,10 @@ export function BottomNav() {
                           }
                         : ICON_SPRING
                     }
-                    className="relative z-10 grid place-items-center"
+                    className={[
+                      "relative z-10 grid place-items-center",
+                      "transform-gpu",
+                    ].join(" ")}
                   >
                     <Icon
                       size={22}
@@ -222,12 +234,12 @@ export function BottomNav() {
                             }
                           : {
                               type: "spring",
-                              stiffness: 650,
-                              damping: 20,
+                              stiffness: 600,
+                              damping: 22,
                             }
                       }
                       className={[
-                        "absolute right-2 top-2 z-20",
+                        "absolute right-1 top-1 z-20",
                         "grid h-4 min-w-4 place-items-center",
                         "rounded-full px-1",
                         "bg-action-primary",

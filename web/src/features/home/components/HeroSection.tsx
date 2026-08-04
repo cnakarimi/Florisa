@@ -1,4 +1,4 @@
-const HERO_IMAGE = "/images/hero_living_room_1785179404997.jpg";
+const HERO_IMAGE = "/images/hero_living_room_1785179404997.webp";
 
 interface HeroSectionProps {
   onShopClick: () => void;

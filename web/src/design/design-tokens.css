@@ -1,0 +1,106 @@
+/* Florisa design tokens
+ * Source: Figma Variables
+ * Tailwind CSS v4 compatible
+ */
+
+:root {
+  /* Primitive tokens */
+  --color-neutral-0: #ffffff;
+  --color-neutral-100: #cccccc;
+  --color-neutral-200: #c7c4bf;
+  --color-neutral-300: #bdbab5;
+  --color-neutral-400: #9f9797;
+  --color-neutral-700: #252525;
+  --color-neutral-800: #1a1a1a;
+  --color-neutral-900: #121212;
+
+  --color-brand-100: #edd382;
+  --color-brand-200: #c9a94d;
+  --color-brand-300: #d4af37;
+
+  --color-success-500: #849483;
+  --color-error-500: #c94a4a;
+
+  --color-surface-950: #162521;
+
+  /* Semantic background tokens */
+  --background-primary: var(--color-neutral-900);
+  --background-secondary: var(--color-neutral-800);
+  --background-tertiary: var(--color-neutral-700);
+  --background-elevated: var(--color-neutral-100);
+  --background-overlay: var(--color-neutral-100);
+
+  /* Semantic text tokens */
+  --text-primary: var(--color-neutral-0);
+  --text-secondary: var(--color-neutral-300);
+  --text-tertiary: var(--color-neutral-400);
+  --text-brand: var(--color-brand-300);
+  --text-accent: var(--color-brand-300);
+  --text-disabled: var(--color-neutral-700);
+
+  /* Semantic border tokens */
+  --border-default: var(--color-neutral-400);
+  --border-subtle: var(--color-neutral-100);
+  --border-brand: var(--color-brand-200);
+
+  /* Semantic action tokens */
+  --action-primary: var(--color-brand-300);
+  --action-secondary: var(--color-surface-950);
+
+  /* Semantic feedback tokens */
+  --feedback-success: var(--color-success-500);
+  --feedback-error: var(--color-error-500);
+}
+
+/*
+   * Tailwind CSS v4 theme mapping.
+   * This generates utilities such as:
+   * bg-background-primary
+   * text-text-primary
+   * border-border-subtle
+   * bg-action-primary
+   * text-feedback-error
+   */
+@theme inline {
+  /* Primitive utilities */
+  --color-neutral-0: var(--color-neutral-0);
+  --color-neutral-100: var(--color-neutral-100);
+  --color-neutral-200: var(--color-neutral-200);
+  --color-neutral-300: var(--color-neutral-300);
+  --color-neutral-400: var(--color-neutral-400);
+  --color-neutral-700: var(--color-neutral-700);
+  --color-neutral-800: var(--color-neutral-800);
+  --color-neutral-900: var(--color-neutral-900);
+
+  --color-brand-100: var(--color-brand-100);
+  --color-brand-200: var(--color-brand-200);
+  --color-brand-300: var(--color-brand-300);
+
+  --color-success-500: var(--color-success-500);
+  --color-error-500: var(--color-error-500);
+  --color-surface-950: var(--color-surface-950);
+
+  /* Semantic utilities */
+  --color-background-primary: var(--background-primary);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-tertiary: var(--background-tertiary);
+  --color-background-elevated: var(--background-elevated);
+  --color-background-overlay: var(--background-overlay);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-brand: var(--text-brand);
+  --color-text-accent: var(--text-accent);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-brand: var(--border-brand);
+
+  --color-action-primary: var(--action-primary);
+  --color-action-secondary: var(--action-secondary);
+
+  --color-feedback-success: var(--feedback-success);
+  --color-feedback-error: var(--feedback-error);
+}

@@ -179,13 +179,7 @@ export function HomeExperience({
                     >
                       <span>جدیدترین محصولات</span>
 
-                      <span className="relative grid h-7 w-7 place-items-center text-[#cda62e] sm:h-8 sm:w-8">
-                        <Sparkles className="absolute h-full w-full stroke-[1.4]" />
-
-                        <span className="relative pt-0.5 text-[7px] font-black tracking-tighter sm:text-[8px]">
-                          NEW
-                        </span>
-                      </span>
+                      <span className="relative grid h-7 w-7 place-items-center text-[#cda62e] sm:h-8 sm:w-8"></span>
                     </h2>
 
                     <button

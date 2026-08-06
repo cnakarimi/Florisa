@@ -130,7 +130,7 @@ export function ProductCard({
       </div>
 
       {/* اطلاعات و خرید */}
-      <div className="flex flex-1 flex-col gap-y-3 px-3 pb-3 pt-3 sm:px-3.5 sm:pb-3.5">
+      <div className="flex flex-1 flex-col gap-y-3 px-3 pb-6 pt-3 sm:px-3.5">
         <button
           type="button"
           onClick={() => onSelectProduct(product)}

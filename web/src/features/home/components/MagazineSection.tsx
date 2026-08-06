@@ -21,7 +21,6 @@ export function MagazineSection({ onSelectArticle }: MagazineSectionProps) {
         >
           مجله گیاهان
         </h2>
-        <Leaf className="h-5 w-5 -rotate-12 text-[#c8a333]" />
       </div>
 
       <button

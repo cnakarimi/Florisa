@@ -99,6 +99,25 @@ button {
   box-shadow: 0 0 15px rgb(229 193 88 / 20%);
 }
 
+@media (max-width: 767px) {
+  .site-footer {
+    padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
+  }
+
+  body:has([data-mobile-bottom-nav]) .site-footer {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  body:has([data-footer-overlay="product-actions"]) .site-footer,
+  body:has([data-footer-overlay="checkout-actions"]) .site-footer {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  body:has([data-footer-overlay="cart-actions"]) .site-footer {
+    padding-bottom: calc(11rem + env(safe-area-inset-bottom));
+  }
+}
+
 .emerald-glow {
   box-shadow: 0 0 20px rgb(16 185 129 / 25%);
 }

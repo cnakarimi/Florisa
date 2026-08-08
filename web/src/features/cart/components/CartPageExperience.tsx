@@ -126,7 +126,7 @@ export function CartPageExperience({
     <>
       <main
         dir="rtl"
-        className="min-h-screen bg-[#0d0e12] pb-36 text-right text-zinc-100 animate-in fade-in duration-300"
+        className="min-h-screen bg-[#0d0e12] pb-10 text-right text-zinc-100 animate-in fade-in duration-300 md:pb-36"
       >
       <header className="relative z-20 mx-auto mb-6 flex w-full max-w-md items-center justify-between px-4 pt-4">
         <button
@@ -395,7 +395,10 @@ export function CartPageExperience({
       </div>
 
       {cart.items.length > 0 ? (
-        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md border-t border-white/10 bg-[#121319]/95 px-4 py-3.5 shadow-2xl backdrop-blur-xl">
+        <div
+          data-footer-overlay="cart-actions"
+          className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md border-t border-white/10 bg-[#121319]/95 px-4 py-3.5 shadow-2xl backdrop-blur-xl"
+        >
           <div className="flex items-center justify-between gap-4">
             <button
               type="button"

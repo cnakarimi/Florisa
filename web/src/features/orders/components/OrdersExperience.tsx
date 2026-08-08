@@ -35,7 +35,7 @@ export function OrdersExperience() {
     listOrders().then(setOrders).catch((reason) => setError(getApiErrorMessage(reason))).finally(() => setLoading(false));
   }, [auth.isAuthenticated, auth.isInitializing, auth.isProfileComplete, auth.initializationError, router]);
 
-  return <main dir="rtl" className="min-h-screen bg-[#0d0e12] pb-24 text-zinc-100">
+  return <main dir="rtl" className="min-h-screen bg-[#0d0e12] text-zinc-100 md:pb-24">
     <header className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-5"><button type="button" onClick={() => router.push("/profile")} className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-[#191b23]" aria-label="بازگشت"><ArrowRight className="h-5 w-5" /></button><div><h1 className="text-lg font-black">سفارش‌های من</h1><p className="text-xs text-zinc-500">تاریخچه و وضعیت سفارش‌ها</p></div></header>
     <div className="mx-auto max-w-2xl space-y-3 px-4">
       {(loading || auth.isInitializing) && !visibleError ? <div className="py-24 text-center text-emerald-400"><LoaderCircle className="mx-auto h-9 w-9 animate-spin" /><p className="mt-3 text-xs text-zinc-400">در حال دریافت سفارش‌ها...</p></div> : null}

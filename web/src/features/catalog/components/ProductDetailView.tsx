@@ -189,7 +189,7 @@ export function ProductDetailView({
       dir="rtl"
       className="min-h-dvh bg-black text-right text-[#efede8] selection:bg-[#c7a23c]/30 selection:text-white"
     >
-      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] pb-32 shadow-2xl shadow-black">
+      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] pb-8 shadow-2xl shadow-black md:pb-32">
         <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-white/[0.05] bg-[#111211]/90 px-4 backdrop-blur-xl sm:px-6 md:px-8">
           <button
             type="button"
@@ -544,7 +544,10 @@ export function ProductDetailView({
           </section>
         ) : null}
 
-        <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-screen-lg border-t border-white/[0.07] bg-[#111211]/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_35px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:px-6 md:px-8">
+        <div
+          data-footer-overlay="product-actions"
+          className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-screen-lg border-t border-white/[0.07] bg-[#111211]/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_35px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:px-6 md:px-8"
+        >
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="min-w-0 shrink-0">
               <p className="text-[9px] text-white/35 sm:text-[10px]">

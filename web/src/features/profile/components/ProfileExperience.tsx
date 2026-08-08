@@ -90,7 +90,7 @@ export function ProfileExperience() {
   }
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] pb-24 text-zinc-100">
+    <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] text-zinc-100 md:pb-24">
       <main className="mx-auto max-w-6xl px-4">
         <ProfileView
           phone={auth.user.phone}

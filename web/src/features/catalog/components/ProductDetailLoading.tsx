@@ -6,7 +6,7 @@ export function ProductDetailLoading() {
       aria-busy="true"
       aria-label="در حال دریافت جزئیات محصول"
     >
-      <div className="mx-auto min-h-dvh w-full max-w-screen-lg animate-pulse bg-[#111211] pb-32 shadow-2xl shadow-black">
+      <div className="mx-auto min-h-dvh w-full max-w-screen-lg animate-pulse bg-[#111211] pb-8 shadow-2xl shadow-black md:pb-32">
         <div className="flex h-[68px] items-center justify-between px-4 sm:px-6 md:px-8">
           <div className="h-10 w-10 rounded-full bg-white/[0.07]" />
           <div className="space-y-2">

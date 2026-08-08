@@ -2,7 +2,7 @@ export function CartPageLoading() {
   return (
     <main
       dir="rtl"
-      className="min-h-screen bg-[#0d0e12] px-4 pb-36 pt-4 text-zinc-100"
+      className="min-h-screen bg-[#0d0e12] px-4 pb-6 pt-4 text-zinc-100 md:pb-36"
       aria-busy="true"
       aria-label="در حال آماده‌سازی سبد خرید"
     >

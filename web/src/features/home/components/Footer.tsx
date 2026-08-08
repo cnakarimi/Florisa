@@ -1,167 +1,317 @@
 "use client";
 
 import {
-  ArrowLeft,
-  Heart,
-  Leaf,
+  Banknote,
+  Check,
+  MessageSquare,
+  Package,
+  Send,
   ShieldCheck,
-  ShoppingBag,
-  Sparkles,
   Truck,
+  Volume2,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import {
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-interface FooterProps {
-  onShopClick: () => void;
-  onCareClick: () => void;
-  onFavoritesClick: () => void;
-}
-
-const trustItems = [
-  { label: "ارسال با هماهنگی", icon: Truck },
-  { label: "تضمین سلامت گیاه", icon: ShieldCheck },
+const features = [
+  {
+    id: 1,
+    icon: ShieldCheck,
+    title: "تضمین سلامت گیاه",
+    description: "گیاه سالم و بررسی‌شده تحویل بگیر",
+  },
+  {
+    id: 2,
+    icon: Truck,
+    title: "ارسال در تهران",
+    description: "ارسال ایمن و سریع در محدوده تهران",
+  },
+  {
+    id: 3,
+    icon: Package,
+    title: "بسته‌بندی مطمئن",
+    description: "محافظت از گیاه و گل هنگام ارسال",
+  },
+  {
+    id: 4,
+    icon: Banknote,
+    title: "پرداخت در محل",
+    description: "ثبت سفارش ساده و پرداخت هنگام تحویل",
+  },
 ];
 
-export function Footer({
-  onShopClick,
-  onCareClick,
-  onFavoritesClick,
-}: FooterProps) {
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+const socialItems = [
+  {
+    id: "announcements",
+    href: "#speaker",
+    label: "اطلاعیه‌ها",
+    icon: Volume2,
+  },
+  {
+    id: "telegram",
+    href: "#telegram",
+    label: "تلگرام",
+    icon: Send,
+  },
+  {
+    id: "chat",
+    href: "#chat",
+    label: "گفتگو",
+    icon: MessageSquare,
+  },
+];
+
+const customerServiceLinks = [
+  { label: "شرایط ارسال", href: "#shipping" },
+  { label: "رویه‌های بازگرداندن", href: "#return" },
+  { label: "پرسش‌های متداول", href: "#faq" },
+];
+
+const florisaLinks = [
+  { label: "درباره ما", href: "#about" },
+  { label: "تماس با ما", href: "#contact" },
+  { label: "فرصت‌های شغلی", href: "#careers" },
+];
+
+function FooterLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="transition-colors hover:text-amber-400 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+    >
+      {children}
+    </a>
+  );
+}
+
+export function FeaturesGrid() {
+  return (
+    <section
+      dir="rtl"
+      aria-label="مزیت‌های خرید از فلوریسا"
+      className="grid grid-cols-2 gap-3 md:grid-cols-4"
+    >
+      {features.map(({ id, icon: Icon, title, description }) => (
+        <article
+          key={id}
+          className="rounded-2xl border border-zinc-200 bg-white p-4 text-right shadow-sm"
+        >
+          <span
+            aria-hidden="true"
+            className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600"
+          >
+            <Icon className="h-5 w-5" />
+          </span>
+
+          <h3 className="text-xs font-black text-zinc-900 sm:text-sm">
+            {title}
+          </h3>
+
+          <p className="mt-1.5 text-[10px] leading-5 text-zinc-500 sm:text-xs">
+            {description}
+          </p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+export function Footer() {
+  const pathname = usePathname();
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleSubscribe = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      return;
+    }
+
+    setSubscribed(true);
+
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+    }
+
+    resetTimerRef.current = setTimeout(() => {
+      setEmail("");
+      setSubscribed(false);
+    }, 3000);
   };
 
-  const navigateFromFooter = (navigate: () => void) => {
-    navigate();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const currentPersianYear = new Intl.DateTimeFormat("fa-IR", {
+    year: "numeric",
+  }).format(new Date());
 
   return (
     <footer
       dir="rtl"
-      className="relative mt-12 overflow-hidden border-t border-white/[0.06] bg-[#0c0e0c] px-4 pb-7 pt-5 sm:mt-16 sm:px-6 sm:pb-9 md:px-8"
+      className={[
+        "site-footer relative mx-auto mt-12 w-full max-w-screen-lg overflow-hidden",
+        "border-t border-white/10 bg-[#090a0f] px-5 pb-7 pt-8 text-white",
+        "shadow-2xl shadow-black sm:mt-16 sm:px-7 sm:pb-9 sm:pt-10",
+        pathname === "/" ? "" : "md:hidden",
+      ].join(" ")}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 top-0 h-56 w-56 rounded-full bg-[#31513d]/15 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-20 bottom-0 h-44 w-44 rounded-full bg-[#c7a23c]/[0.07] blur-3xl"
-      />
-
-      <div className="relative mx-auto max-w-4xl">
-        <section className="relative overflow-hidden rounded-[24px] border border-[#c7a23c]/20 bg-gradient-to-l from-[#1c2b22] via-[#172019] to-[#141714] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)] sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-7">
-          <div
-            aria-hidden="true"
-            className="absolute -left-8 -top-10 text-[#c7a23c]/[0.07]"
+      <div className="mx-auto max-w-4xl space-y-7">
+        <section aria-labelledby="footer-brand-heading">
+          <h2
+            id="footer-brand-heading"
+            className="text-2xl font-black tracking-tight text-white"
           >
-            <Leaf className="h-40 w-40 rotate-[-18deg] stroke-[1]" />
-          </div>
+            فلوریسا
+          </h2>
 
-          <div className="relative max-w-md">
-            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#c7a23c]/20 bg-[#c7a23c]/10 px-2.5 py-1 text-[10px] font-bold text-[#d9bd67] sm:text-xs">
-              <Sparkles className="h-3.5 w-3.5" />
-              انتخابی سبز برای خانه تو
-            </span>
-
-            <h2 className="text-xl font-black leading-8 text-[#f0eee8] sm:text-2xl sm:leading-10">
-              خونه‌ات جای یک زندگی تازه دارد
-            </h2>
-
-            <p className="mt-1.5 text-xs leading-6 text-white/50 sm:text-sm">
-              از بین گل‌ها و گیاهان فلوریسا، همراه سبز خانه‌ات را پیدا کن.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigateFromFooter(onShopClick)}
-            className="relative mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#c7a23c] px-5 text-xs font-black text-[#17170f] shadow-[0_10px_28px_rgba(199,162,60,0.2)] transition hover:bg-[#d7b84e] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#eed77f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#172019] sm:mt-0 sm:w-auto sm:min-w-36 sm:text-sm"
-          >
-            مشاهده فروشگاه
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+          <p className="mt-2 max-w-xl text-xs leading-6 text-zinc-400 sm:text-sm sm:leading-7">
+            فلوریسا؛ همراه شما در انتخاب و نگهداری گیاهان آپارتمانی و گل‌های
+            تازه. تجربه‌ای سبز و آرام برای فضای زندگی شما.
+          </p>
         </section>
 
-        <div className="grid gap-8 px-1 pb-7 pt-9 sm:grid-cols-[1.15fr_0.85fr] sm:gap-12 sm:pb-9 sm:pt-11">
-          <div>
-            <button
-              type="button"
-              onClick={scrollToTop}
-              className="group inline-flex items-center gap-3 text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
-              aria-label="بازگشت به ابتدای صفحه"
+        <nav
+          aria-label="شبکه‌های اجتماعی و ارتباط با فلوریسا"
+          className="flex items-center justify-start gap-3"
+        >
+          {socialItems.map(({ id, href, label, icon: Icon }) => (
+            <a
+              key={id}
+              href={href}
+              aria-label={label}
+              className={[
+                "grid h-10 w-10 place-items-center rounded-xl",
+                "border border-white/10 bg-[#141620] text-zinc-400",
+                "transition-all hover:border-amber-400/40 hover:text-amber-400",
+                "active:scale-95 focus-visible:outline-none",
+                "focus-visible:ring-2 focus-visible:ring-amber-400",
+              ].join(" ")}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-2xl border border-[#c7a23c]/25 bg-[#c7a23c]/10 text-[#d5b651] transition group-hover:bg-[#c7a23c]/15">
-                <Leaf className="h-5 w-5" />
-              </span>
-
-              <span>
-                <strong className="block text-xl font-black tracking-tight text-[#efede8]">
-                  فلوریسا
-                </strong>
-                <span className="mt-0.5 block text-[10px] text-white/35 sm:text-[11px]">
-                  دنیای گل‌ها و گیاهان خانگی
-                </span>
-              </span>
-            </button>
-
-            <p className="mt-5 max-w-md text-xs leading-6 text-white/45 sm:text-[13px] sm:leading-7">
-              فلوریسا کمک می‌کند گیاه مناسب فضای خودت را ساده‌تر انتخاب کنی و با
-              آگاهی بیشتری از آن نگهداری کنی.
-            </p>
-          </div>
-
-          <nav aria-label="دسترسی سریع فوتر">
-            <p className="mb-4 text-xs font-extrabold text-[#d8d5cf]">
-              دسترسی سریع
-            </p>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => navigateFromFooter(onShopClick)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-3 text-[11px] font-medium text-white/55 transition hover:border-[#c7a23c]/20 hover:bg-[#c7a23c]/[0.06] hover:text-[#ddc46f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] sm:text-xs"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                فروشگاه
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigateFromFooter(onFavoritesClick)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-3 text-[11px] font-medium text-white/55 transition hover:border-rose-400/20 hover:bg-rose-400/[0.05] hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] sm:text-xs"
-              >
-                <Heart className="h-4 w-4" />
-                علاقه‌مندی‌ها
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigateFromFooter(onCareClick)}
-                className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-3 text-[11px] font-medium text-white/55 transition hover:border-emerald-400/20 hover:bg-emerald-400/[0.05] hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] sm:text-xs"
-              >
-                <Leaf className="h-4 w-4" />
-                راهنمای هوشمند نگهداری گیاه
-              </button>
-            </div>
-          </nav>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 border-y border-white/[0.05] py-3 sm:flex sm:items-center sm:gap-5">
-          {trustItems.map(({ label, icon: Icon }) => (
-            <span
-              key={label}
-              className="inline-flex items-center justify-center gap-2 text-[10px] text-white/40 sm:justify-start sm:text-[11px]"
-            >
-              <Icon className="h-4 w-4 text-[#b79a40]" />
-              {label}
-            </span>
+              <Icon className="h-4 w-4 stroke-[2]" />
+            </a>
           ))}
-        </div>
+        </nav>
 
-        <div className="flex flex-col items-center justify-between gap-2 pt-5 text-center text-[9px] text-white/25 sm:flex-row sm:text-[10px]">
-          <p>تمامی حقوق این وب‌سایت برای فلوریسا محفوظ است.</p>
-          <p>با عشق به زندگی سبز</p>
+        <section aria-labelledby="newsletter-heading" className="space-y-3">
+          <h3
+            id="newsletter-heading"
+            className="text-xs font-bold text-white sm:text-sm"
+          >
+            از جدیدترین تخفیف‌ها و آموزش‌ها باخبر شوید
+          </h3>
+
+          <form
+            onSubmit={handleSubscribe}
+            className="flex max-w-md items-center gap-2"
+          >
+            <label htmlFor="footer-email" className="sr-only">
+              ایمیل شما
+            </label>
+
+            <input
+              id="footer-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              dir="ltr"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="ایمیل شما"
+              className={[
+                "min-w-0 flex-1 rounded-xl border border-white/10",
+                "bg-[#141620] px-3.5 py-3 text-left text-xs text-white",
+                "placeholder:text-right placeholder:text-zinc-500",
+                "transition-colors focus:border-amber-400/80",
+                "focus:outline-none focus:ring-2 focus:ring-amber-400/20",
+              ].join(" ")}
+            />
+
+            <button
+              type="submit"
+              className={[
+                "inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5",
+                "rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-black text-black",
+                "shadow-md transition-all hover:bg-amber-300 active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2",
+                "focus-visible:ring-amber-200 focus-visible:ring-offset-2",
+                "focus-visible:ring-offset-[#090a0f]",
+              ].join(" ")}
+            >
+              {subscribed ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>عضو شدید</span>
+                </>
+              ) : (
+                <span>عضویت</span>
+              )}
+            </button>
+          </form>
+
+          <p aria-live="polite" className="sr-only">
+            {subscribed ? "عضویت شما با موفقیت ثبت شد." : ""}
+          </p>
+        </section>
+
+        <nav
+          aria-label="پیوندهای فوتر"
+          className="grid grid-cols-2 gap-6 border-t border-white/10 pt-6"
+        >
+          <section aria-labelledby="customer-service-heading">
+            <h3
+              id="customer-service-heading"
+              className="text-xs font-black text-white"
+            >
+              خدمات مشتریان
+            </h3>
+
+            <ul className="mt-3 space-y-2.5 text-[11px] font-medium text-zinc-400 sm:text-xs">
+              {customerServiceLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <FooterLink href={href}>{label}</FooterLink>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section aria-labelledby="florisa-links-heading">
+            <h3
+              id="florisa-links-heading"
+              className="text-xs font-black text-white"
+            >
+              فلوریسا
+            </h3>
+
+            <ul className="mt-3 space-y-2.5 text-[11px] font-medium text-zinc-400 sm:text-xs">
+              {florisaLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <FooterLink href={href}>{label}</FooterLink>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </nav>
+
+        <div className="border-t border-white/5 pt-5 text-center text-[10px] font-medium text-zinc-500">
+          <p>© {currentPersianYear} تمامی حقوق برای فلوریسا محفوظ است.</p>
         </div>
       </div>
     </footer>

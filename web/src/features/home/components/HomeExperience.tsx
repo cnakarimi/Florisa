@@ -15,7 +15,6 @@ import { ArticleModal } from "./ArticleModal";
 import { BottomNav } from "./BottomNav";
 import { CategoriesSection } from "./CategoriesSection";
 import { FavoritesView } from "./FavoritesView";
-import { Footer } from "./Footer";
 import { HeroSection } from "./HeroSection";
 import { MagazineSection } from "./MagazineSection";
 import { PlantAICare } from "./PlantAICare";
@@ -148,7 +147,11 @@ export function HomeExperience({
 
   return (
     <div className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
-      <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] pb-24 shadow-2xl shadow-black">
+      <div
+        className={`relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] shadow-2xl shadow-black ${
+          view === "home" ? "" : "md:pb-24"
+        }`}
+      >
         <main className={view === "home" ? "" : "px-4 sm:px-6 md:px-8"}>
           {view === "home" ? (
             <div className="animate-in fade-in duration-300">
@@ -199,11 +202,6 @@ export function HomeExperience({
                 <MagazineSection onSelectArticle={setSelectedArticle} />
               </div>
 
-              <Footer
-                onShopClick={() => router.push("/shop")}
-                onCareClick={() => router.push("/care")}
-                onFavoritesClick={() => router.push("/favorites")}
-              />
             </div>
           ) : null}
 

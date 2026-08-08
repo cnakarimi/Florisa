@@ -89,6 +89,7 @@ export function BottomNav() {
 
   return (
     <nav
+      data-mobile-bottom-nav
       aria-label="ناوبری اصلی"
       className={[
         "fixed inset-x-0 bottom-0 z-50",

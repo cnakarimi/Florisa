@@ -137,7 +137,7 @@ export function CheckoutExperience() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#0d0e12] pb-36 text-zinc-100">
+    <main dir="rtl" className="min-h-screen bg-[#0d0e12] pb-10 text-zinc-100 md:pb-36">
       <header className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-5">
         <button type="button" onClick={() => router.push("/cart")} className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-[#191b23]" aria-label="بازگشت به سبد خرید"><ArrowRight className="h-5 w-5" /></button>
         <div><h1 className="text-lg font-black">تسویه حساب</h1><p className="text-xs text-zinc-500">ثبت سفارش با پرداخت در محل</p></div>
@@ -180,7 +180,10 @@ export function CheckoutExperience() {
         <label className="block text-xs text-zinc-400">یادداشت سفارش (اختیاری)<textarea value={customerNote} onChange={(event) => setCustomerNote(event.target.value)} maxLength={500} rows={3} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#171921] p-3 text-sm text-white outline-none focus:border-amber-400/50" /></label>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#121319]/95 p-4 backdrop-blur-xl">
+      <div
+        data-footer-overlay="checkout-actions"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#121319]/95 p-4 backdrop-blur-xl"
+      >
         <div className="mx-auto flex max-w-2xl items-center gap-4"><button type="button" onClick={submit} disabled={isSubmitting || !selectedAddressId || !preview} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 py-3.5 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-50">{isSubmitting ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}ثبت نهایی سفارش</button><div><p className="text-[10px] text-zinc-500">مبلغ نهایی</p><p className="font-black text-amber-400">{preview ? formatToman(Number(preview.total)) : "—"}</p></div></div>
       </div>
     </main>

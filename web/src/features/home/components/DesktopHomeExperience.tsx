@@ -104,10 +104,13 @@ function DesktopHeader({
             <label htmlFor="desktop-home-search" className="sr-only">
               جست‌وجوی محصولات فلوریسا
             </label>
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#d4af37]"
-            />
+            <button
+              type="submit"
+              aria-label="اجرای جست‌وجو"
+              className="absolute right-1.5 top-1/2 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full text-[#d4af37] transition hover:bg-[#d4af37]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70"
+            >
+              <Search aria-hidden="true" className="size-4" />
+            </button>
             <input
               id="desktop-home-search"
               type="search"
@@ -199,7 +202,10 @@ export function DesktopHomeExperience(
   } = props;
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#0d0f0e] text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
+    <div
+      data-home-experience="desktop"
+      className="min-h-dvh overflow-x-hidden bg-[#0d0f0e] text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white"
+    >
       <DesktopHeader
         cartCount={cartCount}
         favoritesCount={favoritesCount}
@@ -217,7 +223,7 @@ export function DesktopHomeExperience(
               src={HERO_IMAGE}
               alt="فضای خانه با گیاهان آپارتمانی"
               sizes="(min-width: 1280px) 1216px, calc(100vw - 64px)"
-              quality={85}
+              quality={80}
               priority
               className="object-cover object-center"
             />
@@ -304,7 +310,7 @@ export function DesktopHomeExperience(
                           src={getCategoryImageUrl(category.image)}
                           alt={category.name}
                           sizes="176px"
-                          quality={78}
+                          quality={75}
                           className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
                         />
                         <span className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
@@ -406,8 +412,7 @@ export function DesktopHomeExperience(
                 onClick={() => onSelectArticle(article)}
                 className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-[#181a18] text-right shadow-xl transition hover:border-[#d4af37]/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]"
               >
-                <Image
-                  fill
+                <CatalogImage
                   src={article.image}
                   alt={article.title}
                   sizes={

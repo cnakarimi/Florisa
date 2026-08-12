@@ -70,7 +70,10 @@ export function MobileHomeExperience({
     <>
       <ShopNavigationScrollNavbar />
 
-      <div className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
+      <div
+        data-home-experience="mobile"
+        className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white"
+      >
         <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] shadow-2xl shadow-black">
           <main>
             <div className="animate-in fade-in duration-300">

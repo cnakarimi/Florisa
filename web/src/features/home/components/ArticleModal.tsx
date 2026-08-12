@@ -17,7 +17,9 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({ article, onClose }) 
         {/* Top Floating Close Button */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
           <button
+            type="button"
             onClick={onClose}
+            aria-label="بستن مقاله"
             className="p-2.5 rounded-full bg-black/60 text-zinc-300 hover:text-white backdrop-blur-md border border-white/10"
           >
             <X className="w-5 h-5" />

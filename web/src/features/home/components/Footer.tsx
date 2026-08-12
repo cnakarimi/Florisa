@@ -10,6 +10,7 @@ import {
   Truck,
   Volume2,
 } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   type FormEvent,
@@ -49,44 +50,41 @@ const features = [
 const socialItems = [
   {
     id: "announcements",
-    href: "#speaker",
     label: "اطلاعیه‌ها",
     icon: Volume2,
   },
   {
     id: "telegram",
-    href: "#telegram",
     label: "تلگرام",
     icon: Send,
   },
   {
     id: "chat",
-    href: "#chat",
     label: "گفتگو",
     icon: MessageSquare,
   },
 ];
 
 const customerServiceLinks = [
-  { label: "شرایط ارسال", href: "#shipping" },
-  { label: "رویه‌های بازگرداندن", href: "#return" },
-  { label: "پرسش‌های متداول", href: "#faq" },
+  { label: "فروشگاه", href: "/shop" },
+  { label: "پیگیری سفارش", href: "/orders" },
+  { label: "مراقبت از گیاه", href: "/care" },
 ];
 
 const florisaLinks = [
-  { label: "درباره ما", href: "#about" },
-  { label: "تماس با ما", href: "#contact" },
-  { label: "فرصت‌های شغلی", href: "#careers" },
+  { label: "خانه", href: "/" },
+  { label: "علاقه‌مندی‌ها", href: "/favorites" },
+  { label: "حساب کاربری", href: "/profile" },
 ];
 
 function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a
+    <Link
       href={href}
       className="transition-colors hover:text-amber-400 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
     >
       {children}
-    </a>
+    </Link>
   );
 }
 
@@ -95,25 +93,25 @@ export function FeaturesGrid() {
     <section
       dir="rtl"
       aria-label="مزیت‌های خرید از فلوریسا"
-      className="grid grid-cols-2 gap-3 md:grid-cols-4"
+      className="grid grid-cols-4 gap-5"
     >
       {features.map(({ id, icon: Icon, title, description }) => (
         <article
           key={id}
-          className="rounded-2xl border border-zinc-200 bg-white p-4 text-right shadow-sm"
+          className="rounded-2xl border border-white/[0.08] bg-[#151817] p-5 text-center shadow-lg shadow-black/15 transition hover:border-[#d4af37]/30"
         >
           <span
             aria-hidden="true"
-            className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600"
+            className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-[#d4af37]/10 text-[#d4af37]"
           >
             <Icon className="h-5 w-5" />
           </span>
 
-          <h3 className="text-xs font-black text-zinc-900 sm:text-sm">
+          <h3 className="text-sm font-black text-white">
             {title}
           </h3>
 
-          <p className="mt-1.5 text-[10px] leading-5 text-zinc-500 sm:text-xs">
+          <p className="mt-2 text-xs leading-5 text-zinc-400">
             {description}
           </p>
         </article>
@@ -127,7 +125,7 @@ export function Footer() {
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [showDemoConfirmation, setShowDemoConfirmation] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -146,7 +144,7 @@ export function Footer() {
       return;
     }
 
-    setSubscribed(true);
+    setShowDemoConfirmation(true);
 
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current);
@@ -154,7 +152,7 @@ export function Footer() {
 
     resetTimerRef.current = setTimeout(() => {
       setEmail("");
-      setSubscribed(false);
+      setShowDemoConfirmation(false);
     }, 3000);
   };
 
@@ -169,47 +167,48 @@ export function Footer() {
         "site-footer relative mx-auto mt-12 w-full max-w-screen-lg overflow-hidden",
         "border-t border-white/10 bg-[#090a0f] px-5 pb-7 pt-8 text-white",
         "shadow-2xl shadow-black sm:mt-16 sm:px-7 sm:pb-9 sm:pt-10",
+        "lg:mt-0 lg:max-w-none lg:px-8 lg:pb-10 lg:pt-14",
         pathname === "/" ? "" : "md:hidden",
       ].join(" ")}
     >
-      <div className="mx-auto max-w-4xl space-y-7">
-        <section aria-labelledby="footer-brand-heading">
-          <h2
-            id="footer-brand-heading"
-            className="text-2xl font-black tracking-tight text-white"
-          >
-            فلوریسا
-          </h2>
+      <div className="mx-auto max-w-4xl space-y-7 lg:max-w-7xl lg:space-y-10">
+        <div className="space-y-7 lg:grid lg:grid-cols-4 lg:gap-12 lg:space-y-0">
+          <div className="space-y-4 lg:order-1">
+            <section aria-labelledby="footer-brand-heading">
+              <h2
+                id="footer-brand-heading"
+                className="text-2xl font-black tracking-tight text-white lg:text-[#d4af37]"
+              >
+                فلوریسا
+              </h2>
 
-          <p className="mt-2 max-w-xl text-xs leading-6 text-zinc-400 sm:text-sm sm:leading-7">
-            فلوریسا؛ همراه شما در انتخاب و نگهداری گیاهان آپارتمانی و گل‌های
-            تازه. تجربه‌ای سبز و آرام برای فضای زندگی شما.
-          </p>
-        </section>
+              <p className="mt-2 max-w-xl text-xs leading-6 text-zinc-400 sm:text-sm sm:leading-7 lg:text-xs">
+                فلوریسا؛ همراه شما در انتخاب و نگهداری گیاهان آپارتمانی و
+                گل‌های تازه. تجربه‌ای سبز و آرام برای فضای زندگی شما.
+              </p>
+            </section>
 
-        <nav
-          aria-label="شبکه‌های اجتماعی و ارتباط با فلوریسا"
-          className="flex items-center justify-start gap-3"
-        >
-          {socialItems.map(({ id, href, label, icon: Icon }) => (
-            <a
-              key={id}
-              href={href}
-              aria-label={label}
-              className={[
-                "grid h-10 w-10 place-items-center rounded-xl",
-                "border border-white/10 bg-[#141620] text-zinc-400",
-                "transition-all hover:border-amber-400/40 hover:text-amber-400",
-                "active:scale-95 focus-visible:outline-none",
-                "focus-visible:ring-2 focus-visible:ring-amber-400",
-              ].join(" ")}
+            <div
+              aria-label="راه‌های ارتباط با فلوریسا؛ به‌زودی"
+              className="flex items-center justify-start gap-3"
             >
-              <Icon className="h-4 w-4 stroke-[2]" />
-            </a>
-          ))}
-        </nav>
+              {socialItems.map(({ id, label, icon: Icon }) => (
+                <span
+                  key={id}
+                  aria-label={`${label}؛ به‌زودی`}
+                  role="img"
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-[#141620] text-zinc-400"
+                >
+                  <Icon className="h-4 w-4 stroke-[2]" aria-hidden="true" />
+                </span>
+              ))}
+            </div>
+          </div>
 
-        <section aria-labelledby="newsletter-heading" className="space-y-3">
+          <section
+            aria-labelledby="newsletter-heading"
+            className="space-y-3 lg:order-4"
+          >
           <h3
             id="newsletter-heading"
             className="text-xs font-bold text-white sm:text-sm"
@@ -255,7 +254,7 @@ export function Footer() {
                 "focus-visible:ring-offset-[#090a0f]",
               ].join(" ")}
             >
-              {subscribed ? (
+              {showDemoConfirmation ? (
                 <>
                   <Check className="h-3.5 w-3.5" />
                   <span>عضو شدید</span>
@@ -267,15 +266,20 @@ export function Footer() {
           </form>
 
           <p aria-live="polite" className="sr-only">
-            {subscribed ? "عضویت شما با موفقیت ثبت شد." : ""}
+            {showDemoConfirmation
+              ? "این پیش‌نمایش نمایشی است و ایمیل شما ذخیره نمی‌شود."
+              : ""}
           </p>
-        </section>
+          </section>
 
-        <nav
-          aria-label="پیوندهای فوتر"
-          className="grid grid-cols-2 gap-6 border-t border-white/10 pt-6"
-        >
-          <section aria-labelledby="customer-service-heading">
+          <nav
+            aria-label="پیوندهای فوتر"
+            className="grid grid-cols-2 gap-6 border-t border-white/10 pt-6 lg:contents"
+          >
+          <section
+            aria-labelledby="customer-service-heading"
+            className="lg:order-2"
+          >
             <h3
               id="customer-service-heading"
               className="text-xs font-black text-white"
@@ -292,7 +296,10 @@ export function Footer() {
             </ul>
           </section>
 
-          <section aria-labelledby="florisa-links-heading">
+          <section
+            aria-labelledby="florisa-links-heading"
+            className="lg:order-3"
+          >
             <h3
               id="florisa-links-heading"
               className="text-xs font-black text-white"
@@ -308,9 +315,10 @@ export function Footer() {
               ))}
             </ul>
           </section>
-        </nav>
+          </nav>
+        </div>
 
-        <div className="border-t border-white/5 pt-5 text-center text-[10px] font-medium text-zinc-500">
+        <div className="border-t border-white/5 pt-5 text-center text-[10px] font-medium text-zinc-500 lg:pt-8 lg:text-xs">
           <p>© {currentPersianYear} تمامی حقوق برای فلوریسا محفوظ است.</p>
         </div>
       </div>

@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { Check, Heart, PackageX, ShoppingBag } from "lucide-react";
+import { Check, Heart, PackageX } from "lucide-react";
 
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import {
-  getPriceUnitLabel,
-  getProductColor,
-  getProductIdentity,
-} from "@/features/catalog/utils/product";
 import { formatTomanAmount, toPersianDigits } from "../utils/persian";
 
 interface ProductCardProps {
@@ -36,8 +31,6 @@ export function ProductCard({
   const isAvailable =
     product.is_in_stock &&
     product.stock_quantity >= product.minimum_order_quantity;
-
-  const visibleTag = getProductIdentity(product) || getProductColor(product);
 
   const potMaterial =
     product.product_type === "plant"

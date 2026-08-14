@@ -118,6 +118,69 @@ class OrderAPITests(TestCase):
         self.address.refresh_from_db()
         self.assertFalse(self.address.is_default)
 
+    def test_address_mutations_are_owned(self):
+        self.login()
+
+        update = self.client.patch(
+            f"/api/addresses/{self.other_address.pk}/",
+            {"title": "دستکاری"},
+            format="json",
+        )
+        delete = self.client.delete(
+            f"/api/addresses/{self.other_address.pk}/",
+        )
+        make_default = self.client.patch(
+            f"/api/addresses/{self.other_address.pk}/",
+            {"is_default": True},
+            format="json",
+        )
+
+        self.assertEqual(update.status_code, 404)
+        self.assertEqual(delete.status_code, 404)
+        self.assertEqual(make_default.status_code, 404)
+        self.other_address.refresh_from_db()
+        self.assertTrue(self.other_address.is_default)
+
+    def test_changing_and_deleting_default_preserves_invariant(self):
+        second = UserAddress.objects.create(
+            user=self.user,
+            title="محل کار",
+            recipient_name="گیرنده دوم",
+            recipient_phone="09123333333",
+            province="تهران",
+            city="تهران",
+            address_line="نشانی دوم",
+        )
+        self.login()
+
+        changed = self.client.patch(
+            f"/api/addresses/{second.pk}/",
+            {"is_default": True},
+            format="json",
+        )
+
+        self.assertEqual(changed.status_code, 200)
+        self.assertTrue(changed.data["is_default"])
+        self.address.refresh_from_db()
+        self.assertFalse(self.address.is_default)
+        self.assertEqual(
+            UserAddress.objects.filter(user=self.user, is_default=True).count(),
+            1,
+        )
+
+        deleted = self.client.delete(f"/api/addresses/{second.pk}/")
+
+        self.assertEqual(deleted.status_code, 204)
+        self.address.refresh_from_db()
+        self.assertTrue(self.address.is_default)
+
+    def test_anonymous_address_access_is_rejected(self):
+        self.assertIn(self.client.get("/api/addresses/").status_code, (401, 403))
+        self.assertIn(
+            self.client.post("/api/addresses/", {}, format="json").status_code,
+            (401, 403),
+        )
+
     def test_preview_uses_current_price_and_exact_totals(self):
         self.login()
         response = self.client.post(

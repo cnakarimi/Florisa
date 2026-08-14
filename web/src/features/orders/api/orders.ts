@@ -26,6 +26,19 @@ export async function createAddress(input: AddressInput): Promise<UserAddress> {
   return data;
 }
 
+export async function updateAddress(id: number, input: Partial<AddressInput>): Promise<UserAddress> {
+  const data = await apiRequest<unknown>(`/api/addresses/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+  if (!isAddress(data)) throw new ApiError(INVALID_RESPONSE, 502);
+  return data;
+}
+
+export async function deleteAddress(id: number): Promise<void> {
+  await apiRequest<void>(`/api/addresses/${id}/`, { method: "DELETE" });
+}
+
 export async function previewCart(items: CheckoutItemInput[]): Promise<CartPreview> {
   const data = await apiRequest<unknown>("/api/orders/preview/", {
     method: "POST",

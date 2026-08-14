@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Banknote, LoaderCircle, MapPin, Plus, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/hooks/CartProvider";
@@ -14,25 +14,15 @@ import {
   previewCart,
   submitOrder,
 } from "@/features/orders/api/orders";
+import { AddressForm } from "@/features/orders/components/AddressForm";
 import type { AddressInput, CartPreview, UserAddress } from "@/features/orders/types";
+import { emptyAddressInput } from "@/features/orders/utils/address";
+import { upsertAddress } from "@/features/orders/utils/addressState";
 import { clearCheckoutAttempt, getCheckoutAttemptKey } from "@/features/orders/utils/checkoutAttempt";
 import { completeCheckout } from "@/features/orders/utils/request";
-import { ApiError, getApiErrorMessage } from "@/lib/api/client";
+import { ApiError, type ApiFieldErrors, getApiErrorMessage } from "@/lib/api/client";
 
-const EMPTY_ADDRESS: AddressInput = {
-  title: "خانه",
-  recipient_name: "",
-  recipient_phone: "",
-  province: "تهران",
-  city: "تهران",
-  district: "",
-  address_line: "",
-  plaque: "",
-  unit: "",
-  postal_code: "",
-  delivery_note: "",
-  is_default: true,
-};
+const EMPTY_ADDRESS = emptyAddressInput({ is_default: true });
 
 function record(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -53,6 +43,8 @@ export function CheckoutExperience() {
   const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressInput, setAddressInput] = useState<AddressInput>(EMPTY_ADDRESS);
+  const [addressFieldErrors, setAddressFieldErrors] = useState<ApiFieldErrors>({});
+  const [addressFormError, setAddressFormError] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const [error, setError] = useState("");
   const [itemErrors, setItemErrors] = useState<Record<number, string>>({});
@@ -77,19 +69,22 @@ export function CheckoutExperience() {
     return () => { current = false; };
   }, [checkoutItems]);
 
-  const saveAddress = async (event: FormEvent) => {
-    event.preventDefault();
+  const saveAddress = async (payload: AddressInput) => {
     if (isSavingAddress) return;
-    setError("");
+    setAddressFieldErrors({});
+    setAddressFormError("");
     setIsSavingAddress(true);
     try {
-      const address = await createAddress(addressInput);
-      setAddresses((current) => [address, ...current.map((item) => ({ ...item, is_default: address.is_default ? false : item.is_default }))]);
+      const address = await createAddress(payload);
+      setAddresses((current) => upsertAddress(current, address));
       setSelectedAddressId(address.id);
       setShowAddressForm(false);
       setAddressInput(EMPTY_ADDRESS);
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, ["recipient_name", "recipient_phone", "address_line", "postal_code"]));
+      if (requestError instanceof ApiError) {
+        setAddressFieldErrors(requestError.fieldErrors);
+        setAddressFormError(Object.keys(requestError.fieldErrors).length ? "" : getApiErrorMessage(requestError));
+      } else setAddressFormError(getApiErrorMessage(requestError));
     } finally {
       setIsSavingAddress(false);
     }
@@ -159,7 +154,7 @@ export function CheckoutExperience() {
               </label>
             ))}
           </div>
-          {showAddressForm ? <AddressForm value={addressInput} onChange={setAddressInput} onSubmit={saveAddress} isSaving={isSavingAddress} /> : null}
+          {showAddressForm ? <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 p-3"><AddressForm mode="create" value={addressInput} onChange={setAddressInput} onSubmit={saveAddress} isSaving={isSavingAddress} serverFieldErrors={addressFieldErrors} formError={addressFormError} onFieldChange={(field) => setAddressFieldErrors((current) => { const next = { ...current }; delete next[field]; return next; })} onCancel={() => setShowAddressForm(false)} /></div> : null}
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-[#171921] p-4">
@@ -188,16 +183,6 @@ export function CheckoutExperience() {
       </div>
     </main>
   );
-}
-
-function AddressForm({ value, onChange, onSubmit, isSaving }: { value: AddressInput; onChange: (value: AddressInput) => void; onSubmit: (event: FormEvent) => void; isSaving: boolean }) {
-  const field = (name: keyof AddressInput, label: string, required = false) => <label className="text-[11px] text-zinc-400">{label}<input required={required} value={String(value[name] ?? "")} onChange={(event) => onChange({ ...value, [name]: event.target.value })} className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-400/50" /></label>;
-  return <form onSubmit={onSubmit} className="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-black/10 p-3">
-    {field("title", "عنوان")}{field("recipient_name", "نام تحویل‌گیرنده", true)}{field("recipient_phone", "شماره موبایل", true)}{field("district", "منطقه یا محله")}
-    <div className="col-span-2">{field("address_line", "نشانی کامل", true)}</div>{field("plaque", "پلاک")}{field("unit", "واحد")}{field("postal_code", "کد پستی ۱۰ رقمی")}
-    <label className="flex items-center gap-2 self-end py-3 text-xs"><input type="checkbox" checked={Boolean(value.is_default)} onChange={(event) => onChange({ ...value, is_default: event.target.checked })} className="accent-amber-400" />نشانی پیش‌فرض</label>
-    <button disabled={isSaving} className="col-span-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{isSaving ? "در حال ذخیره..." : "ذخیره و انتخاب نشانی"}</button>
-  </form>;
 }
 
 function MoneyRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {

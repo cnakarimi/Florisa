@@ -15,6 +15,8 @@ from accounts.serializers import (
     CompleteRegistrationValidationErrorSerializer,
     DetailResponseSerializer,
     PhoneSerializer,
+    ProfileUpdateSerializer,
+    ProfileUpdateValidationErrorSerializer,
     UserResponseSerializer,
     UserSerializer,
     VerifyOTPSerializer,
@@ -141,6 +143,34 @@ class CurrentUserView(APIView):
     )
     def get(self, request: Request) -> Response:
         return Response({"user": UserSerializer(request.user).data})
+
+    @extend_schema(
+        auth=[{"cookieAuth": []}],
+        request=ProfileUpdateSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=UserResponseSerializer,
+                description="Current user profile updated successfully.",
+            ),
+            400: OpenApiResponse(
+                response=ProfileUpdateValidationErrorSerializer,
+                description="Validation error.",
+            ),
+            403: OpenApiResponse(
+                response=DetailResponseSerializer,
+                description="Authentication required.",
+            ),
+        },
+    )
+    def patch(self, request: Request) -> Response:
+        serializer = ProfileUpdateSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({"user": UserSerializer(user).data})
 
 
 class CompleteRegistrationView(APIView):

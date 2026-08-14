@@ -15,11 +15,13 @@ import {
   getCurrentUser,
   logout as logoutRequest,
   requestOtp as requestOtpRequest,
+  updateProfile as updateProfileRequest,
   verifyOtp as verifyOtpRequest,
 } from "@/features/auth/api/auth";
 import type {
   AuthenticationState,
   CompleteRegistrationPayload,
+  ProfileUpdatePayload,
   User,
 } from "@/features/auth/types";
 import {
@@ -35,6 +37,7 @@ interface AuthContextValue extends AuthenticationState {
   completeRegistration: (
     payload: CompleteRegistrationPayload,
   ) => Promise<User>;
+  updateProfile: (payload: ProfileUpdatePayload) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -173,6 +176,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setState(unauthenticatedState());
   }, []);
 
+  const updateProfile = useCallback(
+    async (payload: ProfileUpdatePayload): Promise<User> => {
+      const { user } = await updateProfileRequest(payload);
+      setState(authenticatedState(user));
+      return user;
+    },
+    [],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
@@ -180,6 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       requestOtp,
       verifyOtp,
       completeRegistration,
+      updateProfile,
       logout,
     }),
     [
@@ -188,6 +201,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       refreshCurrentUser,
       requestOtp,
       state,
+      updateProfile,
       verifyOtp,
     ],
   );

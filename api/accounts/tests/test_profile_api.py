@@ -242,3 +242,122 @@ class ProfileCompletionAPITests(APITestCase):
             '["POST", "PUT", "PATCH", "DELETE"].includes(method)',
         )
         self.assertContains(response, 'request.headers["X-CSRFToken"]')
+
+
+class ProfileUpdateAPITests(APITestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            phone="09123456789",
+            full_name="نام قدیمی",
+            email="old@example.com",
+        )
+        self.endpoint = reverse("accounts:me")
+
+    def authenticate(self) -> None:
+        self.client.force_login(self.user)
+
+    def test_anonymous_profile_update_is_rejected(self):
+        response = self.client.patch(
+            self.endpoint,
+            {"full_name": "نام تازه"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_profile_name_and_email_can_be_updated_and_email_cleared(self):
+        self.authenticate()
+        updated = self.client.patch(
+            self.endpoint,
+            {"full_name": "  نام تازه  ", "email": "  new@example.com  "},
+            format="json",
+        )
+        cleared = self.client.patch(
+            self.endpoint,
+            {"email": ""},
+            format="json",
+        )
+
+        self.assertEqual(updated.status_code, status.HTTP_200_OK)
+        self.assertEqual(updated.data["user"]["full_name"], "نام تازه")
+        self.assertEqual(updated.data["user"]["email"], "new@example.com")
+        self.assertTrue(updated.data["user"]["is_profile_complete"])
+        self.assertEqual(cleared.status_code, status.HTTP_200_OK)
+        self.assertIsNone(cleared.data["user"]["email"])
+        self.assertEqual(
+            set(cleared.data["user"]),
+            {"id", "phone", "full_name", "email", "is_profile_complete"},
+        )
+
+    def test_invalid_name_and_email_are_rejected(self):
+        self.authenticate()
+
+        blank_name = self.client.patch(
+            self.endpoint,
+            {"full_name": "   "},
+            format="json",
+        )
+        invalid_email = self.client.patch(
+            self.endpoint,
+            {"email": "invalid"},
+            format="json",
+        )
+
+        self.assertEqual(blank_name.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("full_name", blank_name.data)
+        self.assertEqual(invalid_email.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", invalid_email.data)
+
+    def test_read_only_and_privileged_fields_are_rejected(self):
+        self.authenticate()
+
+        for field, value in (
+            ("phone", "09999999999"),
+            ("password", "unsafe"),
+            ("is_staff", True),
+            ("is_superuser", True),
+            ("is_active", False),
+            ("groups", [1]),
+            ("user_permissions", [1]),
+        ):
+            with self.subTest(field=field):
+                response = self.client.patch(
+                    self.endpoint,
+                    {"full_name": "نام تازه", field: value},
+                    format="json",
+                )
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_400_BAD_REQUEST,
+                )
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.phone, "09123456789")
+        self.assertEqual(self.user.full_name, "نام قدیمی")
+        self.assertFalse(self.user.is_staff)
+        self.assertFalse(self.user.is_superuser)
+        self.assertTrue(self.user.is_active)
+
+    def test_session_and_csrf_protection_remain_active_after_update(self):
+        strict_client = APIClient(enforce_csrf_checks=True)
+        strict_client.force_login(self.user)
+        csrf_response = strict_client.get(reverse("accounts:csrf"))
+        csrf_token = csrf_response.cookies["csrftoken"].value
+
+        rejected = strict_client.patch(
+            self.endpoint,
+            {"full_name": "نام تازه"},
+            format="json",
+        )
+        accepted = strict_client.patch(
+            self.endpoint,
+            {"full_name": "نام تازه"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+        current = strict_client.get(self.endpoint)
+
+        self.assertEqual(rejected.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(accepted.status_code, status.HTTP_200_OK)
+        self.assertEqual(current.status_code, status.HTTP_200_OK)
+        self.assertEqual(current.data["user"]["full_name"], "نام تازه")

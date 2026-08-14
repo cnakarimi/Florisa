@@ -21,6 +21,11 @@ export interface CompleteRegistrationPayload {
   email?: string;
 }
 
+export interface ProfileUpdatePayload {
+  full_name: string;
+  email: string;
+}
+
 export type BackendValidationErrors = Record<string, string[]>;
 
 export interface AuthenticationState {

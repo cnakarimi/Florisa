@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 from rest_framework import serializers
 
 from accounts.models import User
@@ -90,12 +92,57 @@ class CompleteRegistrationSerializer(serializers.ModelSerializer):
         return value or None
 
 
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(
+        max_length=150,
+        required=False,
+        allow_blank=False,
+        trim_whitespace=True,
+    )
+    email = serializers.EmailField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ("full_name", "email")
+
+    def to_internal_value(self, data):
+        if not isinstance(data, Mapping):
+            return super().to_internal_value(data)
+        unexpected_fields = set(data) - set(self.fields)
+        if unexpected_fields:
+            raise serializers.ValidationError(
+                {
+                    "non_field_errors": [
+                        "فقط نام و نام خانوادگی و ایمیل قابل ویرایش هستند."
+                    ]
+                }
+            )
+        return super().to_internal_value(data)
+
+    def validate_email(self, value: str | None) -> str | None:
+        return value or None
+
+
 class CompleteRegistrationValidationErrorSerializer(serializers.Serializer):
     full_name = serializers.ListField(
         child=serializers.CharField(),
         required=False,
     )
     email = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+    )
+
+
+class ProfileUpdateValidationErrorSerializer(
+    CompleteRegistrationValidationErrorSerializer
+):
+    non_field_errors = serializers.ListField(
         child=serializers.CharField(),
         required=False,
     )

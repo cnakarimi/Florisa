@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   User,
   MapPin,
@@ -47,7 +48,6 @@ interface ProfileViewProps {
   logoutPending?: boolean;
   logoutError?: string;
   onNavigateToCart?: () => void;
-  onNavigateToOrders?: () => void;
   onNavigateToTab?: (tab: TabType) => void;
   cartCount?: number;
 }
@@ -60,7 +60,6 @@ export function ProfileView({
   logoutPending = false,
   logoutError = "",
   onNavigateToCart,
-  onNavigateToOrders,
   onNavigateToTab,
   cartCount = 0,
 }: ProfileViewProps) {
@@ -98,7 +97,7 @@ export function ProfileView({
   const closeModal = () => setActiveModal(null);
 
   return (
-    <div className="dir-rtl mx-auto max-w-md space-y-5 px-1 py-4 font-['Vazirmatn',sans-serif]">
+    <div className="dir-rtl mx-auto w-full max-w-2xl space-y-5 px-1 py-4 font-['Vazirmatn',sans-serif]">
       <div className="flex items-center justify-between border-b border-white/5 px-1 pb-3 pt-1">
         <h1 className="text-2xl font-black tracking-tight text-[#e5c158]">
           فلورا
@@ -149,54 +148,47 @@ export function ProfileView({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveModal("edit_profile")}
+          <Link
+            href="/profile/edit"
             className="absolute bottom-0 right-0 rounded-full border-2 border-[#0d0e12] bg-amber-400 p-1.5 text-black shadow-md transition-all hover:bg-amber-300"
             aria-label="ویرایش حساب"
           >
             <Pencil className="size-3.5 stroke-[2.5]" aria-hidden="true" />
-          </button>
+          </Link>
         </div>
       </div>
 
       <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/5 bg-[#121617] shadow-lg">
-        <button
-          type="button"
-          onClick={() => setActiveModal("edit_profile")}
+        <Link
+          href="/profile/edit"
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
             <User className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
             <span className="text-sm font-semibold text-zinc-100">
-              اطلاعات شخصی
+              ویرایش اطلاعات حساب
             </span>
           </span>
           <ChevronLeft className="size-5 text-zinc-500" aria-hidden="true" />
-        </button>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => setActiveModal("addresses")}
+        <Link
+          href="/profile/addresses"
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
             <MapPin className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
             <span className="text-sm font-semibold text-zinc-100">
-              آدرس‌های ذخیره شده
+              آدرس‌های من
             </span>
           </span>
           <ChevronLeft className="size-5 text-zinc-500" aria-hidden="true" />
-        </button>
+        </Link>
       </div>
 
       <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/5 bg-[#121617] shadow-lg">
-        <button
-          type="button"
-          onClick={() => {
-            if (onNavigateToOrders) onNavigateToOrders();
-            else setActiveModal("orders");
-          }}
+        <Link
+          href="/orders"
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
@@ -206,7 +198,7 @@ export function ProfileView({
             </span>
           </span>
           <ChevronLeft className="size-5 text-zinc-500" aria-hidden="true" />
-        </button>
+        </Link>
 
         <button
           type="button"

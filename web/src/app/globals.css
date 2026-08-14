@@ -43,8 +43,34 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
+}
+
+.account-input {
+  height: 3.5rem;
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: rgb(0 0 0 / 18%);
+  padding-left: 1rem;
+  color: #f4f4f5;
+  outline: none;
+  transition: border-color 160ms, box-shadow 160ms, background 160ms;
+}
+
+.account-input:hover {
+  border-color: rgb(255 255 255 / 16%);
+}
+
+.account-input:focus-visible {
+  border-color: rgb(251 191 36 / 70%);
+  box-shadow: 0 0 0 3px rgb(251 191 36 / 12%);
+}
+
+.account-input[aria-invalid="true"] {
+  border-color: rgb(251 113 133 / 60%);
 }
 
 button {

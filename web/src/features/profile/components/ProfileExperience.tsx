@@ -9,6 +9,8 @@ import { useCart } from "@/features/cart/hooks/CartProvider";
 import { BottomNav } from "@/features/home/components/BottomNav";
 import { ProfileView } from "@/features/home/components/ProfileView";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
+import { withNext } from "@/features/auth/utils/redirect";
+import { AccountNavigation } from "./AccountNavigation";
 
 export function ProfileExperience() {
   const router = useRouter();
@@ -30,12 +32,12 @@ export function ProfileExperience() {
     }
 
     if (!auth.isAuthenticated) {
-      router.replace("/auth");
+      router.replace(withNext("/auth", "/profile"));
       return;
     }
 
     if (!auth.isProfileComplete) {
-      router.replace("/auth/register?next=/profile");
+      router.replace(withNext("/auth/register", "/profile"));
     }
   }, [
     auth.initializationError,
@@ -91,7 +93,8 @@ export function ProfileExperience() {
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] text-zinc-100 md:pb-24">
-      <main className="mx-auto max-w-6xl px-4">
+      <main className="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] lg:px-8">
+        <aside className="hidden pt-5 md:block"><div className="sticky top-5"><AccountNavigation /></div></aside>
         <ProfileView
           phone={auth.user.phone}
           fullName={auth.user.full_name}
@@ -101,7 +104,6 @@ export function ProfileExperience() {
           logoutError={logoutError}
           cartCount={cart.isHydrated ? cart.totalQuantity : 0}
           onNavigateToCart={() => router.push("/cart")}
-          onNavigateToOrders={() => router.push("/orders")}
           onNavigateToTab={(tab) =>
             router.push(tab === "home" ? "/" : `/${tab}`)
           }

@@ -10,7 +10,6 @@ import {
   Heart,
   LayoutGrid,
   Leaf,
-  Search,
   ShoppingBag,
   User,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type FormEvent,
   type ReactNode,
 } from "react";
 
@@ -35,129 +33,114 @@ import type { HomeExperiencePresentationProps } from "./homeExperience.types";
 import { ProductCard } from "./ProductCard";
 import { ScrollNavbar } from "./ScrollNavbar";
 
-const HERO_IMAGE = "/images/hero_living_room_1785179404997.webp";
+const HERO_IMAGE = "/images/hero_1.png";
 
 const NAV_ITEMS = [
-  { href: "/", label: "خانه", activePath: "/" },
   { href: "/shop", label: "فروشگاه", activePath: "/shop" },
-  { href: "/care", label: "مراقبت هوشمند", activePath: "/care" },
   { href: "/#magazine", label: "مجله", activePath: "" },
 ] as const;
 
 function DesktopHeader({
   cartCount,
   favoritesCount,
-  onSearch,
-}: Pick<
-  HomeExperiencePresentationProps,
-  "cartCount" | "favoritesCount" | "onSearch"
->) {
+}: Pick<HomeExperiencePresentationProps, "cartCount" | "favoritesCount">) {
   const pathname = usePathname();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    onSearch(searchQuery);
-  };
+  useEffect(() => {
+    const updateHeaderState = () => {
+      setIsScrolled(window.scrollY > 16);
+    };
+
+    updateHeaderState();
+
+    window.addEventListener("scroll", updateHeaderState, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", updateHeaderState);
+    };
+  }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#0c0e0d]/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center gap-8 px-8">
-        <Link
-          href="/"
-          aria-label="فلوریسا، صفحه خانه"
-          className="flex w-28 shrink-0 items-center rounded-lg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70"
-        >
-          <Image
-            src="/images/brand/florisa-logo.svg"
-            alt="فلوریسا"
-            width={112}
-            height={43}
-            className="h-auto w-full object-contain"
-          />
-        </Link>
-
-        <nav
-          aria-label="ناوبری اصلی دسکتاپ"
-          className="flex items-center gap-7 text-sm font-medium"
-        >
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.activePath === "/"
-                ? pathname === "/"
-                : Boolean(item.activePath) &&
-                  (pathname === item.activePath ||
-                    pathname.startsWith(`${item.activePath}/`));
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`relative rounded-sm py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/65 ${
-                  isActive
-                    ? "font-bold text-[#d4af37] after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[#d4af37]"
-                    : "text-zinc-300 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="mr-auto flex items-center gap-2 text-zinc-300">
-          <form
-            role="search"
-            onSubmit={handleSubmit}
-            className="relative ml-2 w-56"
-          >
-            <label htmlFor="desktop-home-search" className="sr-only">
-              جست‌وجوی محصولات فلوریسا
-            </label>
-
-            <button
-              type="submit"
-              aria-label="اجرای جست‌وجو"
-              className="absolute right-1.5 top-1/2 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full text-[#d4af37] transition hover:bg-[#d4af37]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70"
-            >
-              <Search aria-hidden="true" className="size-4" />
-            </button>
-
-            <input
-              id="desktop-home-search"
-              type="search"
-              enterKeyHint="search"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="جست‌وجوی محصول..."
-              className="h-10 w-full rounded-full border border-white/10 bg-[#181b19] pr-9 pl-4 text-xs text-white outline-none transition placeholder:text-zinc-500 hover:border-white/20 focus:border-[#d4af37]/70 focus:ring-2 focus:ring-[#d4af37]/15"
+    <>
+      <header
+        className={`hidden lg:fixed lg:inset-x-0 lg:top-0 lg:z-[100] lg:block ${
+          isScrolled
+            ? "border-b border-white/10 bg-[#090b0a]/95 shadow-[0_12px_32px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+            : "border-b border-white/[0.04] bg-[#0d0f0e]/80 backdrop-blur-md"
+        } transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300`}
+      >
+        <div className="mx-auto flex h-[76px] max-w-[1600px] items-center gap-8 px-8">
+          <div className="flex items-center gap-2 text-zinc-300">
+            <HeaderAction
+              href="/favorites"
+              label="علاقه‌مندی‌ها"
+              count={favoritesCount}
+              icon={<Heart className="size-5" aria-hidden="true" />}
             />
-          </form>
 
-          <HeaderAction
-            href="/favorites"
-            label="علاقه‌مندی‌ها"
-            count={favoritesCount}
-            icon={<Heart className="size-5" aria-hidden="true" />}
-          />
+            <HeaderAction
+              href="/cart"
+              label="سبد خرید"
+              count={cartCount}
+              icon={<ShoppingBag className="size-5" aria-hidden="true" />}
+            />
 
-          <HeaderAction
-            href="/cart"
-            label="سبد خرید"
-            count={cartCount}
-            icon={<ShoppingBag className="size-5" aria-hidden="true" />}
-          />
+            <HeaderAction
+              href="/profile"
+              label="حساب کاربری"
+              icon={<User className="size-5" aria-hidden="true" />}
+            />
+          </div>
 
-          <HeaderAction
-            href="/profile"
-            label="حساب کاربری"
-            icon={<User className="size-5" aria-hidden="true" />}
-          />
+          <Link
+            href="/"
+            aria-label="فلوریسا، صفحه خانه"
+            className="mx-auto flex w-28 items-center justify-center rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70"
+          >
+            <Image
+              src="/images/brand/florisa-logo.svg"
+              alt="فلوریسا"
+              width={112}
+              height={43}
+              className="h-auto w-full object-contain"
+            />
+          </Link>
+
+          <nav
+            aria-label="ناوبری اصلی دسکتاپ"
+            className="flex items-center gap-7 text-sm font-medium"
+          >
+            {NAV_ITEMS.map((item) => {
+              const isActive =
+                item.activePath !== "" &&
+                (pathname === item.activePath ||
+                  pathname.startsWith(`${item.activePath}/`));
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`relative rounded-sm py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/65 ${
+                    isActive
+                      ? "font-bold text-[#d4af37] after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[#d4af37]"
+                      : "text-zinc-300 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Header is fixed, so this element reserves its original space. */}
+      <div aria-hidden="true" className="hidden h-[76px] shrink-0 lg:block" />
+    </>
   );
 }
 
@@ -217,6 +200,7 @@ function ProductsSlider({
 >) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const activeIndexRef = useRef(0);
+
   const [canSlideLeft, setCanSlideLeft] = useState(false);
   const [canSlideRight, setCanSlideRight] = useState(false);
 
@@ -265,6 +249,7 @@ function ProductsSlider({
     if (!slider) return;
 
     const animationFrame = window.requestAnimationFrame(updateSliderState);
+
     const resizeObserver = new ResizeObserver(updateSliderState);
     resizeObserver.observe(slider);
 
@@ -286,12 +271,14 @@ function ProductsSlider({
     if (slides.length === 0) return;
 
     const indexChange = direction === "left" ? 1 : -1;
+
     const targetIndex = Math.min(
       Math.max(activeIndexRef.current + indexChange, 0),
       slides.length - 1,
     );
 
     activeIndexRef.current = targetIndex;
+
     slides[targetIndex]?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",
@@ -299,7 +286,9 @@ function ProductsSlider({
     });
   };
 
-  if (isProductsLoading) return <CatalogFeedback kind="loading" />;
+  if (isProductsLoading) {
+    return <CatalogFeedback kind="loading" />;
+  }
 
   if (productsError && latestProducts.length === 0) {
     return (
@@ -333,7 +322,7 @@ function ProductsSlider({
         tabIndex={0}
         onScroll={updateSliderState}
         aria-label="اسلایدر جدیدترین محصولات"
-        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 overscroll-x-contain scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:gap-5 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 scroll-smooth overscroll-x-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:gap-5 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {latestProducts.map((product) => (
           <div
@@ -419,7 +408,9 @@ function Categories({
 
   return (
     <section
-      className={`${shouldShowOnMobile ? "block" : "hidden lg:block"} px-5 py-6 lg:mx-auto lg:max-w-7xl lg:px-8 lg:py-20`}
+      className={`${
+        shouldShowOnMobile ? "block" : "hidden lg:block"
+      } px-5 py-6 lg:mx-auto max-w-[1600px] lg:px-8 lg:py-20`}
       aria-labelledby="home-categories-title"
     >
       <div className="mb-5 flex items-center justify-between lg:mb-8 lg:justify-start lg:gap-2">
@@ -429,11 +420,6 @@ function Categories({
         >
           دسته‌بندی
         </h2>
-
-        <LayoutGrid
-          className="hidden size-5 text-[#d4af37] lg:block"
-          aria-hidden="true"
-        />
 
         {selectedCategory ? (
           <button
@@ -466,7 +452,7 @@ function Categories({
           compact
         />
       ) : (
-        <div className="grid grid-cols-2 gap-x-5 gap-y-7 lg:mx-auto lg:max-w-5xl lg:grid-cols-4 lg:gap-10">
+        <div className="flex items-center gap-x-24">
           {categories.map((category) => {
             const isSelected = selectedCategory === category.slug;
 
@@ -495,6 +481,7 @@ function Categories({
                       quality={75}
                       className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
                     />
+
                     <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent lg:from-black/35" />
                   </span>
                 </span>
@@ -520,7 +507,7 @@ function Categories({
 function Hero() {
   return (
     <section
-      className="relative isolate aspect-[3/2] w-full overflow-hidden bg-[#111411] sm:aspect-[16/8] md:aspect-[16/7] lg:mx-auto lg:mt-8 lg:h-[480px] lg:max-w-7xl lg:aspect-auto lg:rounded-[30px] lg:border lg:border-white/[0.08] lg:shadow-2xl lg:shadow-black/40"
+      className="relative isolate aspect-[3/2] w-full overflow-hidden mx-auto h-[480px] "
       aria-labelledby="home-hero-title"
     >
       <Image
@@ -534,31 +521,22 @@ function Hero() {
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#101110] via-black/5 to-black/30 lg:bg-black/25" />
+
       <div className="absolute inset-0 hidden bg-gradient-to-t from-black/75 via-black/10 to-black/40 lg:block" />
 
       <Link
         href="/shop"
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 pt-5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c7a23c] lg:px-12 lg:pt-0"
+        className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-8 px-6 pt-5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c7a23c] lg:px-12 lg:pt-0"
         aria-label="مشاهده محصولات فلوریسا"
       >
-        <span className="mt-5 rounded-full border border-white/25 bg-black/20 px-5 py-2 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:border-[#c7a23c]/70 hover:bg-[#c7a23c]/15 sm:px-6 sm:py-2.5 sm:text-sm lg:mb-5 lg:mt-0 lg:border-white/15 lg:bg-black/25 lg:text-xs lg:text-white/85 lg:backdrop-blur-md">
-          دنیای گیاهان خانگی
-        </span>
-
         <h1
           id="home-hero-title"
-          className="hidden text-5xl font-black leading-tight tracking-tight text-white drop-shadow-2xl lg:block"
+          className="text-[36px] font-bold leading-tight tracking-tight text-white block"
         >
           به خونت جون بده
         </h1>
-
-        <p className="mt-5 hidden max-w-2xl text-base leading-8 text-zinc-100/85 drop-shadow-lg lg:block">
-          با انتخاب گل‌ها و گیاهان تازه، آرامش و زندگی را به خانه‌ات دعوت کن؛
-          فلوریسا برای یک انتخاب سبز کنارت است.
-        </p>
-
-        <span className="mt-8 hidden min-h-12 items-center justify-center rounded-full bg-[#d4af37] px-8 text-sm font-black text-[#11130f] shadow-xl transition hover:bg-[#e3c45d] motion-safe:hover:scale-[1.03] lg:inline-flex">
-          مشاهده محصولات
+        <span className="mt-5 rounded-full border border-white/25 bg-black/20 px-5 py-2 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:border-[#c7a23c]/70 hover:bg-[#c7a23c]/15 sm:px-6 sm:py-2.5 sm:text-sm lg:mb-5 lg:mt-0 lg:border-white/15 lg:bg-black/25 lg:text-xs lg:text-white/85 lg:backdrop-blur-md">
+          دنیای گیاهان خانگی
         </span>
       </Link>
     </section>
@@ -588,25 +566,22 @@ export function ResponsiveHomeExperience(
   return (
     <div
       data-home-experience="responsive"
-      className="min-h-dvh overflow-x-hidden bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white lg:bg-[#0d0f0e]"
+      className="min-h-dvh overflow-x-clip bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white lg:bg-[#0d0f0e]"
     >
       <div className="lg:hidden">
         <ScrollNavbar
           searchQuery=""
           onSearch={onSearch}
           onLogoClick={() =>
-            window.scrollTo({ top: 0, behavior: "smooth" })
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
           }
         />
       </div>
 
-      <div className="hidden lg:block">
-        <DesktopHeader
-          cartCount={cartCount}
-          favoritesCount={favoritesCount}
-          onSearch={onSearch}
-        />
-      </div>
+      <DesktopHeader cartCount={cartCount} favoritesCount={favoritesCount} />
 
       <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] shadow-2xl shadow-black lg:max-w-none lg:bg-transparent lg:shadow-none">
         <main>
@@ -616,7 +591,7 @@ export function ResponsiveHomeExperience(
             <Categories {...props} />
 
             <section
-              className="pb-2 pt-6 sm:pt-8 lg:mx-auto lg:max-w-7xl lg:px-8 lg:pb-20 lg:pt-0"
+              className="pb-2 pt-6 sm:pt-8 mx-auto max-w-[1600px] lg:px-8 lg:pb-20 lg:pt-0"
               aria-labelledby="home-products-title"
             >
               <div className="mb-4 flex items-center justify-between sm:mb-6 lg:mb-7">
@@ -649,13 +624,13 @@ export function ResponsiveHomeExperience(
               />
             </section>
 
-            <section className="mx-auto hidden max-w-7xl px-8 pb-20 lg:block">
+            <section className="mx-auto hidden max-w-[1600px] px-8 pb-20 lg:block">
               <FeaturesGrid />
             </section>
 
             <section
               id="magazine"
-              className="scroll-mt-28 px-5 pb-10 pt-8 lg:mx-auto lg:max-w-7xl lg:px-8 lg:pb-20 lg:pt-0"
+              className="scroll-mt-28 px-5 pb-10 pt-8 lg:mx-auto max-w-[1600px] lg:px-8 lg:pb-20 lg:pt-0"
               aria-labelledby="home-magazine-title"
             >
               <div className="mb-5 flex items-center gap-2 lg:mb-8">
@@ -665,11 +640,6 @@ export function ResponsiveHomeExperience(
                 >
                   مجله گیاهان
                 </h2>
-
-                <Leaf
-                  className="hidden size-5 text-[#d4af37] lg:block"
-                  aria-hidden="true"
-                />
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -678,7 +648,9 @@ export function ResponsiveHomeExperience(
                     type="button"
                     key={article.id}
                     onClick={() => onSelectArticle(article)}
-                    className={`${index === 0 ? "block" : "hidden lg:block"} group relative aspect-[4/3] w-full overflow-hidden rounded-md bg-[#151715] text-right shadow-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] lg:rounded-2xl lg:border lg:border-white/10 lg:bg-[#181a18] lg:hover:border-[#d4af37]/55 lg:focus-visible:ring-[#d4af37]`}
+                    className={`${
+                      index === 0 ? "block" : "hidden lg:block"
+                    } group relative aspect-[4/3] w-full overflow-hidden rounded-md bg-[#151715] text-right shadow-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] lg:rounded-2xl lg:border lg:border-white/10 lg:bg-[#181a18] lg:hover:border-[#d4af37]/55 lg:focus-visible:ring-[#d4af37]`}
                   >
                     <CatalogImage
                       src={article.image}
@@ -691,10 +663,7 @@ export function ResponsiveHomeExperience(
                     <span className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent lg:from-[#0b0d0c] lg:via-black/45" />
 
                     <span className="absolute left-3 top-3 grid size-8 place-items-center rounded-sm border border-[#c7a23c]/20 bg-black/30 text-[#d1ad38] backdrop-blur-sm lg:left-4 lg:top-4 lg:size-10 lg:rounded-xl lg:border-white/10 lg:bg-black/55 lg:text-[#d4af37] lg:backdrop-blur-md">
-                      <ExternalLink
-                        className="size-4"
-                        aria-hidden="true"
-                      />
+                      <ExternalLink className="size-4" aria-hidden="true" />
                     </span>
 
                     <span className="absolute inset-x-0 bottom-0 block p-5 lg:p-6">

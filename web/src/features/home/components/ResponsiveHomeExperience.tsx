@@ -3,16 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Heart,
-  LayoutGrid,
-  Leaf,
-  ShoppingBag,
-  User,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -32,6 +23,8 @@ import { FeaturesGrid } from "./Footer";
 import type { HomeExperiencePresentationProps } from "./homeExperience.types";
 import { ProductCard } from "./ProductCard";
 import { ScrollNavbar } from "./ScrollNavbar";
+
+import { CartIcon, UserIcon, type IconProps } from "@/components/icons";
 
 const HERO_IMAGE = "/images/hero_1.png";
 
@@ -75,23 +68,16 @@ function DesktopHeader({
         <div className="mx-auto flex h-[76px] max-w-[1600px] items-center gap-8 px-8">
           <div className="flex items-center gap-2 text-zinc-300">
             <HeaderAction
-              href="/favorites"
-              label="علاقه‌مندی‌ها"
-              count={favoritesCount}
-              icon={<Heart className="size-5" aria-hidden="true" />}
-            />
-
-            <HeaderAction
               href="/cart"
               label="سبد خرید"
               count={cartCount}
-              icon={<ShoppingBag className="size-5" aria-hidden="true" />}
+              icon={<CartIcon className="size-5" aria-hidden="true" />}
             />
 
             <HeaderAction
               href="/profile"
               label="حساب کاربری"
-              icon={<User className="size-5" aria-hidden="true" />}
+              icon={<UserIcon className="size-5" aria-hidden="true" />}
             />
           </div>
 
@@ -344,19 +330,18 @@ function ProductsSlider({
 
       <div className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden items-center justify-between lg:flex">
         <SliderButton
-          label="نمایش محصولات بعدی"
-          disabled={!canSlideLeft}
-          onClick={() => scrollToProduct("left")}
-        >
-          <ChevronLeft className="size-5" aria-hidden="true" />
-        </SliderButton>
-
-        <SliderButton
           label="نمایش محصولات قبلی"
           disabled={!canSlideRight}
           onClick={() => scrollToProduct("right")}
         >
           <ChevronRight className="size-5" aria-hidden="true" />
+        </SliderButton>
+        <SliderButton
+          label="نمایش محصولات بعدی"
+          disabled={!canSlideLeft}
+          onClick={() => scrollToProduct("left")}
+        >
+          <ChevronLeft className="size-5" aria-hidden="true" />
         </SliderButton>
       </div>
     </div>

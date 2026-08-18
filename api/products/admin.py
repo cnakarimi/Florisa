@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms.models import BaseInlineFormSet
+from django.utils.html import format_html
 
 from products.models import (
     Category,
     CutFlower,
     CutFlowerDetails,
+    HomeSlide,
     Plant,
     PlantDetails,
     Product,
@@ -249,3 +251,97 @@ class ProductImageAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "alt_text")
     autocomplete_fields = ("product",)
     ordering = ("product", "sort_order", "id")
+
+
+@admin.register(HomeSlide)
+class HomeSlideAdmin(admin.ModelAdmin):
+    list_display = (
+        "admin_title",
+        "title",
+        "mobile_thumbnail",
+        "desktop_thumbnail",
+        "sort_order",
+        "is_active",
+        "updated_at",
+    )
+    list_editable = ("sort_order", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("admin_title", "title", "eyebrow")
+    ordering = ("sort_order", "id")
+    readonly_fields = (
+        "mobile_preview",
+        "desktop_preview",
+        "created_at",
+        "updated_at",
+    )
+    fieldsets = (
+        (
+            "شناسایی و وضعیت",
+            {"fields": ("admin_title", "is_active", "sort_order")},
+        ),
+        (
+            "محتوای نمایشی",
+            {"fields": ("eyebrow", "title", "description", "image_alt")},
+        ),
+        (
+            "تصاویر واکنش‌گرا",
+            {
+                "fields": (
+                    "mobile_image",
+                    "mobile_preview",
+                    "desktop_image",
+                    "desktop_preview",
+                )
+            },
+        ),
+        ("دکمه اقدام", {"fields": ("cta_label", "cta_url")}),
+        ("زمان‌ها", {"fields": ("created_at", "updated_at")}),
+    )
+
+    @staticmethod
+    def _thumbnail(image, *, width: int, height: int):
+        if not image:
+            return "—"
+        try:
+            url = image.url
+        except ValueError:
+            return "—"
+        return format_html(
+            '<img src="{}" alt="" style="width:{}px;height:{}px;object-fit:cover;'
+            'border-radius:6px;background:#eee" />',
+            url,
+            width,
+            height,
+        )
+
+    @admin.display(description="بندانگشتی موبایل")
+    def mobile_thumbnail(self, slide: HomeSlide | None):
+        return self._thumbnail(
+            slide.mobile_image if slide else None,
+            width=48,
+            height=64,
+        )
+
+    @admin.display(description="بندانگشتی دسکتاپ")
+    def desktop_thumbnail(self, slide: HomeSlide | None):
+        return self._thumbnail(
+            slide.desktop_image if slide else None,
+            width=96,
+            height=40,
+        )
+
+    @admin.display(description="پیش‌نمایش موبایل")
+    def mobile_preview(self, slide: HomeSlide | None):
+        return self._thumbnail(
+            slide.mobile_image if slide else None,
+            width=180,
+            height=240,
+        )
+
+    @admin.display(description="پیش‌نمایش دسکتاپ")
+    def desktop_preview(self, slide: HomeSlide | None):
+        return self._thumbnail(
+            slide.desktop_image if slide else None,
+            width=360,
+            height=144,
+        )

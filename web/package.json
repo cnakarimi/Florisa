@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/features/catalog/catalog-images.test.mjs src/features/cart/cart.test.mjs src/features/home/home-responsive.test.mjs src/features/orders/orders.test.mjs src/features/profile/account.test.mjs"
+    "test": "node --experimental-strip-types --test src/features/catalog/catalog-images.test.mjs src/features/cart/cart.test.mjs src/features/home/home-responsive.test.mjs src/features/home/slider/slider.test.mjs src/features/orders/orders.test.mjs src/features/profile/account.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "5.5.7",

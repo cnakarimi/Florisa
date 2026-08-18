@@ -9,6 +9,7 @@ import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 import type { Article } from "../types";
+import { useHomeSlides } from "../slider/useHomeSlides";
 import { ArticleModal } from "./ArticleModal";
 import { BottomNav } from "./BottomNav";
 import { FavoritesView } from "./FavoritesView";
@@ -33,6 +34,7 @@ export function HomeExperience({
   const router = useRouter();
   const cart = useCart();
   const { favorites, toggleFavorite } = useFavorites();
+  const { slides: homeSlides, status: homeSlidesStatus } = useHomeSlides();
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [catalogQuery, setCatalogQuery] = useState<ProductQuery>({
@@ -111,6 +113,8 @@ export function HomeExperience({
           isProductsLoading={isProductsLoading}
           categoriesError={categoriesError}
           productsError={productsError}
+          homeSlides={homeSlides}
+          homeSlidesStatus={homeSlidesStatus}
           cartCount={cart.isHydrated ? cart.totalQuantity : 0}
           favoritesCount={favorites.length}
           onSelectCategory={setSelectedCategory}

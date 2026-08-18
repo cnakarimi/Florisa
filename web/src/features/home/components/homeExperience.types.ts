@@ -1,5 +1,6 @@
 import type { CatalogCategory, CatalogProduct } from "@/features/catalog/types";
 
+import type { HomeSlide, HomeSlidesStatus } from "../slider/types";
 import type { Article } from "../types";
 
 export interface HomeExperiencePresentationProps {
@@ -10,6 +11,8 @@ export interface HomeExperiencePresentationProps {
   isProductsLoading: boolean;
   categoriesError: string | null;
   productsError: string | null;
+  homeSlides: HomeSlide[];
+  homeSlidesStatus: HomeSlidesStatus;
   cartCount: number;
   favoritesCount: number;
   onSelectCategory: (category: string | null) => void;

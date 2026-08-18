@@ -20,13 +20,12 @@ import { ARTICLES } from "../data/products";
 import { toPersianDigits } from "../utils/persian";
 import { BottomNav } from "./BottomNav";
 import { FeaturesGrid } from "./Footer";
+import { HomeHero } from "./HomeHero";
 import type { HomeExperiencePresentationProps } from "./homeExperience.types";
 import { ProductCard } from "./ProductCard";
 import { ScrollNavbar } from "./ScrollNavbar";
 
-import { CartIcon, UserIcon, type IconProps } from "@/components/icons";
-
-const HERO_IMAGE = "/images/hero_1.png";
+import { CartIcon, UserIcon } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/shop", label: "فروشگاه", activePath: "/shop" },
@@ -35,8 +34,7 @@ const NAV_ITEMS = [
 
 function DesktopHeader({
   cartCount,
-  favoritesCount,
-}: Pick<HomeExperiencePresentationProps, "cartCount" | "favoritesCount">) {
+}: Pick<HomeExperiencePresentationProps, "cartCount">) {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -489,45 +487,6 @@ function Categories({
   );
 }
 
-function Hero() {
-  return (
-    <section
-      className="relative isolate aspect-[3/2] w-full overflow-hidden mx-auto h-[480px] "
-      aria-labelledby="home-hero-title"
-    >
-      <Image
-        fill
-        src={HERO_IMAGE}
-        alt="فضای خانه با گیاهان آپارتمانی"
-        sizes="(min-width: 1280px) 1216px, (min-width: 1024px) calc(100vw - 64px), 100vw"
-        quality={80}
-        priority
-        className="object-cover object-center"
-      />
-
-      <div className="absolute inset-0 bg-gradient-to-t from-[#101110] via-black/5 to-black/30 lg:bg-black/25" />
-
-      <div className="absolute inset-0 hidden bg-gradient-to-t from-black/75 via-black/10 to-black/40 lg:block" />
-
-      <Link
-        href="/shop"
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-y-8 px-6 pt-5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#c7a23c] lg:px-12 lg:pt-0"
-        aria-label="مشاهده محصولات فلوریسا"
-      >
-        <h1
-          id="home-hero-title"
-          className="text-[36px] font-bold leading-tight tracking-tight text-white block"
-        >
-          به خونت جون بده
-        </h1>
-        <span className="mt-5 rounded-full border border-white/25 bg-black/20 px-5 py-2 text-xs font-medium text-white/90 backdrop-blur-sm transition-colors hover:border-[#c7a23c]/70 hover:bg-[#c7a23c]/15 sm:px-6 sm:py-2.5 sm:text-sm lg:mb-5 lg:mt-0 lg:border-white/15 lg:bg-black/25 lg:text-xs lg:text-white/85 lg:backdrop-blur-md">
-          دنیای گیاهان خانگی
-        </span>
-      </Link>
-    </section>
-  );
-}
-
 export function ResponsiveHomeExperience(
   props: HomeExperiencePresentationProps,
 ) {
@@ -536,8 +495,9 @@ export function ResponsiveHomeExperience(
     selectedCategory,
     isProductsLoading,
     productsError,
+    homeSlides,
+    homeSlidesStatus,
     cartCount,
-    favoritesCount,
     onRetryProducts,
     onToggleFavorite,
     onAddToCart,
@@ -566,11 +526,11 @@ export function ResponsiveHomeExperience(
         />
       </div>
 
-      <DesktopHeader cartCount={cartCount} favoritesCount={favoritesCount} />
+      <DesktopHeader cartCount={cartCount} />
 
       <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] shadow-2xl shadow-black lg:max-w-none lg:bg-transparent lg:shadow-none">
         <main>
-          <Hero />
+          <HomeHero slides={homeSlides} status={homeSlidesStatus} />
 
           <div className="px-4 sm:px-6 md:px-8 lg:contents">
             <Categories {...props} />

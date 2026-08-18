@@ -1,7 +1,14 @@
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
 
-from products.models import Category, CutFlowerDetails, PlantDetails, Product, ProductImage
+from products.models import (
+    Category,
+    CutFlowerDetails,
+    HomeSlide,
+    PlantDetails,
+    Product,
+    ProductImage,
+)
 
 
 class CategorySummarySerializer(serializers.ModelSerializer):
@@ -17,6 +24,38 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ("id", "name", "slug", "description", "image", "sort_order")
+        read_only_fields = fields
+
+
+class HomeSlideSerializer(serializers.ModelSerializer):
+    mobile_image_url = serializers.SerializerMethodField()
+    desktop_image_url = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.URLField())
+    def get_mobile_image_url(self, slide: HomeSlide) -> str:
+        return self._absolute_image_url(slide.mobile_image.url)
+
+    @extend_schema_field(serializers.URLField())
+    def get_desktop_image_url(self, slide: HomeSlide) -> str:
+        return self._absolute_image_url(slide.desktop_image.url)
+
+    def _absolute_image_url(self, url: str) -> str:
+        request = self.context.get("request")
+        return request.build_absolute_uri(url) if request else url
+
+    class Meta:
+        model = HomeSlide
+        fields = (
+            "id",
+            "eyebrow",
+            "title",
+            "description",
+            "mobile_image_url",
+            "desktop_image_url",
+            "image_alt",
+            "cta_label",
+            "cta_url",
+        )
         read_only_fields = fields
 
 

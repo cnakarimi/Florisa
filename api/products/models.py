@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -369,3 +371,97 @@ class ProductImage(models.Model):
 
     def __str__(self) -> str:
         return f"تصویر {self.product}"
+
+
+class HomeSlide(models.Model):
+    admin_title = models.CharField(
+        "عنوان داخلی",
+        max_length=120,
+        help_text="فقط برای شناسایی اسلاید در پنل مدیریت نمایش داده می‌شود.",
+    )
+    eyebrow = models.CharField("متن بالای عنوان", max_length=80, blank=True)
+    title = models.CharField("عنوان اصلی", max_length=120)
+    description = models.CharField("توضیح کوتاه", max_length=240, blank=True)
+    mobile_image = models.ImageField(
+        "تصویر موبایل",
+        upload_to="home/slides/mobile/%Y/%m/",
+        help_text=(
+            "تصویر عمودی با نسبت حدود ۳:۴ (برای نمونه ۹۰۰×۱۲۰۰) پیشنهاد می‌شود؛ "
+            "سوژه و فضای امن متن را در مرکز نگه دارید."
+        ),
+    )
+    desktop_image = models.ImageField(
+        "تصویر دسکتاپ",
+        upload_to="home/slides/desktop/%Y/%m/",
+        help_text=(
+            "تصویر عریض با نسبت حدود ۸:۳ (برای نمونه ۱۶۰۰×۶۰۰) پیشنهاد می‌شود؛ "
+            "سوژه و فضای امن متن را در مرکز نگه دارید."
+        ),
+    )
+    image_alt = models.CharField(
+        "متن جایگزین تصویر",
+        max_length=180,
+        help_text="تصویر را کوتاه و معنادار برای کاربران صفحه‌خوان توصیف کنید.",
+    )
+    cta_label = models.CharField("متن دکمه", max_length=60, blank=True)
+    cta_url = models.CharField(
+        "مقصد دکمه",
+        max_length=500,
+        blank=True,
+        help_text="فقط مسیر داخلی فلوریسا را وارد کنید؛ مانند /shop?category=plants.",
+    )
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+    is_active = models.BooleanField("فعال", default=True)
+    created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
+    updated_at = models.DateTimeField("زمان به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        ordering = ("sort_order", "id")
+        verbose_name = "اسلاید خانه"
+        verbose_name_plural = "اسلایدهای خانه"
+
+    def clean(self) -> None:
+        super().clean()
+        for field_name in (
+            "admin_title",
+            "eyebrow",
+            "title",
+            "description",
+            "image_alt",
+            "cta_label",
+            "cta_url",
+        ):
+            value = getattr(self, field_name, "")
+            if isinstance(value, str):
+                setattr(self, field_name, value.strip())
+
+        errors: dict[str, str] = {}
+        for field_name in ("admin_title", "title", "image_alt"):
+            if not getattr(self, field_name):
+                errors[field_name] = "این فیلد نمی‌تواند خالی باشد."
+
+        if bool(self.cta_label) != bool(self.cta_url):
+            message = "متن و مقصد دکمه باید هر دو وارد شوند یا هر دو خالی باشند."
+            errors["cta_label"] = message
+            errors["cta_url"] = message
+
+        if self.cta_url:
+            parsed = urlsplit(self.cta_url)
+            is_safe_internal_path = (
+                self.cta_url.startswith("/")
+                and not self.cta_url.startswith("//")
+                and not parsed.scheme
+                and not parsed.netloc
+                and "\\" not in self.cta_url
+                and not any(ord(character) < 32 for character in self.cta_url)
+            )
+            if not is_safe_internal_path:
+                errors["cta_url"] = (
+                    "مقصد دکمه باید یک مسیر داخلی امن باشد که با / شروع می‌شود."
+                )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return self.admin_title

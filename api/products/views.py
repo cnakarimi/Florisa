@@ -4,9 +4,14 @@ from rest_framework import serializers
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 
-from products.models import Category, CutFlowerDetails, PlantDetails, Product
+from products.models import Category, CutFlowerDetails, HomeSlide, PlantDetails, Product
 from products.pagination import ProductPagination
-from products.serializers import CategorySerializer, ProductDetailSerializer, ProductListSerializer
+from products.serializers import (
+    CategorySerializer,
+    HomeSlideSerializer,
+    ProductDetailSerializer,
+    ProductListSerializer,
+)
 
 
 class ProductFilterSerializer(serializers.Serializer):
@@ -65,6 +70,14 @@ class CategoryListView(ListAPIView):
     serializer_class = CategorySerializer
     pagination_class = None
     queryset = Category.objects.filter(is_active=True)
+
+
+class HomeSlideListView(ListAPIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    serializer_class = HomeSlideSerializer
+    pagination_class = None
+    queryset = HomeSlide.objects.filter(is_active=True).order_by("sort_order", "id")
 
 
 FILTER_PARAMETERS = [

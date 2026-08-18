@@ -14,7 +14,7 @@ test("Home uses one CSS-first responsive presentation tree", async () => {
   assert.doesNotMatch(source, /MobileHomeExperience|DesktopHomeExperience/);
   assert.match(source, /data-home-experience="responsive"/);
   assert.match(source, /className="lg:hidden"/);
-  assert.match(source, /className="hidden lg:block"/);
+  assert.match(source, /className="[^"]*hidden[^"]*lg:block[^"]*"/);
 
   const productMappings = source.match(/latestProducts\.map/g) ?? [];
   assert.equal(productMappings.length, 1);

@@ -25,7 +25,7 @@ import type { HomeExperiencePresentationProps } from "./homeExperience.types";
 import { ProductCard } from "./ProductCard";
 import { ScrollNavbar } from "./ScrollNavbar";
 
-import { CartIcon, UserIcon } from "@/components/icons";
+import { CartIcon, UserIcon, SearchIcon } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/shop", label: "فروشگاه", activePath: "/shop" },
@@ -57,25 +57,30 @@ function DesktopHeader({
   return (
     <>
       <header
-        className={`hidden lg:fixed lg:inset-x-0 lg:top-0 lg:z-[100] lg:block ${
+        className={`hidden border-b backdrop-blur-xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 lg:fixed lg:inset-x-0 lg:top-0 lg:z-[100] lg:block ${
           isScrolled
-            ? "border-b border-white/10 bg-[#090b0a]/95 shadow-[0_12px_32px_rgba(0,0,0,0.38)] backdrop-blur-xl"
-            : "border-b border-white/[0.04] bg-[#0d0f0e]/80 backdrop-blur-md"
-        } transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300`}
+            ? "border-white/[0.08] bg-background-glass/85 shadow-[0_12px_36px_rgba(0,0,0,0.32)]"
+            : "border-transparent bg-background-glass/60 shadow-none"
+        }`}
       >
-        <div className="mx-auto flex h-[76px] max-w-[1600px] items-center gap-8 px-8">
+        <div className="mx-auto flex py-2.5 max-w-[1600px] items-center gap-8 px-8">
           <div className="flex items-center gap-2 text-zinc-300">
             <HeaderAction
               href="/cart"
               label="سبد خرید"
               count={cartCount}
-              icon={<CartIcon className="size-5" aria-hidden="true" />}
+              icon={<CartIcon className="size-6" aria-hidden="true" />}
             />
 
             <HeaderAction
               href="/profile"
               label="حساب کاربری"
-              icon={<UserIcon className="size-5" aria-hidden="true" />}
+              icon={<UserIcon className="size-6" aria-hidden="true" />}
+            />
+            <HeaderAction
+              href="/profile"
+              label="حساب کاربری"
+              icon={<SearchIcon className="size-6" aria-hidden="true" />}
             />
           </div>
 
@@ -87,15 +92,15 @@ function DesktopHeader({
             <Image
               src="/images/brand/florisa-logo.svg"
               alt="فلوریسا"
-              width={112}
-              height={43}
+              width={113}
+              height={44}
               className="h-auto w-full object-contain"
             />
           </Link>
 
           <nav
             aria-label="ناوبری اصلی دسکتاپ"
-            className="flex items-center gap-7 text-sm font-medium"
+            className="flex items-center gap-7 font-sans text-sm/5 font-medium tracking-normal text-right text-text-secondary"
           >
             {NAV_ITEMS.map((item) => {
               const isActive =
@@ -108,7 +113,7 @@ function DesktopHeader({
                   key={item.label}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`relative rounded-sm py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/65 ${
+                  className={`relative rounded-sm py-2 transition-colors${
                     isActive
                       ? "font-bold text-[#d4af37] after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[#d4af37]"
                       : "text-zinc-300 hover:text-white"
@@ -123,7 +128,7 @@ function DesktopHeader({
       </header>
 
       {/* Header is fixed, so this element reserves its original space. */}
-      <div aria-hidden="true" className="hidden h-[76px] shrink-0 lg:block" />
+      <div aria-hidden="true" className="hidden mb-16 shrink-0 lg:block" />
     </>
   );
 }
@@ -528,7 +533,7 @@ export function ResponsiveHomeExperience(
 
       <DesktopHeader cartCount={cartCount} />
 
-      <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] shadow-2xl shadow-black lg:max-w-none lg:bg-transparent lg:shadow-none">
+      <div className="relative mx-auto min-h-dvh w-full  bg-background-primary">
         <main>
           <HomeHero slides={homeSlides} status={homeSlidesStatus} />
 

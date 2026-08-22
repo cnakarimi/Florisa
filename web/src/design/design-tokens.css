@@ -4,7 +4,8 @@
  */
 
 :root {
-  /* Primitive tokens */
+  /* Primitive color tokens */
+
   --color-neutral-0: #ffffff;
   --color-neutral-100: #cccccc;
   --color-neutral-200: #c7c4bf;
@@ -13,6 +14,7 @@
   --color-neutral-700: #252525;
   --color-neutral-800: #1a1a1a;
   --color-neutral-900: #121212;
+  --background-glass: #181b19;
 
   --color-brand-100: #edd382;
   --color-brand-200: #c9a94d;
@@ -20,10 +22,102 @@
 
   --color-success-500: #849483;
   --color-error-500: #c94a4a;
-
   --color-surface-950: #162521;
 
+  /* Primitive typography tokens */
+
+  --font-family-sans:
+    var(--font-vazirmatn, "Vazirmatn"), ui-sans-serif, system-ui, sans-serif;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --font-size-100: 0.625rem; /* 10px */
+  --font-size-200: 0.6875rem; /* 11px */
+  --font-size-300: 0.75rem; /* 12px */
+  --font-size-400: 0.875rem; /* 14px */
+  --font-size-500: 0.9375rem; /* 15px */
+  --font-size-600: 1rem; /* 16px */
+  --font-size-700: 1.125rem; /* 18px */
+  --font-size-800: 1.5rem; /* 24px */
+  --font-size-900: 1.75rem; /* 28px */
+  --font-size-1000: 2.25rem; /* 36px */
+  --font-size-1100: 3rem; /* 48px */
+
+  --line-height-100: 0.875rem; /* 14px */
+  --line-height-200: 1rem; /* 16px */
+  --line-height-300: 1.125rem; /* 18px */
+  --line-height-400: 1.25rem; /* 20px */
+  --line-height-500: 1.375rem; /* 22px */
+  --line-height-600: 1.5rem; /* 24px */
+  --line-height-700: 1.875rem; /* 30px */
+  --line-height-800: 2rem; /* 32px */
+  --line-height-900: 2.5rem; /* 40px */
+  --line-height-1000: 3rem; /* 48px */
+  --line-height-1100: 3.75rem; /* 60px */
+
+  /*
+   * Semantic typography tokens
+   * Letter spacing remains zero because Florisa uses Persian text.
+   */
+
+  --type-display-xl-size: var(--font-size-1100);
+  --type-display-xl-line-height: var(--line-height-1100);
+  --type-display-xl-weight: var(--font-weight-extrabold);
+
+  --type-display-lg-size: var(--font-size-1000);
+  --type-display-lg-line-height: var(--line-height-1000);
+  --type-display-lg-weight: var(--font-weight-extrabold);
+
+  --type-heading-page-size: var(--font-size-900);
+  --type-heading-page-line-height: var(--line-height-900);
+  --type-heading-page-weight: var(--font-weight-extrabold);
+
+  --type-heading-hero-size: var(--font-size-800);
+  --type-heading-hero-line-height: var(--line-height-800);
+  --type-heading-hero-weight: var(--font-weight-extrabold);
+
+  --type-heading-section-size: var(--font-size-700);
+  --type-heading-section-line-height: var(--line-height-700);
+  --type-heading-section-weight: var(--font-weight-bold);
+
+  --type-heading-card-size: var(--font-size-500);
+  --type-heading-card-line-height: var(--line-height-600);
+  --type-heading-card-weight: var(--font-weight-bold);
+
+  --type-body-lg-size: var(--font-size-400);
+  --type-body-lg-line-height: var(--line-height-600);
+  --type-body-lg-weight: var(--font-weight-regular);
+
+  --type-body-md-size: var(--font-size-300);
+  --type-body-md-line-height: var(--line-height-400);
+  --type-body-md-weight: var(--font-weight-regular);
+
+  --type-body-sm-size: var(--font-size-200);
+  --type-body-sm-line-height: var(--line-height-300);
+  --type-body-sm-weight: var(--font-weight-regular);
+
+  --type-caption-size: var(--font-size-100);
+  --type-caption-line-height: var(--line-height-200);
+  --type-caption-weight: var(--font-weight-regular);
+
+  --type-label-size: var(--font-size-300);
+  --type-label-line-height: var(--line-height-400);
+  --type-label-weight: var(--font-weight-semibold);
+
+  --type-button-md-size: var(--font-size-300);
+  --type-button-md-line-height: var(--line-height-400);
+  --type-button-md-weight: var(--font-weight-bold);
+
+  --type-button-sm-size: var(--font-size-200);
+  --type-button-sm-line-height: var(--line-height-400);
+  --type-button-sm-weight: var(--font-weight-bold);
+
   /* Semantic background tokens */
+
   --background-primary: var(--color-neutral-900);
   --background-secondary: var(--color-neutral-800);
   --background-tertiary: var(--color-neutral-700);
@@ -31,6 +125,7 @@
   --background-overlay: var(--color-neutral-100);
 
   /* Semantic text tokens */
+
   --text-primary: var(--color-neutral-0);
   --text-secondary: var(--color-neutral-300);
   --text-tertiary: var(--color-neutral-400);
@@ -39,30 +134,38 @@
   --text-disabled: var(--color-neutral-700);
 
   /* Semantic border tokens */
+
   --border-default: var(--color-neutral-400);
   --border-subtle: var(--color-neutral-100);
   --border-brand: var(--color-brand-200);
 
   /* Semantic action tokens */
+
   --action-primary: var(--color-brand-300);
   --action-secondary: var(--color-surface-950);
 
   /* Semantic feedback tokens */
+
   --feedback-success: var(--color-success-500);
   --feedback-error: var(--color-error-500);
 }
 
 /*
-   * Tailwind CSS v4 theme mapping.
-   * This generates utilities such as:
-   * bg-background-primary
-   * text-text-primary
-   * border-border-subtle
-   * bg-action-primary
-   * text-feedback-error
-   */
+ * Tailwind CSS v4 theme mapping.
+ *
+ * Examples:
+ * bg-background-primary
+ * text-text-primary
+ * border-border-subtle
+ * font-sans
+ * text-heading-section
+ * text-body-md
+ * text-button-sm
+ */
+
 @theme inline {
-  /* Primitive utilities */
+  /* Primitive color utilities */
+
   --color-neutral-0: var(--color-neutral-0);
   --color-neutral-100: var(--color-neutral-100);
   --color-neutral-200: var(--color-neutral-200);
@@ -80,7 +183,8 @@
   --color-error-500: var(--color-error-500);
   --color-surface-950: var(--color-surface-950);
 
-  /* Semantic utilities */
+  /* Semantic color utilities */
+
   --color-background-primary: var(--background-primary);
   --color-background-secondary: var(--background-secondary);
   --color-background-tertiary: var(--background-tertiary);
@@ -103,4 +207,74 @@
 
   --color-feedback-success: var(--feedback-success);
   --color-feedback-error: var(--feedback-error);
+
+  /* Font family utilities */
+
+  --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-sans);
+
+  /* Font weight utilities */
+
+  --font-weight-regular: var(--font-weight-regular);
+  --font-weight-medium: var(--font-weight-medium);
+  --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
+  --font-weight-extrabold: var(--font-weight-extrabold);
+
+  /* Semantic typography utilities */
+
+  --text-display-xl: var(--type-display-xl-size);
+  --text-display-xl--line-height: var(--type-display-xl-line-height);
+  --text-display-xl--font-weight: var(--type-display-xl-weight);
+
+  --text-display-lg: var(--type-display-lg-size);
+  --text-display-lg--line-height: var(--type-display-lg-line-height);
+  --text-display-lg--font-weight: var(--type-display-lg-weight);
+
+  --text-heading-page: var(--type-heading-page-size);
+  --text-heading-page--line-height: var(--type-heading-page-line-height);
+  --text-heading-page--font-weight: var(--type-heading-page-weight);
+
+  --text-heading-hero: var(--type-heading-hero-size);
+  --text-heading-hero--line-height: var(--type-heading-hero-line-height);
+  --text-heading-hero--font-weight: var(--type-heading-hero-weight);
+
+  --text-heading-section: var(--type-heading-section-size);
+  --text-heading-section--line-height: var(--type-heading-section-line-height);
+  --text-heading-section--font-weight: var(--type-heading-section-weight);
+
+  --text-heading-card: var(--type-heading-card-size);
+  --text-heading-card--line-height: var(--type-heading-card-line-height);
+  --text-heading-card--font-weight: var(--type-heading-card-weight);
+
+  --text-body-lg: var(--type-body-lg-size);
+  --text-body-lg--line-height: var(--type-body-lg-line-height);
+  --text-body-lg--font-weight: var(--type-body-lg-weight);
+
+  --text-body-md: var(--type-body-md-size);
+  --text-body-md--line-height: var(--type-body-md-line-height);
+  --text-body-md--font-weight: var(--type-body-md-weight);
+
+  --text-body-sm: var(--type-body-sm-size);
+  --text-body-sm--line-height: var(--type-body-sm-line-height);
+  --text-body-sm--font-weight: var(--type-body-sm-weight);
+
+  --text-caption: var(--type-caption-size);
+  --text-caption--line-height: var(--type-caption-line-height);
+  --text-caption--font-weight: var(--type-caption-weight);
+
+  --text-label: var(--type-label-size);
+  --text-label--line-height: var(--type-label-line-height);
+  --text-label--font-weight: var(--type-label-weight);
+
+  --text-button-md: var(--type-button-md-size);
+  --text-button-md--line-height: var(--type-button-md-line-height);
+  --text-button-md--font-weight: var(--type-button-md-weight);
+
+  --text-button-sm: var(--type-button-sm-size);
+  --text-button-sm--line-height: var(--type-button-sm-line-height);
+  --text-button-sm--font-weight: var(--type-button-sm-weight);
+}
+@theme inline {
+  --color-background-glass: var(--background-glass);
 }

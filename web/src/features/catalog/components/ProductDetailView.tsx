@@ -30,7 +30,7 @@ import {
   getProductIdentity,
   getSaleUnitLabel,
 } from "@/features/catalog/utils/product";
-import { formatToman, toPersianDigits } from "@/features/home/utils/persian";
+import { formatToman, toPersianDigits } from "@/utils/persian";
 
 import { CatalogImage } from "./CatalogImage";
 import {
@@ -401,9 +401,7 @@ export function ProductDetailView({
             <div className="mt-7 overflow-hidden rounded-[22px] border border-white/[0.06] bg-[#181a18] shadow-[0_16px_45px_rgba(0,0,0,0.2)]">
               <div className="flex items-center justify-between gap-4 p-4 sm:p-5">
                 <div>
-                  <p className="text-[10px] text-white/35">
-                    قیمت هر واحد فروش
-                  </p>
+                  <p className="text-[10px] text-white/35">قیمت هر واحد فروش</p>
                   <p className="mt-1.5 text-lg font-black text-[#ddc362] sm:text-xl">
                     {formatToman(product.price)}
                   </p>
@@ -487,31 +485,31 @@ export function ProductDetailView({
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <DetailStat
-               icon={
-                 isPlantProduct ? (
-                   <Leaf className="h-[18px] w-[18px]" />
-                 ) : (
-                   <Flower2 className="h-[18px] w-[18px]" />
-                 )
-               }
-               label="تعداد در هر واحد فروش"
-               value={`${toPersianDigits(product.unit_size)} ${
-                 product.product_type === "cut_flower" ? "شاخه" : "عدد"
-               }`}
+              icon={
+                isPlantProduct ? (
+                  <Leaf className="h-[18px] w-[18px]" />
+                ) : (
+                  <Flower2 className="h-[18px] w-[18px]" />
+                )
+              }
+              label="تعداد در هر واحد فروش"
+              value={`${toPersianDigits(product.unit_size)} ${
+                product.product_type === "cut_flower" ? "شاخه" : "عدد"
+              }`}
             />
             <DetailStat
               icon={<Package className="h-[18px] w-[18px]" />}
               label="موجودی"
               value={
                 canBuy
-                   ? `${toPersianDigits(product.stock_quantity)} ${salesUnit}`
+                  ? `${toPersianDigits(product.stock_quantity)} ${salesUnit}`
                   : "ناموجود"
               }
             />
             <DetailStat
               icon={<Layers3 className="h-[18px] w-[18px]" />}
               label="حداقل سفارش"
-               value={`${toPersianDigits(minimumQuantity)} ${salesUnit}`}
+              value={`${toPersianDigits(minimumQuantity)} ${salesUnit}`}
             />
             <DetailStat
               icon={<Tag className="h-[18px] w-[18px]" />}

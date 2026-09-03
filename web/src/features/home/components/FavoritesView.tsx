@@ -2,7 +2,7 @@ import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { formatToman, toPersianDigits } from "../utils/persian";
+import { formatToman, toPersianDigits } from "@/utils/persian";
 
 interface FavoritesViewProps {
   favorites: CatalogProduct[];
@@ -81,16 +81,14 @@ export function FavoritesView({
                     onClick={() => onAddToCart(product)}
                     disabled={
                       !product.is_in_stock ||
-                      product.stock_quantity <
-                        product.minimum_order_quantity
+                      product.stock_quantity < product.minimum_order_quantity
                     }
                     className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
                   >
                     <ShoppingBag className="h-3.5 w-3.5" />
                     <span>
                       {product.is_in_stock &&
-                      product.stock_quantity >=
-                        product.minimum_order_quantity
+                      product.stock_quantity >= product.minimum_order_quantity
                         ? "خرید"
                         : "ناموجود"}
                     </span>

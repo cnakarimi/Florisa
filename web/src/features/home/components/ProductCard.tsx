@@ -6,7 +6,7 @@ import { Check, Heart, PackageX } from "lucide-react";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { formatTomanAmount, toPersianDigits } from "../utils/persian";
+import { formatTomanAmount, toPersianDigits } from "@/utils/persian";
 
 interface ProductCardProps {
   product: CatalogProduct;

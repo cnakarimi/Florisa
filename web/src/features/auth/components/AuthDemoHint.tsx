@@ -1,5 +1,5 @@
 import { FlaskConical, WandSparkles } from "lucide-react";
-import { toPersianDigits } from "../utils/digits";
+import { toPersianDigits } from "@/utils/persian";
 
 interface AuthDemoHintProps {
   label: string;

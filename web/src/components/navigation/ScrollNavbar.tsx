@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import Image from "next/image";
+
+const SCROLL_FADE_START = 32;
+const SCROLL_FADE_DISTANCE = 128;
+const INTERACTIVE_VISIBILITY_THRESHOLD = 0.08;
 
 interface ScrollNavbarProps {
   searchQuery: string;
@@ -9,8 +14,12 @@ interface ScrollNavbarProps {
   onLogoClick: () => void;
 }
 
-const FADE_START = 32;
-const FADE_DISTANCE = 128;
+function getScrollVisibility(scrollY: number) {
+  return Math.min(
+    Math.max((scrollY - SCROLL_FADE_START) / SCROLL_FADE_DISTANCE, 0),
+    1,
+  );
+}
 
 export function ScrollNavbar({
   searchQuery,
@@ -19,7 +28,8 @@ export function ScrollNavbar({
 }: ScrollNavbarProps) {
   const [draftQuery, setDraftQuery] = useState(searchQuery);
   const [visibility, setVisibility] = useState(0);
-  const animationFrame = useRef<number | null>(null);
+
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     setDraftQuery(searchQuery);
@@ -27,48 +37,52 @@ export function ScrollNavbar({
 
   useEffect(() => {
     const updateVisibility = () => {
-      animationFrame.current = null;
+      animationFrameRef.current = null;
 
-      const progress = Math.min(
-        Math.max((window.scrollY - FADE_START) / FADE_DISTANCE, 0),
-        1,
-      );
+      const nextVisibility = getScrollVisibility(window.scrollY);
 
       setVisibility((current) =>
-        Math.abs(current - progress) > 0.01 ? progress : current,
+        Math.abs(current - nextVisibility) > 0.01 ? nextVisibility : current,
       );
     };
 
     const handleScroll = () => {
-      if (animationFrame.current !== null) return;
+      if (animationFrameRef.current !== null) {
+        return;
+      }
 
-      animationFrame.current = window.requestAnimationFrame(updateVisibility);
+      animationFrameRef.current =
+        window.requestAnimationFrame(updateVisibility);
     };
 
     updateVisibility();
-    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
 
-      if (animationFrame.current !== null) {
-        window.cancelAnimationFrame(animationFrame.current);
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     onSearch(draftQuery.trim());
   };
 
-  const isInteractive = visibility > 0.08;
+  const isInteractive = visibility > INTERACTIVE_VISIBILITY_THRESHOLD;
 
   return (
     <header
       dir="rtl"
-      className="pointer-events-none fixed left-1/2 top-0 z-50 w-full max-w-screen-lg -translate-x-1/2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6"
       aria-hidden={!isInteractive}
+      className="pointer-events-none fixed left-1/2 top-0 z-50 w-full max-w-screen-lg -translate-x-1/2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6"
     >
       <div
         className="mx-auto flex h-14 items-center gap-3 rounded-2xl border border-white/[0.07] bg-[#111512]/85 px-3 backdrop-blur-xl sm:h-16 sm:px-4"
@@ -83,13 +97,15 @@ export function ScrollNavbar({
         <button
           type="button"
           onClick={onLogoClick}
-          className="flex w-[82px] shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]/60 sm:w-[108px]"
           aria-label="بازگشت به ابتدای صفحه فلوریسا"
           tabIndex={isInteractive ? 0 : -1}
+          className="flex w-[82px] shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]/60 sm:w-[108px]"
         >
-          <img
+          <Image
             src="/images/brand/florisa-logo.svg"
             alt="فلوریسا"
+            width={108}
+            height={42}
             className="h-auto w-full object-contain"
           />
         </button>
@@ -117,8 +133,8 @@ export function ScrollNavbar({
             value={draftQuery}
             onChange={(event) => setDraftQuery(event.target.value)}
             placeholder="جست‌وجوی گل و گیاه..."
-            className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.035] pr-10 pl-3 text-xs text-[#f0eee9] outline-none transition placeholder:text-white/30 hover:border-white/[0.12] focus:border-[#c7a23c]/35 focus:bg-white/[0.05] sm:h-11"
             tabIndex={isInteractive ? 0 : -1}
+            className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.035] pr-10 pl-3 text-xs text-[#f0eee9] outline-none transition placeholder:text-white/30 hover:border-white/[0.12] focus:border-[#c7a23c]/35 focus:bg-white/[0.05] sm:h-11"
           />
         </form>
       </div>

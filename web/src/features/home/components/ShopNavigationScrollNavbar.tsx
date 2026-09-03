@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { ScrollNavbar } from "./ScrollNavbar";
+import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
 
 export function ShopNavigationScrollNavbar() {
   const router = useRouter();

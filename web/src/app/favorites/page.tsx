@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { HomeExperience } from "@/features/home/components/HomeExperience";
+import { FavoritesExperience } from "@/features/favorites/components/FavoritesExperience";
 
 export const metadata: Metadata = {
   title: "علاقه‌مندی‌ها | فلوریسا",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function FavoritesPage() {
-  return <HomeExperience view="favorites" />;
+  return <FavoritesExperience />;
 }

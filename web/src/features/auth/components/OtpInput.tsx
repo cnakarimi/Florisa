@@ -9,7 +9,8 @@ import {
 import { cn } from "@/lib/cn";
 import { OTP_LENGTH } from "@/features/auth/constants";
 import type { OtpInputProps } from "@/features/auth/types";
-import { normalizeDigits, toPersianDigits } from "@/features/auth/utils/digits";
+import { normalizeDigits } from "@/features/auth/utils/digits";
+import { toPersianDigits } from "@/utils/persian";
 
 export function OtpInput({
   value,

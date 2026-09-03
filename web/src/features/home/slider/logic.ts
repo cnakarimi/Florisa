@@ -1,4 +1,4 @@
-import type { HomeSlide } from "./types";
+import type { HomeSlide, HomeSlidesStatus } from "./types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -87,5 +87,28 @@ export function responsiveImageSources(slide: HomeSlide) {
     mobile: slide.mobile_image_url,
     desktop: slide.desktop_image_url,
     desktopMedia: "(min-width: 1024px)",
+  } as const;
+}
+
+export function selectHomeHeroSlide(
+  status: HomeSlidesStatus,
+  slides: HomeSlide[],
+  currentIndex: number,
+): HomeSlide | null {
+  if (status !== "ready" || slides.length === 0) return null;
+  return slides[correctedSlideIndex(currentIndex, slides.length)] ?? null;
+}
+
+export function getHomeHeroPresentation(slide: HomeSlide) {
+  const cta = classifyCtaUrl(slide.cta_url);
+
+  return {
+    eyebrow: slide.eyebrow,
+    title: slide.title,
+    description: slide.description,
+    ctaLabel: cta ? slide.cta_label : "",
+    ctaHref: cta?.href ?? null,
+    mobileImageUrl: slide.mobile_image_url,
+    desktopImageUrl: slide.desktop_image_url,
   } as const;
 }

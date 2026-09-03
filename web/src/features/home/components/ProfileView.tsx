@@ -25,7 +25,7 @@ import {
   Mail,
 } from "lucide-react";
 import type { TabType } from "../types";
-import { toPersianDigits } from "../utils/persian";
+import { toPersianDigits } from "@/utils/persian";
 
 type ActiveModal =
   | "edit_profile"
@@ -164,7 +164,10 @@ export function ProfileView({
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
-            <User className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+            <User
+              className="size-5 stroke-[2] text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-100">
               ویرایش اطلاعات حساب
             </span>
@@ -177,7 +180,10 @@ export function ProfileView({
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
-            <MapPin className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+            <MapPin
+              className="size-5 stroke-[2] text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-100">
               آدرس‌های من
             </span>
@@ -192,7 +198,10 @@ export function ProfileView({
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
-            <ShoppingBag className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+            <ShoppingBag
+              className="size-5 stroke-[2] text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-100">
               سفارش‌های من
             </span>
@@ -206,7 +215,10 @@ export function ProfileView({
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
-            <Heart className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+            <Heart
+              className="size-5 stroke-[2] text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-100">
               علاقه‌مندی‌ها
             </span>
@@ -220,7 +232,10 @@ export function ProfileView({
           className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
         >
           <span className="flex items-center gap-3">
-            <Bell className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+            <Bell
+              className="size-5 stroke-[2] text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-100">
               اطلاع‌رسانی‌ها
             </span>
@@ -232,7 +247,10 @@ export function ProfileView({
       <div className="divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/5 bg-[#121617] shadow-lg">
         <div className="flex w-full items-center justify-between p-4 opacity-80">
           <div className="flex items-center gap-3">
-            <Wallet className="size-5 stroke-[2] text-amber-400/80" aria-hidden="true" />
+            <Wallet
+              className="size-5 stroke-[2] text-amber-400/80"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-200">کیف پول</span>
           </div>
           <span className="rounded-md border border-white/5 bg-[#1e2326] px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
@@ -242,7 +260,10 @@ export function ProfileView({
 
         <div className="flex w-full items-center justify-between p-4 opacity-80">
           <div className="flex items-center gap-3">
-            <Bookmark className="size-5 stroke-[2] text-amber-400/80" aria-hidden="true" />
+            <Bookmark
+              className="size-5 stroke-[2] text-amber-400/80"
+              aria-hidden="true"
+            />
             <span className="text-sm font-semibold text-zinc-200">
               مقالات ذخیره شده
             </span>
@@ -271,12 +292,18 @@ export function ProfileView({
               className="flex w-full items-center justify-between p-4 text-right transition-colors hover:bg-white/[0.03]"
             >
               <span className="flex items-center gap-3">
-                <Icon className="size-5 stroke-[2] text-amber-400" aria-hidden="true" />
+                <Icon
+                  className="size-5 stroke-[2] text-amber-400"
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-semibold text-zinc-100">
                   {item.label}
                 </span>
               </span>
-              <ChevronLeft className="size-5 text-zinc-500" aria-hidden="true" />
+              <ChevronLeft
+                className="size-5 text-zinc-500"
+                aria-hidden="true"
+              />
             </button>
           );
         })}
@@ -302,7 +329,10 @@ export function ProfileView({
         >
           <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-[#161822] p-6 text-right shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 id="edit-profile-title" className="text-base font-bold text-white">
+              <h3
+                id="edit-profile-title"
+                className="text-base font-bold text-white"
+              >
                 ویرایش اطلاعات شخصی
               </h3>
               <button
@@ -317,7 +347,10 @@ export function ProfileView({
 
             <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
               <div>
-                <label htmlFor="profile-name" className="mb-1 block text-zinc-400">
+                <label
+                  htmlFor="profile-name"
+                  className="mb-1 block text-zinc-400"
+                >
                   نام و نام خانوادگی:
                 </label>
                 <input
@@ -330,7 +363,10 @@ export function ProfileView({
               </div>
 
               <div>
-                <label htmlFor="profile-phone" className="mb-1 block text-zinc-400">
+                <label
+                  htmlFor="profile-phone"
+                  className="mb-1 block text-zinc-400"
+                >
                   شماره همراه:
                 </label>
                 <input
@@ -345,7 +381,10 @@ export function ProfileView({
               </div>
 
               <div>
-                <label htmlFor="profile-email" className="mb-1 block text-zinc-400">
+                <label
+                  htmlFor="profile-email"
+                  className="mb-1 block text-zinc-400"
+                >
                   آدرس ایمیل:
                 </label>
                 <input
@@ -385,7 +424,10 @@ export function ProfileView({
         >
           <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-[#161822] p-6 text-right shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 id="addresses-title" className="text-base font-bold text-white">
+              <h3
+                id="addresses-title"
+                className="text-base font-bold text-white"
+              >
                 آدرس‌های ذخیره شده
               </h3>
               <button
@@ -492,7 +534,10 @@ export function ProfileView({
                 id="support-title"
                 className="flex items-center gap-2 text-base font-bold text-white"
               >
-                <Headphones className="size-5 text-amber-400" aria-hidden="true" />
+                <Headphones
+                  className="size-5 text-amber-400"
+                  aria-hidden="true"
+                />
                 <span>پشتیبانی و مشاوره تخصصی</span>
               </h3>
               <button
@@ -506,13 +551,16 @@ export function ProfileView({
             </div>
 
             <p className="text-xs font-light leading-relaxed text-zinc-300">
-              تیم کارشناسان گیاه‌پزشک و پشتیبانی فلورا همه‌روزه از ساعت ۹ صبح
-              تا ۹ شب پاسخگوی سوالات شما درباره نگهداری و تعویض گیاهان هستند.
+              تیم کارشناسان گیاه‌پزشک و پشتیبانی فلورا همه‌روزه از ساعت ۹ صبح تا
+              ۹ شب پاسخگوی سوالات شما درباره نگهداری و تعویض گیاهان هستند.
             </p>
 
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-[#101117] p-3">
-                <PhoneCall className="size-4 text-emerald-400" aria-hidden="true" />
+                <PhoneCall
+                  className="size-4 text-emerald-400"
+                  aria-hidden="true"
+                />
                 <bdi dir="ltr" className="text-zinc-200">
                   شماره پشتیبانی: ۰۲۱-۸۸۹۹۰۰۱۱
                 </bdi>
@@ -541,7 +589,10 @@ export function ProfileView({
         >
           <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-[#161822] p-6 text-right shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 id="information-title" className="text-base font-bold text-white">
+              <h3
+                id="information-title"
+                className="text-base font-bold text-white"
+              >
                 {activeModal === "contact" ? "تماس با ما" : null}
                 {activeModal === "about" ? "درباره فروشگاه فلورا" : null}
                 {activeModal === "privacy" ? "سیاست حریم خصوصی" : null}

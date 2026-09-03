@@ -278,3 +278,161 @@
 @theme inline {
   --color-background-glass: var(--background-glass);
 }
+@theme inline {
+  --text-section-title: 2rem;
+  --text-section-title--line-height: 3rem;
+  --text-section-title--letter-spacing: 0;
+  --text-section-title--font-weight: 800;
+}
+
+@theme inline {
+  /* Typography */
+
+  --text-desktop-display-large: 3.5rem;
+  --text-desktop-display-large--line-height: 4.5rem;
+  --text-desktop-display-large--letter-spacing: 0;
+  --text-desktop-display-large--font-weight: 900;
+
+  --text-desktop-display-medium: 3rem;
+  --text-desktop-display-medium--line-height: 4rem;
+  --text-desktop-display-medium--letter-spacing: 0;
+  --text-desktop-display-medium--font-weight: 900;
+
+  --text-desktop-heading-h1: 2.5rem;
+  --text-desktop-heading-h1--line-height: 3.5rem;
+  --text-desktop-heading-h1--letter-spacing: 0;
+  --text-desktop-heading-h1--font-weight: 900;
+
+  --text-desktop-heading-h2: 2rem;
+  --text-desktop-heading-h2--line-height: 3rem;
+  --text-desktop-heading-h2--letter-spacing: 0;
+  --text-desktop-heading-h2--font-weight: 700;
+
+  --text-desktop-heading-h3: 1.5rem;
+  --text-desktop-heading-h3--line-height: 2.25rem;
+  --text-desktop-heading-h3--letter-spacing: 0;
+  --text-desktop-heading-h3--font-weight: 700;
+
+  --text-desktop-heading-h4: 1.25rem;
+  --text-desktop-heading-h4--line-height: 2rem;
+  --text-desktop-heading-h4--letter-spacing: 0;
+  --text-desktop-heading-h4--font-weight: 600;
+
+  --text-desktop-body-large: 1.125rem;
+  --text-desktop-body-large--line-height: 2rem;
+  --text-desktop-body-large--letter-spacing: 0;
+  --text-desktop-body-large--font-weight: 400;
+
+  --text-desktop-body-base: 1rem;
+  --text-desktop-body-base--line-height: 1.75rem;
+  --text-desktop-body-base--letter-spacing: 0;
+  --text-desktop-body-base--font-weight: 400;
+
+  --text-desktop-body-small: 0.875rem;
+  --text-desktop-body-small--line-height: 1.5rem;
+  --text-desktop-body-small--letter-spacing: 0;
+  --text-desktop-body-small--font-weight: 400;
+
+  --text-desktop-ui-button: 1rem;
+  --text-desktop-ui-button--line-height: 1.5rem;
+  --text-desktop-ui-button--letter-spacing: 0;
+  --text-desktop-ui-button--font-weight: 600;
+
+  --text-desktop-ui-label: 0.875rem;
+  --text-desktop-ui-label--line-height: 1.25rem;
+  --text-desktop-ui-label--letter-spacing: 0;
+  --text-desktop-ui-label--font-weight: 500;
+
+  --text-desktop-ui-caption: 0.75rem;
+  --text-desktop-ui-caption--line-height: 1.25rem;
+  --text-desktop-ui-caption--letter-spacing: 0;
+  --text-desktop-ui-caption--font-weight: 400;
+
+  --text-desktop-ui-overline: 0.75rem;
+  --text-desktop-ui-overline--line-height: 1.25rem;
+  --text-desktop-ui-overline--letter-spacing: 0;
+  --text-desktop-ui-overline--font-weight: 600;
+
+  --text-desktop-card-title: 1rem;
+  --text-desktop-card-title--line-height: 1.5rem;
+  --text-desktop-card-title--letter-spacing: 0;
+  --text-desktop-card-title--font-weight: 700;
+
+  --text-desktop-card-title-large: 1.25rem;
+  --text-desktop-card-title-large--line-height: 2rem;
+  --text-desktop-card-title-large--letter-spacing: 0;
+  --text-desktop-card-title-large--font-weight: 700;
+
+  --text-mobile-display-large: 2.5rem;
+  --text-mobile-display-large--line-height: 3rem;
+  --text-mobile-display-large--letter-spacing: 0;
+  --text-mobile-display-large--font-weight: 900;
+
+  --text-mobile-display-medium: 2rem;
+  --text-mobile-display-medium--line-height: 2.5rem;
+  --text-mobile-display-medium--letter-spacing: 0;
+  --text-mobile-display-medium--font-weight: 900;
+
+  --text-mobile-heading-h1: 1.75rem;
+  --text-mobile-heading-h1--line-height: 2.25rem;
+  --text-mobile-heading-h1--letter-spacing: 0;
+  --text-mobile-heading-h1--font-weight: 900;
+
+  --text-mobile-heading-h2: 1.5rem;
+  --text-mobile-heading-h2--line-height: 2rem;
+  --text-mobile-heading-h2--letter-spacing: 0;
+  --text-mobile-heading-h2--font-weight: 700;
+
+  --text-mobile-heading-h3: 1.25rem;
+  --text-mobile-heading-h3--line-height: 1.75rem;
+  --text-mobile-heading-h3--letter-spacing: 0;
+  --text-mobile-heading-h3--font-weight: 700;
+
+  --text-mobile-heading-h4: 1.125rem;
+  --text-mobile-heading-h4--line-height: 1.5rem;
+  --text-mobile-heading-h4--letter-spacing: 0;
+  --text-mobile-heading-h4--font-weight: 600;
+
+  --text-mobile-body-large: 1rem;
+  --text-mobile-body-large--line-height: 1.75rem;
+  --text-mobile-body-large--letter-spacing: 0;
+  --text-mobile-body-large--font-weight: 400;
+
+  --text-mobile-body-base: 0.875rem;
+  --text-mobile-body-base--line-height: 1.5rem;
+  --text-mobile-body-base--letter-spacing: 0;
+  --text-mobile-body-base--font-weight: 400;
+
+  --text-mobile-body-small: 0.75rem;
+  --text-mobile-body-small--line-height: 1.25rem;
+  --text-mobile-body-small--letter-spacing: 0;
+  --text-mobile-body-small--font-weight: 400;
+
+  --text-mobile-ui-button: 0.875rem;
+  --text-mobile-ui-button--line-height: 1.25rem;
+  --text-mobile-ui-button--letter-spacing: 0;
+  --text-mobile-ui-button--font-weight: 600;
+
+  --text-mobile-ui-label: 0.75rem;
+  --text-mobile-ui-label--line-height: 1rem;
+  --text-mobile-ui-label--letter-spacing: 0;
+  --text-mobile-ui-label--font-weight: 500;
+
+  --text-mobile-ui-caption: 0.6875rem;
+  --text-mobile-ui-caption--line-height: 1rem;
+  --text-mobile-ui-caption--letter-spacing: 0;
+  --text-mobile-ui-caption--font-weight: 400;
+
+  --text-mobile-ui-overline: 0.6875rem;
+  --text-mobile-ui-overline--line-height: 1rem;
+  --text-mobile-ui-overline--letter-spacing: 0;
+  --text-mobile-ui-overline--font-weight: 600;
+
+  /* Shadows */
+
+  --shadow-small: 0 2px 4px 0 #0000001a, 0 4px 6px 0 #0000001a;
+  --shadow-medium: 0 8px 10px 0 #0000001a, 0 20px 25px 0 #0000001a;
+  --shadow-large: 0 25px 50px 0 #00000040;
+  --shadow-brand: 0 4px 6px 0 #e8c24a33, 0 10px 15px 0 #e8c24a33;
+  --shadow-navbar: 0 4px 6px 0 #0000001a, 0 10px 15px 0 #0000001a;
+}

@@ -1,9 +1,10 @@
 "use client";
 
 import type { ComponentType } from "react";
+
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 
 import {
   CartIcon,
@@ -19,12 +20,12 @@ import { toPersianDigits } from "@/utils/persian";
 
 type TabId = "home" | "shop" | "cart" | "favorites" | "profile";
 
-type Tab = {
+interface Tab {
   id: TabId;
   href: string;
   label: string;
   icon: ComponentType<IconProps>;
-};
+}
 
 const TABS = [
   {
@@ -80,6 +81,20 @@ const BUBBLE_SPRING = {
   mass: 0.7,
 } as const;
 
+const BADGE_SPRING = {
+  type: "spring",
+  stiffness: 600,
+  damping: 22,
+} as const;
+
+function isTabActive(pathname: string, href: string) {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function BottomNav() {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
@@ -91,22 +106,13 @@ export function BottomNav() {
     <nav
       data-mobile-bottom-nav
       aria-label="ناوبری اصلی"
-      className={[
-        "fixed inset-x-0 bottom-0 z-50",
-        "mx-auto w-full max-w-screen-lg",
-        "overflow-visible",
-        "bg-background-secondary",
-      ].join(" ")}
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-screen-lg overflow-visible bg-background-secondary"
     >
       <LayoutGroup id="florisa-bottom-navigation">
-        <div className="grid h-12 grid-cols-5 overflow-visible px-2" dir="ltr">
+        <div dir="ltr" className="grid h-12 grid-cols-5 overflow-visible px-2">
           {TABS.map((tab) => {
             const Icon = tab.icon;
-
-            const isActive =
-              tab.href === "/"
-                ? pathname === "/"
-                : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+            const isActive = isTabActive(pathname, tab.href);
 
             const badgeCount =
               tab.id === "cart"
@@ -115,7 +121,12 @@ export function BottomNav() {
                   ? favorites.length
                   : 0;
 
-            const shouldShowBadge = cart.isHydrated && badgeCount > 0;
+            const shouldShowBadge =
+              tab.id === "cart"
+                ? cart.isHydrated && badgeCount > 0
+                : tab.id === "favorites"
+                  ? badgeCount > 0
+                  : false;
 
             const accessibleLabel = shouldShowBadge
               ? `${tab.label}، ${toPersianDigits(badgeCount)} مورد`
@@ -127,15 +138,7 @@ export function BottomNav() {
                 href={tab.href}
                 aria-current={isActive ? "page" : undefined}
                 aria-label={accessibleLabel}
-                className={[
-                  "relative grid place-items-center",
-                  "overflow-visible",
-                  "[-webkit-tap-highlight-color:transparent]",
-                  "focus-visible:outline-none",
-                  "focus-visible:ring-2",
-                  "focus-visible:ring-inset",
-                  "focus-visible:ring-action-primary",
-                ].join(" ")}
+                className="relative grid place-items-center overflow-visible [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-action-primary"
               >
                 <motion.span
                   initial={false}
@@ -156,10 +159,7 @@ export function BottomNav() {
                         }
                       : TAB_SPRING
                   }
-                  className={[
-                    "relative grid size-12 place-items-center",
-                    "transform-gpu",
-                  ].join(" ")}
+                  className="relative grid size-12 place-items-center transform-gpu"
                 >
                   {isActive ? (
                     <motion.span
@@ -176,11 +176,7 @@ export function BottomNav() {
                       style={{
                         borderRadius: 9999,
                       }}
-                      className={[
-                        "absolute inset-0",
-                        "bg-background-secondary",
-                        "transform-gpu",
-                      ].join(" ")}
+                      className="absolute inset-0 transform-gpu bg-background-secondary"
                     />
                   ) : null}
 
@@ -188,7 +184,6 @@ export function BottomNav() {
                     initial={false}
                     animate={{
                       scale: isActive ? 1.1 : 1,
-                      rotate: 0,
                     }}
                     transition={
                       shouldReduceMotion
@@ -197,19 +192,14 @@ export function BottomNav() {
                           }
                         : ICON_SPRING
                     }
-                    className={[
-                      "relative z-10 grid place-items-center",
-                      "transform-gpu",
-                    ].join(" ")}
+                    className="relative z-10 grid place-items-center transform-gpu"
                   >
                     <Icon
                       size={22}
                       aria-hidden="true"
-                      className={[
-                        "shrink-0",
-                        "transition-colors duration-200",
-                        isActive ? "text-text-brand" : "text-text-secondary",
-                      ].join(" ")}
+                      className={`shrink-0 transition-colors duration-200 ${
+                        isActive ? "text-text-brand" : "text-text-secondary"
+                      }`}
                     />
                   </motion.span>
 
@@ -233,20 +223,9 @@ export function BottomNav() {
                           ? {
                               duration: 0,
                             }
-                          : {
-                              type: "spring",
-                              stiffness: 600,
-                              damping: 22,
-                            }
+                          : BADGE_SPRING
                       }
-                      className={[
-                        "absolute right-1 top-1 z-20",
-                        "grid h-4 min-w-4 place-items-center",
-                        "rounded-full px-1",
-                        "bg-action-primary",
-                        "text-[9px] font-black leading-none",
-                        "text-background-primary",
-                      ].join(" ")}
+                      className="absolute right-1 top-1 z-20 grid h-4 min-w-4 place-items-center rounded-full bg-action-primary px-1 text-[9px] font-black leading-none text-background-primary"
                     >
                       {toPersianDigits(badgeCount)}
                     </motion.span>

@@ -1,5 +1,5 @@
 import type { CatalogProduct } from "@/features/catalog/types";
-import { toPersianDigits } from "@/features/home/utils/persian";
+import { toPersianDigits } from "@/utils/persian";
 
 export function getProductIdentity(product: CatalogProduct): string {
   if (product.product_type === "plant") {

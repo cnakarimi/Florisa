@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { formatToman, toPersianDigits } from "../utils/persian";
+import { formatToman, toPersianDigits } from "@/utils/persian";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -53,7 +53,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         <header className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-emerald-400" />
-            <h2 id="cart-drawer-title" className="text-base font-bold text-white">
+            <h2
+              id="cart-drawer-title"
+              className="text-base font-bold text-white"
+            >
               سبد خرید شما
             </h2>
             <span className="text-xs text-zinc-400">
@@ -104,18 +107,16 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       {item.product.name}
                     </h3>
                     <p className="mt-1 text-[10px] text-zinc-400">
-                      {toPersianDigits(item.quantity)} {item.product.sale_unit_display}
+                      {toPersianDigits(item.quantity)}{" "}
+                      {item.product.sale_unit_display}
                       {item.product.unit_size > 1
                         ? `، ${toPersianDigits(item.quantity * item.product.unit_size)} عدد`
                         : ""}
                     </p>
                     <p className="mt-1 text-xs font-extrabold text-amber-400">
-                      {formatToman(
-                        item.product.price * item.quantity,
-                      )}
+                      {formatToman(item.product.price * item.quantity)}
                     </p>
-                    {!item.product.is_available ||
-                    !item.product.is_in_stock ? (
+                    {!item.product.is_available || !item.product.is_in_stock ? (
                       <p className="mt-1 text-[10px] text-rose-400">
                         نیازمند بررسی در صفحه سبد خرید
                       </p>

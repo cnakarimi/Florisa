@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CatalogProduct } from "@/features/catalog/types";
-import { BottomNav } from "@/features/home/components/BottomNav";
-import { FavoritesView } from "@/features/home/components/FavoritesView";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { FavoritesView } from "@/features/favorites/components/FavoritesView";
 
 import { useFavorites } from "../hooks/FavoritesProvider";
 

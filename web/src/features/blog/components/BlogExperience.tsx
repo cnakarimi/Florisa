@@ -1,4 +1,4 @@
-import { BottomNav } from "@/features/home/components/BottomNav";
+import { BottomNav } from "@/components/layout/BottomNav";
 
 export function BlogExperience() {
   return (

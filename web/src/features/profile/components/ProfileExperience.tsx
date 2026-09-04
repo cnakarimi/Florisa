@@ -6,8 +6,8 @@ import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { clearPendingPhone } from "@/features/auth/utils/storage";
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { BottomNav } from "@/features/home/components/BottomNav";
-import { ProfileView } from "@/features/home/components/ProfileView";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { ProfileView } from "@/features/profile/components/ProfileView";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 import { withNext } from "@/features/auth/utils/redirect";
 import { AccountNavigation } from "./AccountNavigation";
@@ -94,7 +94,11 @@ export function ProfileExperience() {
   return (
     <div className="min-h-dvh overflow-x-hidden bg-[#0d0e12] text-zinc-100 md:pb-24">
       <main className="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] lg:px-8">
-        <aside className="hidden pt-5 md:block"><div className="sticky top-5"><AccountNavigation /></div></aside>
+        <aside className="hidden pt-5 md:block">
+          <div className="sticky top-5">
+            <AccountNavigation />
+          </div>
+        </aside>
         <ProfileView
           phone={auth.user.phone}
           fullName={auth.user.full_name}

@@ -10,33 +10,28 @@ import {
 } from "react";
 
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
-
 import { ProductCard } from "@/features/catalog/components/ProductCard";
-
 import type { CatalogProduct } from "@/features/catalog/types";
 
 interface ProductsSliderProps {
   latestProducts: CatalogProduct[];
-  selectedCategory: string | null;
   isProductsLoading: boolean;
   productsError: string | null;
+
   onRetryProducts: () => void;
   onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
-  isFavorite: (product: CatalogProduct) => boolean;
 }
 
 export function ProductsSlider({
   latestProducts,
-  selectedCategory,
   isProductsLoading,
   productsError,
   onRetryProducts,
   onToggleFavorite,
   onAddToCart,
   onSelectProduct,
-  isFavorite,
 }: ProductsSliderProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const activeIndexRef = useRef(0);
@@ -47,7 +42,9 @@ export function ProductsSlider({
   const updateSliderState = useCallback(() => {
     const slider = sliderRef.current;
 
-    if (!slider) return;
+    if (!slider) {
+      return;
+    }
 
     const slides = Array.from(
       slider.querySelectorAll<HTMLElement>("[data-product-slide]"),
@@ -86,11 +83,13 @@ export function ProductsSlider({
   useEffect(() => {
     const slider = sliderRef.current;
 
-    if (!slider) return;
+    if (!slider) {
+      return;
+    }
 
     const animationFrame = window.requestAnimationFrame(updateSliderState);
-
     const resizeObserver = new ResizeObserver(updateSliderState);
+
     resizeObserver.observe(slider);
 
     return () => {
@@ -102,13 +101,17 @@ export function ProductsSlider({
   const scrollToProduct = (direction: "left" | "right") => {
     const slider = sliderRef.current;
 
-    if (!slider) return;
+    if (!slider) {
+      return;
+    }
 
     const slides = Array.from(
       slider.querySelectorAll<HTMLElement>("[data-product-slide]"),
     );
 
-    if (slides.length === 0) return;
+    if (slides.length === 0) {
+      return;
+    }
 
     const indexChange = direction === "left" ? 1 : -1;
 
@@ -144,11 +147,7 @@ export function ProductsSlider({
     return (
       <CatalogFeedback
         kind="empty"
-        message={
-          selectedCategory
-            ? "در این دسته‌بندی هنوز محصولی ثبت نشده است."
-            : undefined
-        }
+        message="در حال حاضر محصولی برای نمایش وجود ندارد."
       />
     );
   }
@@ -162,7 +161,7 @@ export function ProductsSlider({
         tabIndex={0}
         onScroll={updateSliderState}
         aria-label="اسلایدر جدیدترین محصولات"
-        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 scroll-smooth overscroll-x-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37]/70 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:gap-5 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 scroll-smooth overscroll-x-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary/70 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:gap-5 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {latestProducts.map((product) => (
           <div
@@ -173,7 +172,6 @@ export function ProductsSlider({
             <ProductCard
               product={product}
               imageSizes="(min-width: 1280px) 289px, (min-width: 1024px) calc((100vw - 104px) / 3), (min-width: 768px) 300px, (min-width: 640px) 310px, 290px"
-              isFavorite={isFavorite(product)}
               onToggleFavorite={onToggleFavorite}
               onAddToCart={onAddToCart}
               onSelectProduct={onSelectProduct}
@@ -220,7 +218,7 @@ function SliderButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="pointer-events-auto grid size-11 place-items-center rounded-full border border-white/15 bg-[#111411]/95 text-white shadow-xl backdrop-blur-md transition hover:border-[#d4af37]/60 hover:bg-[#d4af37] hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4af37] disabled:pointer-events-none disabled:opacity-0"
+      className="pointer-events-auto grid size-11 place-items-center rounded-full border border-white/15 bg-[#111411]/95 text-white shadow-xl backdrop-blur-md transition hover:border-action-primary/60 hover:bg-action-primary hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary disabled:pointer-events-none disabled:opacity-0"
     >
       {children}
     </button>

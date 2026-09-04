@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { CartDrawer } from "@/features/home/components/CartDrawer";
+import { CartDrawer } from "@/components/layout/CartDrawer";
 import { getProductDetail } from "@/features/catalog/api/catalog";
 import type { CatalogProductDetail } from "@/features/catalog/types";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";

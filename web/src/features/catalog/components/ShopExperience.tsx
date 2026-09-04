@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
-import { ShopCatalog } from "@/features/home/components/ShopCatalog";
+import { ShopCatalog } from "@/features/catalog/components/ShopCatalog";
 
 import { useCatalog } from "../hooks/useCatalog";
 import type { CatalogProduct, ProductQuery } from "../types";
@@ -19,7 +19,7 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   const router = useRouter();
 
   const cart = useCart();
-  const { favorites, toggleFavorite } = useFavorites();
+  const { toggleFavorite } = useFavorites();
 
   const [catalogQuery, setCatalogQuery] = useState<ProductQuery>({
     ...initialQuery,
@@ -109,7 +109,6 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
           <ShopCatalog
             products={products}
             categories={categories}
-            favorites={favorites}
             onToggleFavorite={toggleFavorite}
             onAddToCart={cart.addItem}
             onSelectProduct={openProduct}

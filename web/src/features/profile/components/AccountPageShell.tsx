@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/features/home/components/BottomNav";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { AccountNavigation } from "./AccountNavigation";
 
 export function AccountPageShell({
@@ -17,7 +17,10 @@ export function AccountPageShell({
 }) {
   const router = useRouter();
   return (
-    <main dir="rtl" className="min-h-dvh bg-[#0d0e12] pb-20 text-zinc-100 md:pb-24">
+    <main
+      dir="rtl"
+      className="min-h-dvh bg-[#0d0e12] pb-20 text-zinc-100 md:pb-24"
+    >
       <header className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-5 sm:px-6 lg:px-8">
         <button
           type="button"
@@ -29,11 +32,17 @@ export function AccountPageShell({
         </button>
         <div>
           <h1 className="text-lg font-black sm:text-xl">{title}</h1>
-          <p className="mt-0.5 text-xs leading-5 text-zinc-500">{description}</p>
+          <p className="mt-0.5 text-xs leading-5 text-zinc-500">
+            {description}
+          </p>
         </div>
       </header>
       <div className="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] lg:px-8">
-        <aside className="hidden md:block"><div className="sticky top-5"><AccountNavigation /></div></aside>
+        <aside className="hidden md:block">
+          <div className="sticky top-5">
+            <AccountNavigation />
+          </div>
+        </aside>
         <div className="min-w-0">{children}</div>
       </div>
       <BottomNav />

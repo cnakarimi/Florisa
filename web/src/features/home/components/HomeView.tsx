@@ -1,20 +1,20 @@
 "use client";
 
+import { DesktopHeader } from "@/components/layout/DesktopHeader";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
 
+import type { HomeExperiencePresentationProps } from "../types";
+
 import { CategoriesSection } from "./CategoriesSection";
-import { DesktopHeader } from "./DesktopHeader";
 import { FeaturesGrid } from "./FeaturesGrid";
 import { HomeHero } from "./HomeHero";
-import type { HomeExperiencePresentationProps } from "./homeExperience.types";
 import { MagazineSection } from "./MagazineSection";
 import { ProductsSection } from "./ProductsSection";
 
 export function HomeView({
   categories,
   latestProducts,
-  selectedCategory,
   isCategoriesLoading,
   isProductsLoading,
   categoriesError,
@@ -22,16 +22,13 @@ export function HomeView({
   homeSlides,
   homeSlidesStatus,
   cartCount,
-  onSelectCategory,
   onRetryCategories,
   onRetryProducts,
   onToggleFavorite,
   onAddToCart,
   onSelectProduct,
-  onSelectArticle,
   onShopClick,
   onSearch,
-  isFavorite,
 }: HomeExperiencePresentationProps) {
   const scrollToTop = () => {
     window.scrollTo({
@@ -62,16 +59,13 @@ export function HomeView({
           <div className="px-4 sm:px-6 md:px-8 lg:contents">
             <CategoriesSection
               categories={categories}
-              selectedCategory={selectedCategory}
               isCategoriesLoading={isCategoriesLoading}
               categoriesError={categoriesError}
-              onSelectCategory={onSelectCategory}
               onRetryCategories={onRetryCategories}
             />
 
             <ProductsSection
               latestProducts={latestProducts}
-              selectedCategory={selectedCategory}
               isProductsLoading={isProductsLoading}
               productsError={productsError}
               onRetryProducts={onRetryProducts}
@@ -79,14 +73,13 @@ export function HomeView({
               onAddToCart={onAddToCart}
               onSelectProduct={onSelectProduct}
               onShopClick={onShopClick}
-              isFavorite={isFavorite}
             />
 
             <section className="mx-auto hidden max-w-[1600px] px-8 pb-20 lg:block">
               <FeaturesGrid />
             </section>
 
-            <MagazineSection onSelectArticle={onSelectArticle} />
+            <MagazineSection />
           </div>
         </main>
 

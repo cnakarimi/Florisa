@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
-import { BottomNav } from "@/features/home/components/BottomNav";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { formatToman, toPersianDigits } from "@/utils/persian";
 import { listOrders } from "@/features/orders/api/orders";
 import type { Order } from "@/features/orders/types";

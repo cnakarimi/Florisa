@@ -26,7 +26,6 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 interface ShopCatalogProps {
   products: CatalogProduct[];
   categories: CatalogCategory[];
-  favorites: CatalogProduct[];
   onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
@@ -67,7 +66,6 @@ const orderingOptions: Array<{
 export function ShopCatalog({
   products,
   categories,
-  favorites,
   onToggleFavorite,
   onAddToCart,
   onSelectProduct,
@@ -372,9 +370,6 @@ export function ShopCatalog({
                     key={product.id}
                     product={product}
                     imageSizes="(max-width: 639px) calc(100vw - 44px), (max-width: 767px) calc(100vw - 60px), (max-width: 1023px) calc(100vw - 76px), 458px"
-                    isFavorite={favorites.some(
-                      (favorite) => favorite.id === product.id,
-                    )}
                     onToggleFavorite={onToggleFavorite}
                     onAddToCart={onAddToCart}
                     onSelectProduct={onSelectProduct}

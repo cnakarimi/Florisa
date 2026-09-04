@@ -18,7 +18,7 @@ import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CartItem } from "@/features/cart/types";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { BottomNav } from "@/features/home/components/BottomNav";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { formatToman, toPersianDigits } from "@/utils/persian";
 import { CartPageLoading } from "./CartPageLoading";
 

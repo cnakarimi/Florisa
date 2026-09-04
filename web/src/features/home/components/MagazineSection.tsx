@@ -1,16 +1,10 @@
+import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
+import { ARTICLES } from "@/features/blog/data/articles";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 
-import { ARTICLES } from "../data/products";
-import type { HomeExperiencePresentationProps } from "./homeExperience.types";
-
-type MagazineSectionProps = Pick<
-  HomeExperiencePresentationProps,
-  "onSelectArticle"
->;
-
-export function MagazineSection({ onSelectArticle }: MagazineSectionProps) {
+export function MagazineSection() {
   return (
     <section
       id="magazine"
@@ -28,10 +22,10 @@ export function MagazineSection({ onSelectArticle }: MagazineSectionProps) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {ARTICLES.map((article, index) => (
-          <button
-            type="button"
+          <Link
             key={article.id}
-            onClick={() => onSelectArticle(article)}
+            href="/blog"
+            aria-label={`مطالعه ${article.title}`}
             className={`${
               index === 0 ? "block" : "hidden lg:block"
             } group relative aspect-[4/3] w-full overflow-hidden rounded-md bg-[#151715] text-right shadow-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c] lg:rounded-2xl lg:border lg:border-white/10 lg:bg-[#181a18] lg:hover:border-[#d4af37]/55 lg:focus-visible:ring-[#d4af37]`}
@@ -59,7 +53,7 @@ export function MagazineSection({ onSelectArticle }: MagazineSectionProps) {
                 {article.excerpt}
               </span>
             </span>
-          </button>
+          </Link>
         ))}
       </div>
     </section>

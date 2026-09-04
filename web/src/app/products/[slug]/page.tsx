@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ProductDetailExperience } from "@/features/catalog/components/ProductDetailExperience";
-import { ShopNavigationScrollNavbar } from "@/features/home/components/ShopNavigationScrollNavbar";
+import { ShopNavigationScrollNavbar } from "@/components/layout/ShopNavigationScrollNavbar";
 
 export const metadata: Metadata = {
   title: "جزئیات محصول | فلوریسا",

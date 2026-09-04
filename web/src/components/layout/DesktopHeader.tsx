@@ -102,19 +102,13 @@ export function DesktopHeader({ cartCount }: DesktopHeaderProps) {
     setIsSearchOpen(false);
   };
 
-  const handleSearchButtonClick = () => {
-    if (!isSearchOpen) {
-      setIsSearchOpen(true);
-    }
-  };
-
   return (
     <>
       <header
-        className={`hidden border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 lg:fixed lg:inset-x-0 lg:top-0 lg:z-[100] lg:block ${
+        className={`hidden  transition-[background-color,box-shadow,backdrop-filter] duration-300 lg:fixed lg:inset-x-0 lg:top-0 lg:z-[100] lg:block ${
           isScrolled
-            ? "border-border-subtle/40 bg-background-secondary/90 shadow-navbar backdrop-blur-xl backdrop-saturate-150"
-            : "border-transparent bg-background-secondary"
+            ? " bg-background-secondary/90 shadow-navbar backdrop-blur-xl backdrop-saturate-150"
+            : " bg-background-secondary"
         }`}
       >
         <div className="mx-auto grid h-[68px] max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center px-12">

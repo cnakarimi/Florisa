@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Check, Heart, PackageX } from "lucide-react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
@@ -11,7 +11,6 @@ import { formatTomanAmount, toPersianDigits } from "@/utils/persian";
 interface ProductCardProps {
   product: CatalogProduct;
   imageSizes: string;
-  isFavorite: boolean;
   onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
@@ -20,12 +19,12 @@ interface ProductCardProps {
 export function ProductCard({
   product,
   imageSizes,
-  isFavorite,
   onToggleFavorite,
   onAddToCart,
   onSelectProduct,
 }: ProductCardProps) {
   const [isAdded, setIsAdded] = useState(false);
+
   const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAvailable =
@@ -55,7 +54,9 @@ export function ProductCard({
   const handleAddToCart = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
-    if (!isAvailable) return;
+    if (!isAvailable) {
+      return;
+    }
 
     onAddToCart(product);
     setIsAdded(true);
@@ -79,8 +80,7 @@ export function ProductCard({
       dir="rtl"
       className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] bg-[#181a18] transition duration-300 hover:-translate-y-1"
     >
-      {/* تصویر محصول */}
-      <div className="relative  pb-0">
+      <div className="relative pb-0">
         <button
           type="button"
           onClick={() => onSelectProduct(product)}
@@ -98,31 +98,16 @@ export function ProductCard({
           <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
         </button>
 
-        {/* علاقه‌مندی */}
         <button
           type="button"
           onClick={handleToggleFavorite}
-          aria-pressed={isFavorite}
-          aria-label={
-            isFavorite
-              ? `حذف ${product.name} از علاقه‌مندی‌ها`
-              : `افزودن ${product.name} به علاقه‌مندی‌ها`
-          }
-          className={`absolute left-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full border shadow-lg backdrop-blur-md transition duration-200 active:scale-90 sm:h-9 sm:w-9 ${
-            isFavorite
-              ? "border-rose-300/30 bg-rose-500/20 text-rose-300"
-              : "border-white/15 bg-black/35 text-white/85 hover:bg-black/55"
-          }`}
+          aria-label={`افزودن ${product.name} به علاقه‌مندی‌ها`}
+          className="absolute left-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-black/35 text-white/85 shadow-lg backdrop-blur-md transition duration-200 hover:bg-black/55 active:scale-90 sm:h-9 sm:w-9"
         >
-          <Heart
-            className={`h-4 w-4 transition-transform ${
-              isFavorite ? "scale-105 fill-current" : ""
-            }`}
-          />
+          <Heart className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      {/* اطلاعات و خرید */}
       <div className="flex flex-1 flex-col gap-y-3 px-3 pb-6 pt-3 sm:px-3.5">
         <button
           type="button"
@@ -134,19 +119,16 @@ export function ProductCard({
           </h3>
         </button>
 
-        {/* قیمت در یک ردیف مستقل */}
         <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
-          <div className="flex items-center justify-between w-full">
-            <span className=" block text-[12px] font-bold text-border-subtle sm:text-[10px]">
+          <div className="flex w-full items-center justify-between">
+            <span className="block text-[12px] font-bold text-border-subtle sm:text-[10px]">
               {packageLabel}
             </span>
-
-            <span className="mt-1 block text-[8px] text-white/35 sm:text-[9px]"></span>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="block whitespace-nowrap text-[15px] tracking-tight text-text-primary font-bold">
+          <span className="block whitespace-nowrap text-[15px] font-bold tracking-tight text-text-primary">
             {formatTomanAmount(product.price)}
             <span className="mr-1 text-[10px] font-medium">تومان</span>
           </span>
@@ -160,7 +142,7 @@ export function ProductCard({
                 ? `افزودن ${product.name} به سبد خرید`
                 : `${product.name} ناموجود است`
             }
-            className={`mt-auto inline-flex h-10 items-center justify-center gap-1.5 overflow-hidden rounded-[12px] text-[12px] font-bold transition-all duration-300 active:scale-[0.98] sm:h-11 px-4 ${
+            className={`mt-auto inline-flex h-10 items-center justify-center gap-1.5 overflow-hidden rounded-[12px] px-4 text-[12px] font-bold transition-all duration-300 active:scale-[0.98] sm:h-11 ${
               !isAvailable
                 ? "cursor-not-allowed bg-white/[0.04] text-white/30"
                 : isAdded
@@ -179,9 +161,7 @@ export function ProductCard({
                 <span>به سبد اضافه شد</span>
               </>
             ) : (
-              <>
-                <span>افزودن به سبد</span>
-              </>
+              <span>افزودن به سبد</span>
             )}
           </button>
         </div>

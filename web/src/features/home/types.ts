@@ -1,43 +1,28 @@
-export interface Product {
-  id: string;
-  title: string;
-  titleEnglish?: string;
-  category: 'plants' | 'flowers' | 'pots' | 'care';
-  categoryLabel: string;
-  price: number; // in Toman
-  discountPrice?: number;
-  image: string;
-  potType: string;
-  careTags: string[]; // e.g. ["نگهداری آسان", "تصفیه‌کننده هوا"]
-  sunlight: 'مستقیم' | 'غیرمستقیم' | 'سایه دوست' | 'کم‌نور';
-  watering: 'هفتگی یکبار' | 'هر ۱۰ روز' | 'هنگام خشکی خاک' | 'روزانه';
-  humidity: 'متوسط' | 'زیاد' | 'کم';
-  isPetFriendly: boolean;
-  careLevel: 'آسان' | 'متوسط' | 'حرفه‌ای';
-  description: string;
-  rating: number;
-  reviewCount: number;
-  isNew?: boolean;
-  isBestseller?: boolean;
-}
+import type { CatalogCategory, CatalogProduct } from "@/features/catalog/types";
+import type { HomeSlide, HomeSlidesStatus } from "@/features/home/slider/types";
 
-export interface Category {
-  id: string;
-  title: string;
-  image: string;
-  count: number;
-}
+export interface HomeExperiencePresentationProps {
+  categories: CatalogCategory[];
+  latestProducts: CatalogProduct[];
 
-export interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string[];
-  image: string;
-  readTime: string;
-  date: string;
-  author: string;
-  tags: string[];
-}
+  isCategoriesLoading: boolean;
+  isProductsLoading: boolean;
 
-export type TabType = "home" | "shop" | "cart" | "favorites" | "profile";
+  categoriesError: string | null;
+  productsError: string | null;
+
+  homeSlides: HomeSlide[];
+  homeSlidesStatus: HomeSlidesStatus;
+
+  cartCount: number;
+
+  onRetryCategories: () => void;
+  onRetryProducts: () => void;
+
+  onToggleFavorite: (product: CatalogProduct) => void;
+  onAddToCart: (product: CatalogProduct) => void;
+  onSelectProduct: (product: CatalogProduct) => void;
+
+  onShopClick: () => void;
+  onSearch: (query: string) => void;
+}

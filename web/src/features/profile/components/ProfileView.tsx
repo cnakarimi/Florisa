@@ -24,7 +24,7 @@ import {
   PhoneCall,
   Mail,
 } from "lucide-react";
-import type { TabType } from "../types";
+import type { TabType } from "@/components/navigation/types";
 import { toPersianDigits } from "@/utils/persian";
 
 type ActiveModal =

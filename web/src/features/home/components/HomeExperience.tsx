@@ -1,36 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useCart } from "@/features/cart/hooks/CartProvider";
-import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
+import { useCatalog } from "@/features/catalog/hooks/useCatalog";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 import { useHomeSlides } from "../slider/useHomeSlides";
-import type { Article } from "../types";
-
-import { ArticleModal } from "./ArticleModal";
 import { HomeView } from "./HomeView";
 
 const HOME_PRODUCTS_LIMIT = 8;
+
+const HOME_CATALOG_QUERY: ProductQuery = {
+  ordering: "newest",
+};
 
 export function HomeExperience() {
   const router = useRouter();
 
   const cart = useCart();
-  const { favorites, toggleFavorite } = useFavorites();
-
+  const { toggleFavorite } = useFavorites();
   const { slides: homeSlides, status: homeSlidesStatus } = useHomeSlides();
-
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-
-  const [catalogQuery, setCatalogQuery] = useState<ProductQuery>({
-    ordering: "newest",
-  });
-
-  const selectedCategory = catalogQuery.category ?? null;
 
   const {
     categories,
@@ -41,16 +32,9 @@ export function HomeExperience() {
     productsError,
     retryCategories,
     retryProducts,
-  } = useCatalog(catalogQuery);
+  } = useCatalog(HOME_CATALOG_QUERY);
 
   const latestProducts = products.slice(0, HOME_PRODUCTS_LIMIT);
-
-  const handleCategorySelect = (category: string | null) => {
-    setCatalogQuery((current) => ({
-      ...current,
-      category: category ?? undefined,
-    }));
-  };
 
   const handleSearch = (query: string) => {
     const normalizedQuery = query.trim();
@@ -70,38 +54,24 @@ export function HomeExperience() {
     router.push("/shop");
   };
 
-  const isFavorite = (product: CatalogProduct) =>
-    favorites.some((favorite) => favorite.id === product.id);
-
   return (
-    <>
-      <HomeView
-        categories={categories}
-        latestProducts={latestProducts}
-        selectedCategory={selectedCategory}
-        isCategoriesLoading={isCategoriesLoading}
-        isProductsLoading={isProductsLoading}
-        categoriesError={categoriesError}
-        productsError={productsError}
-        homeSlides={homeSlides}
-        homeSlidesStatus={homeSlidesStatus}
-        cartCount={cart.isHydrated ? cart.totalQuantity : 0}
-        onSelectCategory={handleCategorySelect}
-        onRetryCategories={retryCategories}
-        onRetryProducts={retryProducts}
-        onToggleFavorite={toggleFavorite}
-        onAddToCart={cart.addItem}
-        onSelectProduct={handleProductSelect}
-        onSelectArticle={setSelectedArticle}
-        onShopClick={handleShopClick}
-        onSearch={handleSearch}
-        isFavorite={isFavorite}
-      />
-
-      <ArticleModal
-        article={selectedArticle}
-        onClose={() => setSelectedArticle(null)}
-      />
-    </>
+    <HomeView
+      categories={categories}
+      latestProducts={latestProducts}
+      isCategoriesLoading={isCategoriesLoading}
+      isProductsLoading={isProductsLoading}
+      categoriesError={categoriesError}
+      productsError={productsError}
+      homeSlides={homeSlides}
+      homeSlidesStatus={homeSlidesStatus}
+      cartCount={cart.isHydrated ? cart.totalQuantity : 0}
+      onRetryCategories={retryCategories}
+      onRetryProducts={retryProducts}
+      onToggleFavorite={toggleFavorite}
+      onAddToCart={cart.addItem}
+      onSelectProduct={handleProductSelect}
+      onShopClick={handleShopClick}
+      onSearch={handleSearch}
+    />
   );
 }

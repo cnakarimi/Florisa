@@ -21,7 +21,7 @@ import type {
 } from "@/features/catalog/types";
 import { clearIncompatibleFilters } from "@/features/catalog/types";
 
-import { ProductCard } from "./ProductCard";
+import { ProductCard } from "@/features/catalog/components/ProductCard";
 
 interface ShopCatalogProps {
   products: CatalogProduct[];

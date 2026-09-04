@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms.models import BaseInlineFormSet
@@ -253,8 +254,20 @@ class ProductImageAdmin(admin.ModelAdmin):
     ordering = ("product", "sort_order", "id")
 
 
+class HomeSlideAdminForm(forms.ModelForm):
+    class Meta:
+        model = HomeSlide
+        fields = "__all__"
+        widgets = {
+            "button_background_color": forms.TextInput(attrs={"type": "color"}),
+            "button_text_color": forms.TextInput(attrs={"type": "color"}),
+            "title_text_color": forms.TextInput(attrs={"type": "color"}),
+        }
+
+
 @admin.register(HomeSlide)
 class HomeSlideAdmin(admin.ModelAdmin):
+    form = HomeSlideAdminForm
     list_display = (
         "admin_title",
         "title",
@@ -266,7 +279,7 @@ class HomeSlideAdmin(admin.ModelAdmin):
     )
     list_editable = ("sort_order", "is_active")
     list_filter = ("is_active",)
-    search_fields = ("admin_title", "title", "eyebrow")
+    search_fields = ("admin_title", "title")
     ordering = ("sort_order", "id")
     readonly_fields = (
         "mobile_preview",
@@ -281,7 +294,7 @@ class HomeSlideAdmin(admin.ModelAdmin):
         ),
         (
             "محتوای نمایشی",
-            {"fields": ("eyebrow", "title", "description", "image_alt")},
+            {"fields": ("title", "image_alt")},
         ),
         (
             "تصاویر واکنش‌گرا",
@@ -294,7 +307,18 @@ class HomeSlideAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("دکمه اقدام", {"fields": ("cta_label", "cta_url")}),
+        (
+            "دکمه اقدام",
+            {
+                "fields": (
+                    "cta_label",
+                    "cta_url",
+                    "button_background_color",
+                    "button_text_color",
+                    "title_text_color",
+                )
+            },
+        ),
         ("زمان‌ها", {"fields": ("created_at", "updated_at")}),
     )
 

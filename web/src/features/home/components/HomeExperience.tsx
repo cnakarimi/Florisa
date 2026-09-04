@@ -14,11 +14,14 @@ import type { Article } from "../types";
 import { ArticleModal } from "./ArticleModal";
 import { HomeView } from "./HomeView";
 
+const HOME_PRODUCTS_LIMIT = 8;
+
 export function HomeExperience() {
   const router = useRouter();
 
   const cart = useCart();
   const { favorites, toggleFavorite } = useFavorites();
+
   const { slides: homeSlides, status: homeSlidesStatus } = useHomeSlides();
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -40,9 +43,9 @@ export function HomeExperience() {
     retryProducts,
   } = useCatalog(catalogQuery);
 
-  const latestProducts = products.slice(0, 8);
+  const latestProducts = products.slice(0, HOME_PRODUCTS_LIMIT);
 
-  const setSelectedCategory = (category: string | null) => {
+  const handleCategorySelect = (category: string | null) => {
     setCatalogQuery((current) => ({
       ...current,
       category: category ?? undefined,
@@ -52,19 +55,23 @@ export function HomeExperience() {
   const handleSearch = (query: string) => {
     const normalizedQuery = query.trim();
 
-    const search = normalizedQuery
+    const searchParams = normalizedQuery
       ? `?search=${encodeURIComponent(normalizedQuery)}`
       : "";
 
-    router.push(`/shop${search}`);
+    router.push(`/shop${searchParams}`);
   };
 
-  const openProduct = (product: CatalogProduct) => {
+  const handleProductSelect = (product: CatalogProduct) => {
     router.push(`/products/${encodeURIComponent(product.slug)}`);
   };
 
+  const handleShopClick = () => {
+    router.push("/shop");
+  };
+
   const isFavorite = (product: CatalogProduct) =>
-    favorites.some((item) => item.id === product.id);
+    favorites.some((favorite) => favorite.id === product.id);
 
   return (
     <>
@@ -79,14 +86,14 @@ export function HomeExperience() {
         homeSlides={homeSlides}
         homeSlidesStatus={homeSlidesStatus}
         cartCount={cart.isHydrated ? cart.totalQuantity : 0}
-        onSelectCategory={setSelectedCategory}
+        onSelectCategory={handleCategorySelect}
         onRetryCategories={retryCategories}
         onRetryProducts={retryProducts}
         onToggleFavorite={toggleFavorite}
         onAddToCart={cart.addItem}
-        onSelectProduct={openProduct}
+        onSelectProduct={handleProductSelect}
         onSelectArticle={setSelectedArticle}
-        onShopClick={() => router.push("/shop")}
+        onShopClick={handleShopClick}
         onSearch={handleSearch}
         isFavorite={isFavorite}
       />

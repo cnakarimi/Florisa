@@ -11,7 +11,7 @@ import {
 
 import { CatalogFeedback } from "@/features/catalog/components/CatalogFeedback";
 
-import { ProductCard } from "./ProductCard";
+import { ProductCard } from "@/features/catalog/components/ProductCard";
 
 import type { CatalogProduct } from "@/features/catalog/types";
 

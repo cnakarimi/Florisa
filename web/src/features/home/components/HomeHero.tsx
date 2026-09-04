@@ -4,6 +4,8 @@ import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { toPersianDigits } from "@/utils/persian";
+
 import {
   adjacentSlideIndex,
   correctedSlideIndex,
@@ -11,11 +13,17 @@ import {
   responsiveImageSources,
   selectHomeHeroSlide,
 } from "../slider/logic";
+
 import type { HomeSlide, HomeSlidesStatus } from "../slider/types";
-import { toPersianDigits } from "@/utils/persian";
 
 const FALLBACK_HERO_IMAGE = "/images/hero_1.png";
+
 const SWIPE_THRESHOLD = 48;
+
+const HERO_SIZE_CLASS = "h-[250px] lg:h-[400px] xl:h-[460px] 2xl:h-[540px]";
+
+const HERO_IMAGE_TRANSITION =
+  "transition-opacity duration-700 ease-out motion-reduce:transition-none";
 
 interface HomeHeroProps {
   slides: HomeSlide[];
@@ -24,7 +32,10 @@ interface HomeHeroProps {
 
 function HeroOverlay() {
   return (
-    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.30)_0%,rgba(0,0,0,0.08)_45%,rgba(0,0,0,0.58)_100%)]" />
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 bg-overlay-hero"
+    />
   );
 }
 
@@ -34,10 +45,10 @@ function FallbackHeroImage() {
       fill
       src={FALLBACK_HERO_IMAGE}
       alt="فضای خانه با گیاهان آپارتمانی"
-      sizes="(min-width: 1275px) 1275px, 100vw"
+      sizes="100vw"
       quality={80}
       priority
-      className="object-cover object-center"
+      className="object-cover object-[center_45%]"
     />
   );
 }
@@ -45,9 +56,11 @@ function FallbackHeroImage() {
 function ResponsiveSlideImage({
   slide,
   onError,
+  isVisible = true,
 }: {
   slide: HomeSlide;
   onError: () => void;
+  isVisible?: boolean;
 }) {
   const sources = responsiveImageSources(slide);
 
@@ -70,12 +83,14 @@ function ResponsiveSlideImage({
     src: sources.desktop,
     width: 2172,
     height: 724,
-    sizes: "(min-width: 1275px) 1275px, 100vw",
+    sizes: "(min-width: 1024px) 100vw, 1px",
     priority: true,
   });
 
   return (
-    <picture>
+    <picture
+      className={`${isVisible ? "opacity-100" : "opacity-0"} ${HERO_IMAGE_TRANSITION}`}
+    >
       <source
         media={sources.desktopMedia}
         srcSet={desktopProps.srcSet}
@@ -86,7 +101,7 @@ function ResponsiveSlideImage({
         {...mobileProps}
         alt={slide.image_alt}
         onError={onError}
-        className="absolute inset-0 size-full object-cover object-center"
+        className="absolute inset-0 size-full object-cover object-[center_45%]"
       />
     </picture>
   );
@@ -95,19 +110,18 @@ function ResponsiveSlideImage({
 function HeroLoading() {
   return (
     <section
-      className="relative isolate mx-auto h-[250px] w-full overflow-hidden bg-background-primary lg:h-[400px]"
+      className={`relative isolate mx-auto w-full overflow-hidden bg-background-primary ${HERO_SIZE_CLASS}`}
       aria-busy="true"
       aria-label="در حال بارگذاری پیشنهادهای ویژه"
     >
-      <div className="absolute inset-0 animate-pulse bg-white/[0.04]" />
+      <div className="absolute inset-0 animate-pulse bg-surface-muted" />
     </section>
   );
 }
-
 function FallbackHero() {
   return (
     <section
-      className="relative isolate mx-auto h-[250px] w-full overflow-hidden lg:h-[400px]"
+      className={`relative isolate mx-auto w-full overflow-hidden ${HERO_SIZE_CLASS}`}
       aria-labelledby="home-hero-title"
     >
       <FallbackHeroImage />
@@ -115,17 +129,24 @@ function FallbackHero() {
       <HeroOverlay />
 
       <div className="absolute inset-0 z-10 flex items-center justify-center px-4 pb-8 pt-6 text-center lg:px-12 lg:pb-10">
-        <div className="flex max-w-2xl flex-col items-center gap-6" dir="rtl">
+        <div
+          dir="rtl"
+          className="flex max-w-2xl flex-col items-center gap-3 lg:gap-4"
+        >
           <h1
             id="home-hero-title"
-            className="line-clamp-2 text-center font-sans text-2xl/8 font-bold tracking-normal text-white lg:text-5xl/[64px]"
+            className="line-clamp-2 text-mobile-heading-xl text-text-inverse lg:text-desktop-display-xl"
           >
             به خونت جون بده
           </h1>
 
           <Link
             href="/shop"
-            className="flex items-center justify-center rounded-full bg-text-brand px-8 py-3.5 text-sm font-bold text-background-primary"
+            className="inline-flex min-h-11 items-center justify-center rounded-full px-7 py-2.5 text-desktop-ui-label font-bold transition-[filter] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary"
+            style={{
+              backgroundColor: "var(--action-primary)",
+              color: "var(--background-primary)",
+            }}
           >
             مشاهده محصولات
           </Link>
@@ -141,32 +162,27 @@ function HeroContent({ slide }: { slide: HomeSlide }) {
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center px-4 pb-8 pt-6 text-center lg:px-12 lg:pb-10">
       <div
-        className="flex max-w-2xl flex-col items-center gap-2 lg:gap-3"
         dir="rtl"
+        className="flex max-w-2xl flex-col items-center gap-3 lg:gap-4"
       >
-        {presentation.eyebrow ? (
-          <p className="text-xs/5 font-bold text-text-brand lg:text-sm/6">
-            {presentation.eyebrow}
-          </p>
-        ) : null}
-
         <h1
           id="home-hero-title"
-          className="line-clamp-2 text-2xl/8 font-bold text-white lg:text-4xl/12 lg:font-extrabold"
+          className="line-clamp-2 text-mobile-heading-xl lg:text-desktop-heading-h1"
+          style={{
+            color: presentation.titleTextColor,
+          }}
         >
           {presentation.title}
         </h1>
 
-        {presentation.description ? (
-          <p className="line-clamp-1 max-w-xl text-xs/5 text-white/85 lg:line-clamp-2 lg:text-sm/6">
-            {presentation.description}
-          </p>
-        ) : null}
-
         {presentation.ctaHref && presentation.ctaLabel ? (
           <Link
             href={presentation.ctaHref}
-            className="inline-flex min-h-10 items-center justify-center rounded-full bg-action-primary px-5 py-2 text-xs/5 font-bold text-background-primary transition-colors hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black/70 lg:min-h-11 lg:px-6"
+            className="inline-flex min-h-11 items-center justify-center rounded-full px-7 py-2.5 text-desktop-ui-label font-bold transition-[filter] hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary"
+            style={{
+              backgroundColor: presentation.buttonBackgroundColor,
+              color: presentation.buttonTextColor,
+            }}
           >
             {presentation.ctaLabel}
           </Link>
@@ -193,7 +209,7 @@ function HeroPagination({
     <div
       role="group"
       aria-label="انتخاب اسلاید"
-      className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center lg:bottom-3"
+      className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1"
     >
       {slides.map((slide, index) => {
         const isActive = index === currentIndex;
@@ -205,12 +221,14 @@ function HeroPagination({
             onClick={() => onSelect(index)}
             aria-label={`نمایش اسلاید ${toPersianDigits(index + 1)}`}
             aria-current={isActive ? "true" : undefined}
-            className="grid size-8 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
+            className="grid size-4 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
           >
             <span
               aria-hidden="true"
               className={`h-1.5 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ${
-                isActive ? "w-5 bg-action-primary" : "w-1.5 bg-white/55"
+                isActive
+                  ? "w-5 bg-action-primary"
+                  : "w-1.5 bg-text-inverse-muted"
               }`}
             />
           </button>
@@ -222,6 +240,7 @@ function HeroPagination({
 
 export function HomeHero({ slides, status }: HomeHeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [hasImageError, setHasImageError] = useState(false);
 
   const pointerStartX = useRef<number | null>(null);
@@ -236,6 +255,17 @@ export function HomeHero({ slides, status }: HomeHeroProps) {
     setHasImageError(false);
   }, [slide?.id]);
 
+  const changeSlide = (index: number) => {
+    if (index === currentIndex) return;
+
+    setPreviousIndex(currentIndex);
+    setCurrentIndex(index);
+
+    window.setTimeout(() => {
+      setPreviousIndex(null);
+    }, 700);
+  };
+
   if (status === "loading") {
     return <HeroLoading />;
   }
@@ -247,21 +277,28 @@ export function HomeHero({ slides, status }: HomeHeroProps) {
   const hasMultipleSlides = slides.length > 1;
 
   const move = (direction: "previous" | "next") => {
+    setPreviousIndex(currentIndex);
+
     setCurrentIndex((index) =>
       adjacentSlideIndex(index, direction, slides.length),
     );
-  };
 
+    window.setTimeout(() => {
+      setPreviousIndex(null);
+    }, 700);
+  };
   return (
     <section
-      className="relative isolate mx-auto h-[250px] w-full touch-pan-y overflow-hidden lg:h-[400px]"
+      className={`relative isolate mx-auto w-full touch-pan-y overflow-hidden ${HERO_SIZE_CLASS}`}
       aria-roledescription="اسلایدر"
       aria-label="پیشنهادهای ویژه فلوریسا"
       data-home-slide-source="api"
       data-home-slide-id={slide.id}
       tabIndex={hasMultipleSlides ? 0 : undefined}
       onKeyDown={(event) => {
-        if (!hasMultipleSlides) return;
+        if (!hasMultipleSlides) {
+          return;
+        }
 
         if (event.key === "ArrowLeft") {
           event.preventDefault();
@@ -308,10 +345,21 @@ export function HomeHero({ slides, status }: HomeHeroProps) {
         {hasImageError ? (
           <FallbackHeroImage />
         ) : (
-          <ResponsiveSlideImage
-            slide={slide}
-            onError={() => setHasImageError(true)}
-          />
+          <>
+            {previousIndex !== null && slides[previousIndex] ? (
+              <ResponsiveSlideImage
+                slide={slides[previousIndex]}
+                onError={() => setHasImageError(true)}
+                isVisible={false}
+              />
+            ) : null}
+
+            <ResponsiveSlideImage
+              slide={slide}
+              onError={() => setHasImageError(true)}
+              isVisible
+            />
+          </>
         )}
 
         <HeroOverlay />
@@ -322,7 +370,7 @@ export function HomeHero({ slides, status }: HomeHeroProps) {
       <HeroPagination
         slides={slides}
         currentIndex={currentIndex}
-        onSelect={setCurrentIndex}
+        onSelect={changeSlide}
       />
     </section>
   );

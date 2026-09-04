@@ -57,7 +57,10 @@ textarea {
   padding-left: 1rem;
   color: #f4f4f5;
   outline: none;
-  transition: border-color 160ms, box-shadow 160ms, background 160ms;
+  transition:
+    border-color 160ms,
+    box-shadow 160ms,
+    background 160ms;
 }
 
 .account-input:hover {
@@ -160,4 +163,13 @@ button {
     --page-padding: var(--space-8);
     --section-gap: var(--space-20);
   }
+}
+
+.overlay-hero {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(0, 0, 0, 0.06) 42%,
+    rgba(0, 0, 0, 0.48) 100%
+  );
 }

@@ -40,9 +40,7 @@ class HomeSlideTests(TestCase):
     def create_slide(self, *, name: str, sort_order: int = 0, is_active: bool = True):
         return HomeSlide.objects.create(
             admin_title=name,
-            eyebrow="تازه",
             title=f"عنوان {name}",
-            description="توضیح کوتاه",
             mobile_image=uploaded_image(f"{name}-mobile.png"),
             desktop_image=uploaded_image(f"{name}-desktop.png"),
             image_alt="گلدان سبز در خانه",
@@ -73,16 +71,20 @@ class HomeSlideTests(TestCase):
             set(payload),
             {
                 "id",
-                "eyebrow",
                 "title",
-                "description",
                 "mobile_image_url",
                 "desktop_image_url",
                 "image_alt",
                 "cta_label",
                 "cta_url",
+                "button_background_color",
+                "button_text_color",
+                "title_text_color",
             },
         )
+        self.assertEqual(payload["button_background_color"], "#d4af37")
+        self.assertEqual(payload["button_text_color"], "#121212")
+        self.assertEqual(payload["title_text_color"], "#ffffff")
         self.assertTrue(payload["mobile_image_url"].startswith("http://testserver/media/"))
         self.assertTrue(payload["desktop_image_url"].startswith("http://testserver/media/"))
         self.assertNotIn("admin_title", payload)
@@ -156,7 +158,6 @@ class HomeSlideTests(TestCase):
     def test_text_is_trimmed_and_string_representation_uses_admin_title(self):
         slide = HomeSlide(
             admin_title="  اسلاید تابستان  ",
-            eyebrow="  جدید  ",
             title="  گل‌های تازه  ",
             mobile_image=uploaded_image("trim-mobile.png"),
             desktop_image=uploaded_image("trim-desktop.png"),
@@ -166,7 +167,6 @@ class HomeSlideTests(TestCase):
         slide.full_clean()
 
         self.assertEqual(str(slide), "اسلاید تابستان")
-        self.assertEqual(slide.eyebrow, "جدید")
         self.assertEqual(slide.title, "گل‌های تازه")
         self.assertEqual(slide.image_alt, "گل تازه")
 
@@ -181,6 +181,18 @@ class HomeSlideTests(TestCase):
 
         self.assertEqual(slide_admin.list_editable, ("sort_order", "is_active"))
         self.assertEqual(slide_admin.ordering, ("sort_order", "id"))
+        self.assertEqual(
+            slide_admin.form.base_fields["button_background_color"].widget.input_type,
+            "color",
+        )
+        self.assertEqual(
+            slide_admin.form.base_fields["button_text_color"].widget.input_type,
+            "color",
+        )
+        self.assertEqual(
+            slide_admin.form.base_fields["title_text_color"].widget.input_type,
+            "color",
+        )
         self.assertEqual(slide_admin.mobile_preview(None), "—")
         self.assertEqual(slide_admin.desktop_preview(None), "—")
 

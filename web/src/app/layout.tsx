@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { AuthProvider } from "@/features/auth/hooks/AuthProvider";
 import { CartProvider } from "@/features/cart/hooks/CartProvider";
 import { FavoritesProvider } from "@/features/favorites/hooks/FavoritesProvider";
-import { Footer } from "@/features/home/components/Footer";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({

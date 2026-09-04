@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
 
@@ -379,9 +379,7 @@ class HomeSlide(models.Model):
         max_length=120,
         help_text="فقط برای شناسایی اسلاید در پنل مدیریت نمایش داده می‌شود.",
     )
-    eyebrow = models.CharField("متن بالای عنوان", max_length=80, blank=True)
     title = models.CharField("عنوان اصلی", max_length=120)
-    description = models.CharField("توضیح کوتاه", max_length=240, blank=True)
     mobile_image = models.ImageField(
         "تصویر موبایل",
         upload_to="home/slides/mobile/%Y/%m/",
@@ -410,6 +408,39 @@ class HomeSlide(models.Model):
         blank=True,
         help_text="فقط مسیر داخلی فلوریسا را وارد کنید؛ مانند /shop?category=plants.",
     )
+    button_background_color = models.CharField(
+        "رنگ پس‌زمینه دکمه",
+        max_length=7,
+        default="#d4af37",
+        validators=[
+            RegexValidator(
+                regex=r"^#[0-9a-fA-F]{6}$",
+                message="رنگ باید با فرمت هگزادسیمال مانند #d4af37 وارد شود.",
+            )
+        ],
+    )
+    button_text_color = models.CharField(
+        "رنگ متن دکمه",
+        max_length=7,
+        default="#121212",
+        validators=[
+            RegexValidator(
+                regex=r"^#[0-9a-fA-F]{6}$",
+                message="رنگ باید با فرمت هگزادسیمال مانند #121212 وارد شود.",
+            )
+        ],
+    )
+    title_text_color = models.CharField(
+        "رنگ متن عنوان",
+        max_length=7,
+        default="#ffffff",
+        validators=[
+            RegexValidator(
+                regex=r"^#[0-9a-fA-F]{6}$",
+                message="رنگ باید با فرمت هگزادسیمال مانند #ffffff وارد شود.",
+            )
+        ],
+    )
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
     is_active = models.BooleanField("فعال", default=True)
     created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
@@ -424,9 +455,7 @@ class HomeSlide(models.Model):
         super().clean()
         for field_name in (
             "admin_title",
-            "eyebrow",
             "title",
-            "description",
             "image_alt",
             "cta_label",
             "cta_url",

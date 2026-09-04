@@ -1,5 +1,7 @@
 import type { HomeSlide, HomeSlidesStatus } from "./types";
 
+const DEFAULT_TITLE_TEXT_COLOR = "#ffffff";
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -13,6 +15,10 @@ function isSafeImageUrl(value: unknown): value is string {
   } catch {
     return false;
   }
+}
+
+function isHexColor(value: unknown): value is string {
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
 export function classifyCtaUrl(
@@ -38,7 +44,7 @@ export function classifyCtaUrl(
   return { kind: "internal", href };
 }
 
-export function isHomeSlide(value: unknown): value is HomeSlide {
+function isHomeSlideResponse(value: unknown): value is Record<string, unknown> {
   if (!isRecord(value)) return false;
 
   const hasCtaLabel = typeof value.cta_label === "string" && value.cta_label.length > 0;
@@ -48,23 +54,39 @@ export function isHomeSlide(value: unknown): value is HomeSlide {
     typeof value.id === "number" &&
     Number.isSafeInteger(value.id) &&
     value.id > 0 &&
-    typeof value.eyebrow === "string" &&
     typeof value.title === "string" &&
     value.title.length > 0 &&
-    typeof value.description === "string" &&
     isSafeImageUrl(value.mobile_image_url) &&
     isSafeImageUrl(value.desktop_image_url) &&
     typeof value.image_alt === "string" &&
     value.image_alt.length > 0 &&
     typeof value.cta_label === "string" &&
     typeof value.cta_url === "string" &&
+    isHexColor(value.button_background_color) &&
+    isHexColor(value.button_text_color) &&
+    (value.title_text_color === undefined || isHexColor(value.title_text_color)) &&
     hasCtaLabel === hasCtaUrl &&
     (!hasCtaUrl || classifyCtaUrl(value.cta_url) !== null)
   );
 }
 
 export function parseHomeSlides(value: unknown): HomeSlide[] | null {
-  return Array.isArray(value) && value.every(isHomeSlide) ? value : null;
+  if (!Array.isArray(value) || !value.every(isHomeSlideResponse)) return null;
+
+  return value.map((slide) => ({
+    id: slide.id as number,
+    title: slide.title as string,
+    mobile_image_url: slide.mobile_image_url as string,
+    desktop_image_url: slide.desktop_image_url as string,
+    image_alt: slide.image_alt as string,
+    cta_label: slide.cta_label as string,
+    cta_url: slide.cta_url as string,
+    buttonBackgroundColor: slide.button_background_color as string,
+    buttonTextColor: slide.button_text_color as string,
+    titleTextColor: isHexColor(slide.title_text_color)
+      ? slide.title_text_color
+      : DEFAULT_TITLE_TEXT_COLOR,
+  }));
 }
 
 export function correctedSlideIndex(currentIndex: number, slideCount: number): number {
@@ -103,11 +125,12 @@ export function getHomeHeroPresentation(slide: HomeSlide) {
   const cta = classifyCtaUrl(slide.cta_url);
 
   return {
-    eyebrow: slide.eyebrow,
     title: slide.title,
-    description: slide.description,
     ctaLabel: cta ? slide.cta_label : "",
     ctaHref: cta?.href ?? null,
+    buttonBackgroundColor: slide.buttonBackgroundColor,
+    buttonTextColor: slide.buttonTextColor,
+    titleTextColor: slide.titleTextColor,
     mobileImageUrl: slide.mobile_image_url,
     desktopImageUrl: slide.desktop_image_url,
   } as const;

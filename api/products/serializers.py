@@ -47,14 +47,15 @@ class HomeSlideSerializer(serializers.ModelSerializer):
         model = HomeSlide
         fields = (
             "id",
-            "eyebrow",
             "title",
-            "description",
             "mobile_image_url",
             "desktop_image_url",
             "image_alt",
             "cta_label",
             "cta_url",
+            "button_background_color",
+            "button_text_color",
+            "title_text_color",
         )
         read_only_fields = fields
 

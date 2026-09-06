@@ -9,14 +9,14 @@ import {
   X,
 } from "lucide-react";
 
-import { ShopFiltersDialog } from "@/features/catalog/components/ShopFiltersDialog";
+import { ShopFiltersDialog } from "@/features/catalog/components/shop/ShopFiltersDialog";
 import type {
   CatalogCategory,
   CatalogProduct,
   ProductOrdering,
   ProductQuery,
 } from "@/features/catalog/types";
-import { ShopResults } from "@/features/catalog/components/ShopResults";
+import { ShopResults } from "@/features/catalog/components/shop/ShopResults";
 
 interface ShopCatalogProps {
   products: CatalogProduct[];

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { ShopCatalog } from "@/features/catalog/components/ShopCatalog";
+import { ShopCatalog } from "@/features/catalog/components/shop/ShopCatalog";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
 import {

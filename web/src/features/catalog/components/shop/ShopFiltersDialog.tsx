@@ -9,11 +9,11 @@ import {
   FilterInput,
   FilterSelect,
   type UpdateFilter,
-} from "@/features/catalog/components/shop-filters/FilterControls";
+} from "@/features/catalog/components/shop/filters/FilterControls";
 import {
   CutFlowerFilterFields,
   PlantFilterFields,
-} from "@/features/catalog/components/shop-filters/ProductFilterFields";
+} from "@/features/catalog/components/shop/filters/ProductFilterFields";
 import type {
   CatalogCategory,
   ProductQuery,

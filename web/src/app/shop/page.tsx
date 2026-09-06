@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ShopExperience } from "@/features/catalog/components/ShopExperience";
+import { ShopExperience } from "@/features/catalog/components/shop/ShopExperience";
 import type { ProductQuery } from "@/features/catalog/types";
 
 export const metadata: Metadata = {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ProductDetailExperience } from "@/features/catalog/components/ProductDetailExperience";
+import { ProductDetailExperience } from "@/features/catalog/components/product-detail/ProductDetailExperience";
 import { ShopNavigationScrollNavbar } from "@/components/layout/ShopNavigationScrollNavbar";
 
 export const metadata: Metadata = {

@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CartDrawer } from "@/components/layout/CartDrawer";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { getProductDetail } from "@/features/catalog/api/catalog";
 import type { CatalogProductDetail } from "@/features/catalog/types";
+import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
-import { CatalogFeedback } from "./CatalogFeedback";
+import { CatalogFeedback } from "../CatalogFeedback";
 import { ProductDetailLoading } from "./ProductDetailLoading";
 import { ProductDetailView } from "./ProductDetailView";
 
@@ -23,13 +24,14 @@ export function ProductDetailExperience({
 }: ProductDetailExperienceProps) {
   const router = useRouter();
   const cart = useCart();
+  const { favorites, toggleFavorite } = useFavorites();
+
   const [product, setProduct] = useState<CatalogProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -38,11 +40,11 @@ export function ProductDetailExperience({
       if (!isCurrent) {
         return;
       }
+
       setIsLoading(true);
       setError(null);
       setIsNotFound(false);
       setProduct(null);
-      setIsFavorite(false);
     });
 
     getProductDetail(slug, retryKey > 0)
@@ -60,6 +62,7 @@ export function ProductDetailExperience({
           setIsNotFound(true);
           return;
         }
+
         setError(getApiErrorMessage(requestError));
       })
       .finally(() => {
@@ -77,8 +80,11 @@ export function ProductDetailExperience({
     if (!product) {
       return;
     }
+
     const previousTitle = document.title;
+
     document.title = `${product.name} | فلوریسا`;
+
     return () => {
       document.title = previousTitle;
     };
@@ -89,6 +95,7 @@ export function ProductDetailExperience({
       router.back();
       return;
     }
+
     router.push("/");
   }, [router]);
 
@@ -100,20 +107,20 @@ export function ProductDetailExperience({
     return (
       <main
         dir="rtl"
-        className="min-h-dvh bg-black text-white selection:bg-[#c7a23c]/30"
+        className="min-h-dvh bg-background-primary text-text-primary selection:bg-action-primary/30 selection:text-text-inverse"
       >
-        <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-[#111211] px-4 py-5 shadow-2xl shadow-black sm:px-6 md:px-8 md:py-7">
+        <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-secondary px-4 py-5 shadow-large sm:px-6 md:px-8 md:py-7">
           <div className="mx-auto w-full max-w-xl">
             <button
               type="button"
               onClick={goBack}
-              className="mb-8 grid h-11 w-11 place-items-center rounded-full border border-white/[0.08] bg-[#191b19] text-[#ddd9d1] transition hover:border-[#c7a23c]/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
+              className="mb-8 grid size-11 place-items-center rounded-full border border-border-subtle bg-surface-muted text-text-secondary transition-colors hover:border-action-primary/30 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
               aria-label="بازگشت"
             >
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="size-5" aria-hidden="true" />
             </button>
 
-            <div className="rounded-[24px] border border-white/[0.06] bg-[#171917] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+            <div className="rounded-[24px] border border-border-subtle bg-surface-muted p-4 shadow-large sm:p-6">
               <CatalogFeedback
                 kind={isNotFound ? "empty" : "error"}
                 message={
@@ -134,6 +141,8 @@ export function ProductDetailExperience({
     );
   }
 
+  const isFavorite = favorites.some((item) => item.id === product.id);
+
   return (
     <>
       <ProductDetailView
@@ -143,12 +152,13 @@ export function ProductDetailExperience({
         isFavorite={isFavorite}
         onBack={goBack}
         onNavigateToCart={() => router.push("/cart")}
-        onToggleFavorite={() => setIsFavorite((current) => !current)}
+        onToggleFavorite={() => toggleFavorite(product)}
         onAddToCart={(selectedProduct, quantity) => {
           cart.addItem(selectedProduct, quantity);
           setIsCartOpen(true);
         }}
       />
+
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );

@@ -43,3 +43,18 @@ class TypedProductAdminTests(TestCase):
 
         self.assertEqual(plant.product_type, Product.ProductType.PLANT)
         self.assertEqual(flower.product_type, Product.ProductType.CUT_FLOWER)
+
+    def test_typed_admin_supports_featured_status_and_manual_order(self):
+        for admin_class, model in (
+            (PlantAdmin, Plant),
+            (CutFlowerAdmin, CutFlower),
+        ):
+            with self.subTest(admin_class=admin_class.__name__):
+                product_admin = admin_class(model, admin.site)
+                self.assertIn("is_featured", product_admin.list_display)
+                self.assertIn("featured_order", product_admin.list_display)
+                self.assertIn("is_featured", product_admin.list_filter)
+                self.assertEqual(
+                    product_admin.list_editable,
+                    ("is_featured", "featured_order"),
+                )

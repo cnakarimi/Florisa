@@ -14,16 +14,20 @@ import { ProductsSection } from "./ProductsSection";
 
 export function HomeView({
   categories,
-  latestProducts,
+  featuredProducts,
+  newestProducts,
   isCategoriesLoading,
-  isProductsLoading,
+  isFeaturedProductsLoading,
+  isNewestProductsLoading,
   categoriesError,
-  productsError,
+  featuredProductsError,
+  newestProductsError,
   homeSlides,
   homeSlidesStatus,
   cartCount,
   onRetryCategories,
-  onRetryProducts,
+  onRetryFeaturedProducts,
+  onRetryNewestProducts,
   onAddToCart,
   onSelectProduct,
   onSearch,
@@ -63,22 +67,32 @@ export function HomeView({
             />
 
             <ProductsSection
-              latestProducts={latestProducts}
-              isProductsLoading={isProductsLoading}
-              productsError={productsError}
-              onRetryProducts={onRetryProducts}
+              id="featured-products"
+              title="محصولات منتخب"
+              products={featuredProducts}
+              isLoading={isFeaturedProductsLoading}
+              error={featuredProductsError}
+              onRetry={onRetryFeaturedProducts}
               onAddToCart={onAddToCart}
               onSelectProduct={onSelectProduct}
             />
 
-            <section
-              className="mx-auto w-full max-w-[1600px] py-10 lg:px-8 lg:pb-20 lg:pt-4
-  "
-            >
+            <MagazineSection />
+
+            <ProductsSection
+              id="newest-products"
+              title="جدیدترین محصولات"
+              products={newestProducts}
+              isLoading={isNewestProductsLoading}
+              error={newestProductsError}
+              onRetry={onRetryNewestProducts}
+              onAddToCart={onAddToCart}
+              onSelectProduct={onSelectProduct}
+            />
+
+            <section className="mx-auto w-full max-w-[1600px] py-10 lg:px-8 lg:pb-20 lg:pt-4">
               <FeaturesGrid />
             </section>
-
-            <MagazineSection />
           </div>
         </main>
 

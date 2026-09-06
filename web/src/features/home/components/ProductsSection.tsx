@@ -12,10 +12,12 @@ import {
 } from "./ProductsSlider";
 
 interface ProductsSectionProps {
-  latestProducts: CatalogProduct[];
-  isProductsLoading: boolean;
-  productsError: string | null;
-  onRetryProducts: () => void;
+  id: string;
+  title: string;
+  products: CatalogProduct[];
+  isLoading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
 }
@@ -26,10 +28,12 @@ const INITIAL_NAVIGATION_STATE: ProductsSliderNavigationState = {
 };
 
 export function ProductsSection({
-  latestProducts,
-  isProductsLoading,
-  productsError,
-  onRetryProducts,
+  id,
+  title,
+  products,
+  isLoading,
+  error,
+  onRetry,
   onAddToCart,
   onSelectProduct,
 }: ProductsSectionProps) {
@@ -56,20 +60,22 @@ export function ProductsSection({
   );
 
   const shouldShowNavigation =
-    !isProductsLoading && !productsError && latestProducts.length > 1;
+    !isLoading && !error && products.length > 1;
+
+  const titleId = `${id}-title`;
+  const sliderId = `${id}-slider`;
 
   return (
     <section
       className="mx-auto w-full max-w-[1600px] pb-8 pt-7 sm:pt-9 lg:px-8 lg:pb-16 lg:pt-8"
-      aria-labelledby="home-products-title"
+      aria-labelledby={titleId}
     >
       <div className="mb-5 flex items-center justify-between sm:mb-6 lg:mb-8">
         <h2
-          id="home-products-title"
+          id={titleId}
           className="text-mobile-heading-lg text-text-primary lg:text-desktop-heading-h2"
         >
-          <span className="lg:hidden">جدیدترین محصولات</span>
-          <span className="hidden lg:inline">محصولات منتخب</span>
+          {title}
         </h2>
 
         {shouldShowNavigation ? (
@@ -80,6 +86,7 @@ export function ProductsSection({
           >
             <SliderControlButton
               label="نمایش محصولات بعدی"
+              controls={sliderId}
               disabled={!navigation.canShowNext}
               onClick={() => sliderRef.current?.showNext()}
             >
@@ -87,6 +94,7 @@ export function ProductsSection({
             </SliderControlButton>
             <SliderControlButton
               label="نمایش محصولات قبلی"
+              controls={sliderId}
               disabled={!navigation.canShowPrevious}
               onClick={() => sliderRef.current?.showPrevious()}
             >
@@ -98,10 +106,11 @@ export function ProductsSection({
 
       <ProductsSlider
         ref={sliderRef}
-        latestProducts={latestProducts}
-        isProductsLoading={isProductsLoading}
-        productsError={productsError}
-        onRetryProducts={onRetryProducts}
+        id={sliderId}
+        products={products}
+        isLoading={isLoading}
+        error={error}
+        onRetry={onRetry}
         onAddToCart={onAddToCart}
         onSelectProduct={onSelectProduct}
         onNavigationStateChange={handleNavigationStateChange}
@@ -112,11 +121,13 @@ export function ProductsSection({
 
 function SliderControlButton({
   label,
+  controls,
   disabled,
   onClick,
   children,
 }: {
   label: string;
+  controls: string;
   disabled: boolean;
   onClick: () => void;
   children: ReactNode;
@@ -125,7 +136,7 @@ function SliderControlButton({
     <button
       type="button"
       aria-label={label}
-      aria-controls="home-products-slider"
+      aria-controls={controls}
       disabled={disabled}
       onClick={onClick}
       className="

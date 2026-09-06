@@ -84,7 +84,11 @@ export function useCatalog(options: ProductQuery): CatalogState {
       }
     });
     getProducts(
-      { ...requestQuery, page: 1, page_size: PAGE_SIZE },
+      {
+        ...requestQuery,
+        page: 1,
+        page_size: requestQuery.page_size ?? PAGE_SIZE,
+      },
       productsRetry > 0,
     )
       .then((result) => {
@@ -107,7 +111,11 @@ export function useCatalog(options: ProductQuery): CatalogState {
     if (nextPage === null || isLoadingMore) return;
     setIsLoadingMore(true);
     setProductsError(null);
-    getProducts({ ...requestQuery, page: nextPage, page_size: PAGE_SIZE })
+    getProducts({
+      ...requestQuery,
+      page: nextPage,
+      page_size: requestQuery.page_size ?? PAGE_SIZE,
+    })
       .then((result) => {
         setProducts((current) => {
           const ids = new Set(current.map((product) => product.id));

@@ -130,7 +130,23 @@ export interface PaginatedCatalogProducts {
   results: CatalogProduct[];
 }
 
-export type ProductOrdering = "newest" | "price" | "-price" | "name" | "-name";
+export const PRODUCT_ORDERINGS = [
+  "newest",
+  "price",
+  "-price",
+  "name",
+  "-name",
+  "featured",
+] as const;
+
+export type ProductOrdering = (typeof PRODUCT_ORDERINGS)[number];
+
+export function isProductOrdering(value: unknown): value is ProductOrdering {
+  return (
+    typeof value === "string" &&
+    (PRODUCT_ORDERINGS as readonly string[]).includes(value)
+  );
+}
 
 export interface ProductQuery {
   category?: string | null;
@@ -140,6 +156,8 @@ export interface ProductQuery {
   max_price?: number;
   in_stock?: boolean;
   sale_unit?: SaleUnit;
+  is_featured?: boolean;
+  /** @deprecated Use is_featured for the public API contract. */
   featured?: boolean;
   ordering?: ProductOrdering;
   plant_size?: PlantSize;

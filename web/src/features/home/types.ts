@@ -3,13 +3,16 @@ import type { HomeSlide, HomeSlidesStatus } from "@/features/home/slider/types";
 
 export interface HomeExperiencePresentationProps {
   categories: CatalogCategory[];
-  latestProducts: CatalogProduct[];
+  featuredProducts: CatalogProduct[];
+  newestProducts: CatalogProduct[];
 
   isCategoriesLoading: boolean;
-  isProductsLoading: boolean;
+  isFeaturedProductsLoading: boolean;
+  isNewestProductsLoading: boolean;
 
   categoriesError: string | null;
-  productsError: string | null;
+  featuredProductsError: string | null;
+  newestProductsError: string | null;
 
   homeSlides: HomeSlide[];
   homeSlidesStatus: HomeSlidesStatus;
@@ -17,7 +20,8 @@ export interface HomeExperiencePresentationProps {
   cartCount: number;
 
   onRetryCategories: () => void;
-  onRetryProducts: () => void;
+  onRetryFeaturedProducts: () => void;
+  onRetryNewestProducts: () => void;
 
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;

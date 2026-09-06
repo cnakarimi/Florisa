@@ -1,5 +1,5 @@
 from django.db.models import Q, QuerySet
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
@@ -14,6 +14,17 @@ from products.serializers import (
 )
 
 
+PRODUCT_ORDERING_FIELDS = {
+    "newest": ("-created_at",),
+    "price": ("price",),
+    "-price": ("-price",),
+    "name": ("name",),
+    "-name": ("-name",),
+    "featured": ("featured_order", "id"),
+}
+PRODUCT_ORDERING_CHOICES = tuple(PRODUCT_ORDERING_FIELDS)
+
+
 class ProductFilterSerializer(serializers.Serializer):
     search = serializers.CharField(required=False, allow_blank=False, max_length=200)
     product_type = serializers.ChoiceField(required=False, choices=Product.ProductType.choices)
@@ -22,10 +33,12 @@ class ProductFilterSerializer(serializers.Serializer):
     max_price = serializers.IntegerField(required=False, min_value=0)
     in_stock = serializers.BooleanField(required=False)
     sale_unit = serializers.ChoiceField(required=False, choices=Product.SaleUnit.choices)
+    is_featured = serializers.BooleanField(required=False)
+    # Kept as a backwards-compatible alias for existing catalog clients.
     featured = serializers.BooleanField(required=False)
     ordering = serializers.ChoiceField(
         required=False,
-        choices=("price", "-price", "newest", "name", "-name"),
+        choices=PRODUCT_ORDERING_CHOICES,
     )
 
     plant_size = serializers.ChoiceField(required=False, choices=PlantDetails.PlantSize.choices)
@@ -80,19 +93,13 @@ class HomeSlideListView(ListAPIView):
     queryset = HomeSlide.objects.filter(is_active=True).order_by("sort_order", "id")
 
 
-FILTER_PARAMETERS = [
-    OpenApiParameter(name=field_name, type=str, required=False)
-    for field_name in ProductFilterSerializer().fields
-]
-
-
 class ProductListView(ListAPIView):
     authentication_classes = []
     permission_classes = [AllowAny]
     serializer_class = ProductListSerializer
     pagination_class = ProductPagination
 
-    @extend_schema(parameters=FILTER_PARAMETERS)
+    @extend_schema(parameters=[ProductFilterSerializer])
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -114,6 +121,7 @@ class ProductListView(ListAPIView):
             "min_price": "price__gte",
             "max_price": "price__lte",
             "sale_unit": "sale_unit",
+            "is_featured": "is_featured",
             "featured": "is_featured",
             "plant_size": "plant_details__plant_size",
             "min_height": "plant_details__approximate_height_cm__gte",
@@ -163,14 +171,8 @@ class ProductListView(ListAPIView):
                 | Q(cut_flower_details__color__icontains=search)
             )
 
-        ordering_fields = {
-            "price": "price",
-            "-price": "-price",
-            "newest": "-created_at",
-            "name": "name",
-            "-name": "-name",
-        }
-        return queryset.order_by(ordering_fields.get(values.get("ordering"), "-created_at"))
+        ordering = values.get("ordering", "newest")
+        return queryset.order_by(*PRODUCT_ORDERING_FIELDS[ordering])
 
 
 class ProductDetailView(RetrieveAPIView):

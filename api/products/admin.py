@@ -154,6 +154,7 @@ class TypedProductAdmin(admin.ModelAdmin):
                     "minimum_order_quantity",
                     "is_active",
                     "is_featured",
+                    "featured_order",
                 )
             },
         ),
@@ -184,8 +185,10 @@ class PlantAdmin(TypedProductAdmin):
         "sale_unit",
         "is_active",
         "is_featured",
+        "featured_order",
         "created_at",
     )
+    list_editable = ("is_featured", "featured_order")
     list_filter = ("category", "sale_unit", "is_active", "is_featured")
     inlines = (PlantDetailsInline, ProductImageInline)
 
@@ -208,8 +211,10 @@ class CutFlowerAdmin(TypedProductAdmin):
         "unit_size",
         "is_active",
         "is_featured",
+        "featured_order",
         "created_at",
     )
+    list_editable = ("is_featured", "featured_order")
     list_filter = ("category", "sale_unit", "is_active", "is_featured")
     inlines = (CutFlowerDetailsInline, ProductImageInline)
 
@@ -232,9 +237,17 @@ class ProductAdmin(admin.ModelAdmin):
         "stock_quantity",
         "sale_unit",
         "is_active",
+        "is_featured",
+        "featured_order",
         "created_at",
     )
-    list_filter = ("product_type", "category", "sale_unit", "is_active")
+    list_filter = (
+        "product_type",
+        "category",
+        "sale_unit",
+        "is_active",
+        "is_featured",
+    )
     search_fields = ("name", "slug")
     ordering = ("-created_at",)
 

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 
 import { ShopExperience } from "@/features/catalog/components/shop/ShopExperience";
-import type { ProductQuery } from "@/features/catalog/types";
+import {
+  isProductOrdering,
+  type ProductQuery,
+} from "@/features/catalog/types";
 
 export const metadata: Metadata = {
   title: "فروشگاه | فلوریسا",
@@ -36,14 +39,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   if (category) initialQuery.category = category;
   if (productType === "plant" || productType === "cut_flower")
     initialQuery.product_type = productType;
-  if (
-    ordering === "newest" ||
-    ordering === "price" ||
-    ordering === "-price" ||
-    ordering === "name" ||
-    ordering === "-name"
-  )
-    initialQuery.ordering = ordering;
+  if (isProductOrdering(ordering)) initialQuery.ordering = ordering;
   if (
     saleUnit === "item" ||
     saleUnit === "pot" ||

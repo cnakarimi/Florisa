@@ -93,6 +93,7 @@ class Product(models.Model):
     cover_image = models.CharField("تصویر اصلی", max_length=255, blank=True, null=True)
     is_active = models.BooleanField("فعال", default=True)
     is_featured = models.BooleanField("ویژه", default=False)
+    featured_order = models.PositiveIntegerField("ترتیب نمایش ویژه", default=0)
     created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
     updated_at = models.DateTimeField("زمان به‌روزرسانی", auto_now=True)
 
@@ -100,6 +101,12 @@ class Product(models.Model):
         ordering = ("-created_at",)
         verbose_name = "محصول"
         verbose_name_plural = "محصولات"
+        indexes = (
+            models.Index(
+                fields=("is_featured", "featured_order", "id"),
+                name="product_featured_order_idx",
+            ),
+        )
         constraints = (
             models.CheckConstraint(condition=Q(price__gte=0), name="product_price_nonnegative"),
             models.CheckConstraint(

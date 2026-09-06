@@ -2,18 +2,16 @@
 
 import { useRouter } from "next/navigation";
 
-import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
+import type { CatalogProduct } from "@/features/catalog/types";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 
 import { useHomeSlides } from "../slider/useHomeSlides";
+import {
+  HOME_FEATURED_PRODUCTS_QUERY,
+  HOME_NEWEST_PRODUCTS_QUERY,
+} from "../queries";
 import { HomeView } from "./HomeView";
-
-const HOME_PRODUCTS_LIMIT = 8;
-
-const HOME_CATALOG_QUERY: ProductQuery = {
-  ordering: "newest",
-};
 
 export function HomeExperience() {
   const router = useRouter();
@@ -21,18 +19,15 @@ export function HomeExperience() {
   const cart = useCart();
   const { slides: homeSlides, status: homeSlidesStatus } = useHomeSlides();
 
+  const featuredCatalog = useCatalog(HOME_FEATURED_PRODUCTS_QUERY);
+  const newestCatalog = useCatalog(HOME_NEWEST_PRODUCTS_QUERY);
+
   const {
     categories,
-    products,
     isCategoriesLoading,
-    isProductsLoading,
     categoriesError,
-    productsError,
     retryCategories,
-    retryProducts,
-  } = useCatalog(HOME_CATALOG_QUERY);
-
-  const latestProducts = products.slice(0, HOME_PRODUCTS_LIMIT);
+  } = newestCatalog;
 
   const handleSearch = (query: string) => {
     const normalizedQuery = query.trim();
@@ -51,16 +46,20 @@ export function HomeExperience() {
   return (
     <HomeView
       categories={categories}
-      latestProducts={latestProducts}
+      featuredProducts={featuredCatalog.products}
+      newestProducts={newestCatalog.products}
       isCategoriesLoading={isCategoriesLoading}
-      isProductsLoading={isProductsLoading}
+      isFeaturedProductsLoading={featuredCatalog.isProductsLoading}
+      isNewestProductsLoading={newestCatalog.isProductsLoading}
       categoriesError={categoriesError}
-      productsError={productsError}
+      featuredProductsError={featuredCatalog.productsError}
+      newestProductsError={newestCatalog.productsError}
       homeSlides={homeSlides}
       homeSlidesStatus={homeSlidesStatus}
       cartCount={cart.isHydrated ? cart.totalQuantity : 0}
       onRetryCategories={retryCategories}
-      onRetryProducts={retryProducts}
+      onRetryFeaturedProducts={featuredCatalog.retryProducts}
+      onRetryNewestProducts={newestCatalog.retryProducts}
       onAddToCart={cart.addItem}
       onSelectProduct={handleProductSelect}
       onSearch={handleSearch}

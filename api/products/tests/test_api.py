@@ -1,6 +1,8 @@
 import json
+from datetime import timedelta
 
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -139,6 +141,106 @@ class CatalogAPITests(APITestCase):
 
         self.assertEqual([item["slug"] for item in self.results(response)], [cheap.slug])
 
+    def test_is_featured_filter_excludes_non_featured_and_hidden_products(self):
+        first = self.make_plant(is_featured=True, featured_order=20)
+        second = self.make_cut_flower(is_featured=True, featured_order=10)
+        self.make_plant(is_featured=False, featured_order=0)
+        self.make_plant(is_featured=True, featured_order=5, is_active=False)
+        self.make_cut_flower(
+            is_featured=True,
+            featured_order=1,
+            category=self.inactive_category,
+        )
+
+        response = self.client.get(
+            reverse("products:product-list"),
+            {"is_featured": "true", "ordering": "featured"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [item["id"] for item in self.results(response)],
+            [second.id, first.id],
+        )
+
+    def test_featured_order_uses_id_as_a_deterministic_tiebreaker(self):
+        first = self.make_plant(is_featured=True, featured_order=7)
+        second = self.make_cut_flower(is_featured=True, featured_order=7)
+
+        response = self.client.get(
+            reverse("products:product-list"),
+            {"is_featured": "true", "ordering": "featured"},
+        )
+
+        self.assertEqual(
+            [item["id"] for item in self.results(response)],
+            [first.id, second.id],
+        )
+
+    def test_featured_filter_combines_with_existing_filters(self):
+        matching = self.make_plant(
+            is_featured=True,
+            details={"plant_size": PlantDetails.PlantSize.MEDIUM},
+        )
+        self.make_plant(
+            is_featured=False,
+            details={"plant_size": PlantDetails.PlantSize.MEDIUM},
+        )
+        self.make_cut_flower(is_featured=True)
+
+        response = self.client.get(
+            reverse("products:product-list"),
+            {
+                "is_featured": "true",
+                "product_type": "plant",
+                "plant_size": "medium",
+            },
+        )
+
+        self.assertEqual(
+            [item["id"] for item in self.results(response)],
+            [matching.id],
+        )
+
+    def test_legacy_featured_filter_remains_supported(self):
+        featured = self.make_plant(is_featured=True)
+        self.make_plant(is_featured=False)
+
+        response = self.client.get(
+            reverse("products:product-list"),
+            {"featured": "true"},
+        )
+
+        self.assertEqual(
+            [item["id"] for item in self.results(response)],
+            [featured.id],
+        )
+
+    def test_existing_ordering_values_remain_unchanged(self):
+        first = self.make_plant(name="Alpha", price=300)
+        second = self.make_cut_flower(name="Beta", price=100)
+        now = timezone.now()
+        Product.objects.filter(pk=first.pk).update(created_at=now - timedelta(days=1))
+        Product.objects.filter(pk=second.pk).update(created_at=now)
+
+        expected_ids = {
+            "newest": [second.id, first.id],
+            "price": [second.id, first.id],
+            "-price": [first.id, second.id],
+            "name": [first.id, second.id],
+            "-name": [second.id, first.id],
+        }
+        for ordering, expected in expected_ids.items():
+            with self.subTest(ordering=ordering):
+                response = self.client.get(
+                    reverse("products:product-list"),
+                    {"ordering": ordering},
+                )
+                self.assertEqual(
+                    [item["id"] for item in self.results(response)],
+                    expected,
+                )
+
     def test_plant_filters_can_be_combined(self):
         matching = self.make_plant()
         self.make_plant(
@@ -233,3 +335,18 @@ class CatalogAPITests(APITestCase):
         parameters = {parameter["name"] for parameter in path["parameters"]}
         self.assertTrue({"product_type", "min_price", "plant_size", "flower_type"}.issubset(parameters))
         self.assertIn("ProductDetails", schema["components"]["schemas"])
+
+        ordering_parameter = next(
+            parameter
+            for parameter in path["parameters"]
+            if parameter["name"] == "ordering"
+        )
+        ordering_schema = ordering_parameter["schema"]
+        if "$ref" in ordering_schema:
+            ordering_schema = schema["components"]["schemas"][
+                ordering_schema["$ref"].rsplit("/", 1)[-1]
+            ]
+        self.assertEqual(
+            set(ordering_schema["enum"]),
+            {"newest", "price", "-price", "name", "-name", "featured"},
+        )

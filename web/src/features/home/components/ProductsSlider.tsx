@@ -13,10 +13,11 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import type { CatalogProduct } from "@/features/catalog/types";
 
 interface ProductsSliderProps {
-  latestProducts: CatalogProduct[];
-  isProductsLoading: boolean;
-  productsError: string | null;
-  onRetryProducts: () => void;
+  id: string;
+  products: CatalogProduct[];
+  isLoading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
   onNavigationStateChange?: (state: ProductsSliderNavigationState) => void;
@@ -39,10 +40,11 @@ export const ProductsSlider = forwardRef<
   ProductsSliderProps
 >(function ProductsSlider(
   {
-    latestProducts,
-    isProductsLoading,
-    productsError,
-    onRetryProducts,
+    id,
+    products,
+    isLoading,
+    error,
+    onRetry,
     onAddToCart,
     onSelectProduct,
     onNavigationStateChange,
@@ -132,7 +134,7 @@ export const ProductsSlider = forwardRef<
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
     };
-  }, [latestProducts.length, updateSliderState]);
+  }, [products.length, updateSliderState]);
 
   const scrollToProduct = useCallback(
     (indexChange: -1 | 1) => {
@@ -167,21 +169,21 @@ export const ProductsSlider = forwardRef<
     [scrollToProduct],
   );
 
-  if (isProductsLoading) {
+  if (isLoading) {
     return <CatalogFeedback kind="loading" />;
   }
 
-  if (productsError && latestProducts.length === 0) {
+  if (error && products.length === 0) {
     return (
       <CatalogFeedback
         kind="error"
-        message={productsError}
-        onRetry={onRetryProducts}
+        message={error}
+        onRetry={onRetry}
       />
     );
   }
 
-  if (latestProducts.length === 0) {
+  if (products.length === 0) {
     return (
       <CatalogFeedback
         kind="empty"
@@ -192,7 +194,7 @@ export const ProductsSlider = forwardRef<
 
   return (
     <div
-      id="home-products-slider"
+      id={id}
       ref={sliderRef}
       dir="rtl"
       role="region"
@@ -232,7 +234,7 @@ export const ProductsSlider = forwardRef<
         [&::-webkit-scrollbar]:hidden
       "
     >
-      {latestProducts.map((product) => (
+      {products.map((product) => (
         <div
           key={product.id}
           data-product-slide

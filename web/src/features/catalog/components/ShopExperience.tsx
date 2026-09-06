@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useCart } from "@/features/cart/hooks/CartProvider";
-import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
+import { useCart } from "@/features/cart/hooks/CartProvider";
 import { ShopCatalog } from "@/features/catalog/components/ShopCatalog";
-
-import { useCatalog } from "../hooks/useCatalog";
-import type { CatalogProduct, ProductQuery } from "../types";
+import { useCatalog } from "@/features/catalog/hooks/useCatalog";
+import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
+import {
+  getCatalogFilters,
+  serializeShopQuery,
+} from "@/features/catalog/utils/query";
+import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 interface ShopExperienceProps {
   initialQuery?: ProductQuery;
@@ -17,7 +20,6 @@ interface ShopExperienceProps {
 
 export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   const router = useRouter();
-
   const cart = useCart();
   const { toggleFavorite } = useFavorites();
 
@@ -30,17 +32,15 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   const searchQuery = catalogQuery.search ?? "";
   const ordering = catalogQuery.ordering ?? "newest";
 
-  const catalogFilters = { ...catalogQuery };
-
-  delete catalogFilters.category;
-  delete catalogFilters.search;
-  delete catalogFilters.ordering;
-  delete catalogFilters.page;
-  delete catalogFilters.page_size;
+  const catalogFilters = useMemo(
+    () => getCatalogFilters(catalogQuery),
+    [catalogQuery],
+  );
 
   const {
     categories,
     products,
+    totalProducts,
     hasNextPage,
     isProductsLoading,
     isLoadingMore,
@@ -50,16 +50,7 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   } = useCatalog(catalogQuery);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-
-    for (const [key, value] of Object.entries(catalogQuery)) {
-      if (value === undefined || value === null || value === "") continue;
-      if (key === "ordering" && value === "newest") continue;
-
-      params.set(key, String(value));
-    }
-
-    const query = params.toString();
+    const query = serializeShopQuery(catalogQuery);
 
     router.replace(`/shop${query ? `?${query}` : ""}`, {
       scroll: false,
@@ -76,15 +67,34 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   const setSearchQuery = (search: string) => {
     setCatalogQuery((current) => ({
       ...current,
-      search,
+      search: search || undefined,
+    }));
+  };
+
+  const setOrdering = (nextOrdering: ProductQuery["ordering"]) => {
+    setCatalogQuery((current) => ({
+      ...current,
+      ordering: nextOrdering ?? "newest",
+    }));
+  };
+
+  const setFilters = (filters: ProductQuery) => {
+    setCatalogQuery((current) => ({
+      search: current.search,
+      category: current.category,
+      ordering: current.ordering,
+      ...filters,
     }));
   };
 
   const handleNavbarSearch = (query: string) => {
     const normalizedQuery = query.trim();
 
-    setSearchQuery(normalizedQuery);
-    setSelectedCategory(null);
+    setCatalogQuery((current) => ({
+      ...current,
+      search: normalizedQuery || undefined,
+      category: undefined,
+    }));
   };
 
   const openProduct = (product: CatalogProduct) => {
@@ -108,6 +118,7 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
 
           <ShopCatalog
             products={products}
+            totalProducts={totalProducts}
             categories={categories}
             onToggleFavorite={toggleFavorite}
             onAddToCart={cart.addItem}
@@ -117,21 +128,9 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
             ordering={ordering}
-            onOrderingChange={(nextOrdering) =>
-              setCatalogQuery((current) => ({
-                ...current,
-                ordering: nextOrdering,
-              }))
-            }
+            onOrderingChange={setOrdering}
             filters={catalogFilters}
-            onFiltersChange={(filters) =>
-              setCatalogQuery((current) => ({
-                search: current.search,
-                category: current.category,
-                ordering: current.ordering,
-                ...filters,
-              }))
-            }
+            onFiltersChange={setFilters}
             isLoading={isProductsLoading}
             error={productsError}
             onRetry={retryProducts}

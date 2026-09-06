@@ -1,8 +1,18 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { getCategories, getProducts } from "@/features/catalog/api/catalog";
-import type { CatalogCategory, CatalogProduct, ProductQuery } from "@/features/catalog/types";
+import type {
+  CatalogCategory,
+  CatalogProduct,
+  ProductQuery,
+} from "@/features/catalog/types";
 import { getApiErrorMessage } from "@/lib/api/client";
 
 const PAGE_SIZE = 8;
@@ -25,10 +35,11 @@ interface CatalogState {
 export function useCatalog(options: ProductQuery): CatalogState {
   const deferredSearch = useDeferredValue(options.search?.trim() ?? "");
   const requestQuery = useMemo(
-    () => ({ ...options, search: deferredSearch || undefined }),
-    // All query values are primitives and the serialized form gives the effect a stable key.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(options), deferredSearch],
+    () => ({
+      ...options,
+      search: deferredSearch || undefined,
+    }),
+    [options, deferredSearch],
   );
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
@@ -52,7 +63,10 @@ export function useCatalog(options: ProductQuery): CatalogState {
     });
     getCategories(categoriesRetry > 0)
       .then((result) => current && setCategories(result))
-      .catch((error: unknown) => current && setCategoriesError(getApiErrorMessage(error)))
+      .catch(
+        (error: unknown) =>
+          current && setCategoriesError(getApiErrorMessage(error)),
+      )
       .finally(() => current && setIsCategoriesLoading(false));
     return () => {
       current = false;
@@ -69,14 +83,20 @@ export function useCatalog(options: ProductQuery): CatalogState {
         setNextPage(null);
       }
     });
-    getProducts({ ...requestQuery, page: 1, page_size: PAGE_SIZE }, productsRetry > 0)
+    getProducts(
+      { ...requestQuery, page: 1, page_size: PAGE_SIZE },
+      productsRetry > 0,
+    )
       .then((result) => {
         if (!current) return;
         setProducts(result.results);
         setTotalProducts(result.count);
         setNextPage(result.next ? 2 : null);
       })
-      .catch((error: unknown) => current && setProductsError(getApiErrorMessage(error)))
+      .catch(
+        (error: unknown) =>
+          current && setProductsError(getApiErrorMessage(error)),
+      )
       .finally(() => current && setIsProductsLoading(false));
     return () => {
       current = false;
@@ -91,7 +111,10 @@ export function useCatalog(options: ProductQuery): CatalogState {
       .then((result) => {
         setProducts((current) => {
           const ids = new Set(current.map((product) => product.id));
-          return [...current, ...result.results.filter((product) => !ids.has(product.id))];
+          return [
+            ...current,
+            ...result.results.filter((product) => !ids.has(product.id)),
+          ];
         });
         setTotalProducts(result.count);
         setNextPage(result.next ? nextPage + 1 : null);

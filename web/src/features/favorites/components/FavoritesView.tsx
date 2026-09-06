@@ -1,4 +1,5 @@
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
+
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
@@ -19,94 +20,106 @@ export function FavoritesView({
 }: FavoritesViewProps) {
   return (
     <div className="mx-auto max-w-4xl py-6">
-      <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-3">
-        <h2 className="flex items-center gap-2 text-xl font-bold text-white">
-          <Heart className="h-5 w-5 fill-rose-500 text-rose-500" />
+      <div className="mb-6 flex items-center justify-between border-b border-border-subtle pb-3">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-text-primary">
+          <Heart
+            className="size-5 fill-rose-500 text-rose-500"
+            aria-hidden="true"
+          />
+
           <span>علاقه‌مندی‌های شما</span>
-          <span className="text-xs font-normal text-zinc-400">
+
+          <span className="text-xs font-normal text-text-secondary">
             ({toPersianDigits(favorites.length)} مورد)
           </span>
         </h2>
       </div>
 
       {favorites.length === 0 ? (
-        <div className="rounded-2xl border border-white/5 bg-[#161722] p-8 py-20 text-center text-zinc-500">
-          <Heart className="mx-auto mb-3 h-12 w-12 text-rose-400 opacity-30" />
-          <h3 className="mb-1 text-base font-bold text-zinc-300">
+        <div className="rounded-2xl border border-border-subtle bg-surface-muted px-8 py-20 text-center">
+          <Heart
+            className="mx-auto mb-3 size-12 text-rose-400 opacity-30"
+            aria-hidden="true"
+          />
+
+          <h3 className="mb-1 text-base font-bold text-text-primary">
             لیست علاقه‌مندی‌ها خالی است
           </h3>
-          <p className="text-xs text-zinc-500">
+
+          <p className="text-xs text-text-secondary">
             با انتخاب قلب هر محصول، آن را برای بعد ذخیره کنید.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {favorites.map((product) => (
-            <article
-              key={product.id}
-              className="group relative flex gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#181a24] p-3"
-            >
-              <button
-                type="button"
-                onClick={() => onSelectProduct(product)}
-                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-black/40"
+          {favorites.map((product) => {
+            const canBuy =
+              product.is_in_stock &&
+              product.stock_quantity >= product.minimum_order_quantity;
+
+            return (
+              <article
+                key={product.id}
+                className="group relative flex gap-3 overflow-hidden rounded-2xl border border-border-subtle bg-surface-muted p-3"
               >
-                <CatalogImage
-                  src={getProductImageUrl(product.cover_image)}
-                  alt={product.name}
-                  sizes="96px"
-                />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectProduct(product)}
+                  className="relative size-24 shrink-0 overflow-hidden rounded-xl bg-background-primary/40"
+                  aria-label={`مشاهده ${product.name}`}
+                >
+                  <CatalogImage
+                    src={getProductImageUrl(product.cover_image)}
+                    alt={product.name}
+                    sizes="96px"
+                  />
+                </button>
 
-              <div className="flex flex-1 flex-col justify-between">
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => onSelectProduct(product)}
-                    className="line-clamp-1 text-right text-sm font-bold text-white hover:text-emerald-400"
-                  >
-                    {product.name}
-                  </button>
-                  <p className="mb-2 text-[11px] text-zinc-400">
-                    {toPersianDigits(product.unit_size)} عدد در هر واحد فروش
-                  </p>
-                  <span className="block text-xs font-extrabold text-amber-400">
-                    {formatToman(product.price)} / {product.sale_unit_display}
-                  </span>
-                </div>
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => onSelectProduct(product)}
+                      className="line-clamp-1 text-right text-sm font-bold text-text-primary transition-colors hover:text-text-brand"
+                    >
+                      {product.name}
+                    </button>
 
-                <div className="flex items-center justify-between border-t border-white/5 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => onAddToCart(product)}
-                    disabled={
-                      !product.is_in_stock ||
-                      product.stock_quantity < product.minimum_order_quantity
-                    }
-                    className="flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-black hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-                  >
-                    <ShoppingBag className="h-3.5 w-3.5" />
-                    <span>
-                      {product.is_in_stock &&
-                      product.stock_quantity >= product.minimum_order_quantity
-                        ? "خرید"
-                        : "ناموجود"}
+                    <p className="mb-2 text-[11px] text-text-secondary">
+                      {toPersianDigits(product.unit_size)} عدد در هر واحد فروش
+                    </p>
+
+                    <span className="block text-xs font-extrabold text-text-brand">
+                      {formatToman(product.price)} / {product.sale_unit_display}
                     </span>
-                  </button>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => onToggleFavorite(product)}
-                    className="rounded-lg p-1.5 text-zinc-500 hover:text-rose-400"
-                    title="حذف از لیست"
-                    aria-label="حذف از لیست"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center justify-between border-t border-border-subtle pt-2">
+                    <button
+                      type="button"
+                      onClick={() => onAddToCart(product)}
+                      disabled={!canBuy}
+                      className="flex items-center gap-1 rounded-lg bg-action-primary px-3 py-1.5 text-[11px] font-bold text-text-inverse transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-secondary"
+                    >
+                      <ShoppingBag className="size-3.5" aria-hidden="true" />
+
+                      <span>{canBuy ? "خرید" : "ناموجود"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onToggleFavorite(product)}
+                      className="rounded-lg p-1.5 text-text-secondary transition-colors hover:text-rose-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
+                      title="حذف از لیست"
+                      aria-label={`حذف ${product.name} از علاقه‌مندی‌ها`}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

@@ -2,16 +2,14 @@
 
 import { useRouter } from "next/navigation";
 
+import { BottomNav } from "@/components/navigation/BottomNav";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CatalogProduct } from "@/features/catalog/types";
-import { BottomNav } from "@/components/layout/BottomNav";
 import { FavoritesView } from "@/features/favorites/components/FavoritesView";
-
-import { useFavorites } from "../hooks/FavoritesProvider";
+import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 export function FavoritesExperience() {
   const router = useRouter();
-
   const cart = useCart();
   const { favorites, toggleFavorite } = useFavorites();
 
@@ -20,8 +18,8 @@ export function FavoritesExperience() {
   };
 
   return (
-    <div className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
-      <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] shadow-2xl shadow-black md:pb-24">
+    <div className="min-h-dvh bg-background-primary text-text-primary selection:bg-action-primary/30 selection:text-text-inverse">
+      <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-background-secondary shadow-large md:pb-24">
         <main className="px-4 sm:px-6 md:px-8">
           <FavoritesView
             favorites={favorites}

@@ -71,7 +71,10 @@ export function HomeView({
               onSelectProduct={onSelectProduct}
             />
 
-            <section className="mx-auto hidden max-w-[1600px] px-8 pb-20 lg:block">
+            <section
+              className="mx-auto w-full max-w-[1600px] py-10 lg:px-8 lg:pb-20 lg:pt-4
+  "
+            >
               <FeaturesGrid />
             </section>
 

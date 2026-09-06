@@ -32,23 +32,87 @@ export function FeaturesGrid() {
     <section
       dir="rtl"
       aria-label="مزیت‌های خرید از فلوریسا"
-      className="grid grid-cols-4 gap-5"
+      className="
+        grid
+        grid-cols-2
+        gap-3
+
+        lg:grid-cols-4
+        lg:gap-5
+      "
     >
       {FEATURES.map(({ id, icon: Icon, title, description }) => (
         <article
           key={id}
-          className="rounded-2xl border border-white/[0.08] bg-[#151817] p-5 text-center shadow-lg shadow-black/15 transition hover:border-[#d4af37]/30"
+          className="
+            flex
+            min-h-[108px]
+            flex-col
+            items-center
+            justify-center
+            rounded-xl
+            border
+            border-border-subtle/30
+            bg-background-tertiary
+            px-3
+            py-4
+            text-center
+
+            transition-[border-color,transform]
+            duration-200
+            ease-out
+
+            lg:min-h-[150px]
+            lg:rounded-2xl
+            lg:px-5
+            lg:py-6
+            lg:hover:-translate-y-0.5
+            lg:hover:border-border-brand/45
+
+            motion-reduce:transform-none
+            motion-reduce:transition-none
+          "
         >
-          <span
+          <Icon
             aria-hidden="true"
-            className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-[#d4af37]/10 text-[#d4af37]"
+            className="
+              mb-2
+              size-5
+              text-action-primary
+
+              lg:mb-3
+              lg:size-6
+            "
+          />
+
+          <h3
+            className="
+              text-sm
+              font-bold
+              leading-6
+              text-text-primary
+
+              lg:text-base
+            "
           >
-            <Icon className="size-5" />
-          </span>
+            {title}
+          </h3>
 
-          <h3 className="text-sm font-black text-white">{title}</h3>
+          <p
+            className="
+              mt-1
+              line-clamp-2
+              text-[11px]
+              leading-5
+              text-text-secondary
 
-          <p className="mt-2 text-xs leading-5 text-zinc-400">{description}</p>
+              lg:mt-2
+              lg:text-xs
+              lg:leading-5
+            "
+          >
+            {description}
+          </p>
         </article>
       ))}
     </section>

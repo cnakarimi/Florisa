@@ -140,11 +140,12 @@ export function MagazineSection() {
               snap-start
               overflow-hidden
               rounded-xl
-           
+              border
+              border-border-subtle/25
               bg-background-secondary
               text-right
 
-              transition-[transform]
+              transition-[transform,border-color]
               duration-300
               ease-out
 
@@ -164,6 +165,7 @@ export function MagazineSection() {
               lg:max-w-none
               lg:rounded-2xl
               lg:hover:-translate-y-1
+              lg:hover:border-border-brand/60
 
               motion-reduce:transform-none
               motion-reduce:transition-none
@@ -193,18 +195,20 @@ export function MagazineSection() {
                 size-8
                 place-items-center
                 rounded-md
-             
+                border
+                border-border-brand/30
                 bg-background-primary/60
                 text-text-brand
                 backdrop-blur-sm
 
-                transition-[background-color]
+                transition-[background-color,border-color]
                 duration-200
 
                 lg:left-4
                 lg:top-4
                 lg:size-10
                 lg:rounded-lg
+                lg:group-hover:border-border-brand/70
                 lg:group-hover:bg-background-primary/80
               "
             >

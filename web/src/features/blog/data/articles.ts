@@ -6,8 +6,7 @@ export const ARTICLES: Article[] = [
     title: "۱۰ گیاه محبوب آپارتمانی",
     excerpt:
       "با گیاهانی آشنا شوید که زیبایی و طراوت را به هر خانه‌ای می‌آورند.",
-    image:
-      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+    image: "/images/blog/popular-houseplants.webp",
     readTime: "۵ دقیقه",
     date: "۵ مرداد ۱۴۰۵",
     author: "مریم رضایی (کارشناس گیاه‌پزشکی)",
@@ -25,8 +24,7 @@ export const ARTICLES: Article[] = [
     id: "a2",
     title: "رازهای آبیاری صحیح گیاهان در تابستان",
     excerpt: "چگونه از پوسیدگی ریشه و خشکی برگ‌ها در فصل گرم جلوگیری کنیم؟",
-    image:
-      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+    image: "/images/blog/summer-watering.webp",
     readTime: "۴ دقیقه",
     date: "۱ مرداد ۱۴۰۵",
     author: "امیرحسین کاظمی",

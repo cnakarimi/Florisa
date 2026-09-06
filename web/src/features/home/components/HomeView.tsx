@@ -24,10 +24,8 @@ export function HomeView({
   cartCount,
   onRetryCategories,
   onRetryProducts,
-  onToggleFavorite,
   onAddToCart,
   onSelectProduct,
-  onShopClick,
   onSearch,
 }: HomeExperiencePresentationProps) {
   const scrollToTop = () => {
@@ -69,10 +67,8 @@ export function HomeView({
               isProductsLoading={isProductsLoading}
               productsError={productsError}
               onRetryProducts={onRetryProducts}
-              onToggleFavorite={onToggleFavorite}
               onAddToCart={onAddToCart}
               onSelectProduct={onSelectProduct}
-              onShopClick={onShopClick}
             />
 
             <section className="mx-auto hidden max-w-[1600px] px-8 pb-20 lg:block">

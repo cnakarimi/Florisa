@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { CatalogProduct, ProductQuery } from "@/features/catalog/types";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 import { useHomeSlides } from "../slider/useHomeSlides";
 import { HomeView } from "./HomeView";
@@ -20,7 +19,6 @@ export function HomeExperience() {
   const router = useRouter();
 
   const cart = useCart();
-  const { toggleFavorite } = useFavorites();
   const { slides: homeSlides, status: homeSlidesStatus } = useHomeSlides();
 
   const {
@@ -50,10 +48,6 @@ export function HomeExperience() {
     router.push(`/products/${encodeURIComponent(product.slug)}`);
   };
 
-  const handleShopClick = () => {
-    router.push("/shop");
-  };
-
   return (
     <HomeView
       categories={categories}
@@ -67,10 +61,8 @@ export function HomeExperience() {
       cartCount={cart.isHydrated ? cart.totalQuantity : 0}
       onRetryCategories={retryCategories}
       onRetryProducts={retryProducts}
-      onToggleFavorite={toggleFavorite}
       onAddToCart={cart.addItem}
       onSelectProduct={handleProductSelect}
-      onShopClick={handleShopClick}
       onSearch={handleSearch}
     />
   );

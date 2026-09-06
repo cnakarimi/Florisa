@@ -16,7 +16,6 @@ interface ShopResultsProps {
   hasNextPage: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
 }
@@ -31,7 +30,6 @@ export function ShopResults({
   hasNextPage,
   isLoadingMore,
   onLoadMore,
-  onToggleFavorite,
   onAddToCart,
   onSelectProduct,
 }: ShopResultsProps) {
@@ -85,7 +83,6 @@ export function ShopResults({
               key={product.id}
               product={product}
               imageSizes="(max-width: 639px) calc(100vw - 44px), (max-width: 767px) calc(100vw - 60px), (max-width: 1023px) calc(100vw - 76px), 458px"
-              onToggleFavorite={onToggleFavorite}
               onAddToCart={onAddToCart}
               onSelectProduct={onSelectProduct}
             />

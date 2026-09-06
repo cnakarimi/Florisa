@@ -12,7 +12,6 @@ import {
   getCatalogFilters,
   serializeShopQuery,
 } from "@/features/catalog/utils/query";
-import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 
 interface ShopExperienceProps {
   initialQuery?: ProductQuery;
@@ -21,7 +20,6 @@ interface ShopExperienceProps {
 export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
   const router = useRouter();
   const cart = useCart();
-  const { toggleFavorite } = useFavorites();
 
   const [catalogQuery, setCatalogQuery] = useState<ProductQuery>({
     ...initialQuery,
@@ -120,7 +118,6 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
             products={products}
             totalProducts={totalProducts}
             categories={categories}
-            onToggleFavorite={toggleFavorite}
             onAddToCart={cart.addItem}
             onSelectProduct={openProduct}
             searchQuery={searchQuery}

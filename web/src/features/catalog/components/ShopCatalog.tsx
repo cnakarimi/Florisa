@@ -22,7 +22,6 @@ interface ShopCatalogProps {
   products: CatalogProduct[];
   totalProducts: number;
   categories: CatalogCategory[];
-  onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
   searchQuery: string;
@@ -63,7 +62,6 @@ export function ShopCatalog({
   products,
   totalProducts,
   categories,
-  onToggleFavorite,
   onAddToCart,
   onSelectProduct,
   searchQuery,
@@ -297,7 +295,6 @@ export function ShopCatalog({
           hasNextPage={hasNextPage}
           isLoadingMore={isLoadingMore}
           onLoadMore={onLoadMore}
-          onToggleFavorite={onToggleFavorite}
           onAddToCart={onAddToCart}
           onSelectProduct={onSelectProduct}
         />

@@ -19,10 +19,8 @@ export interface HomeExperiencePresentationProps {
   onRetryCategories: () => void;
   onRetryProducts: () => void;
 
-  onToggleFavorite: (product: CatalogProduct) => void;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
 
-  onShopClick: () => void;
   onSearch: (query: string) => void;
 }

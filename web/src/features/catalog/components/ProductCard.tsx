@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Heart, PackageX } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
@@ -11,15 +11,17 @@ import { formatTomanAmount, toPersianDigits } from "@/utils/persian";
 interface ProductCardProps {
   product: CatalogProduct;
   imageSizes: string;
-  onToggleFavorite: (product: CatalogProduct) => void;
+  originalPrice?: string | number | null;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
 }
 
+const ADDED_FEEDBACK_DURATION_MS = 1400;
+
 export function ProductCard({
   product,
   imageSizes,
-  onToggleFavorite,
+  originalPrice,
   onAddToCart,
   onSelectProduct,
 }: ProductCardProps) {
@@ -40,8 +42,23 @@ export function ProductCard({
     product.product_type === "plant"
       ? `گلدان ${potMaterial}`.trim()
       : product.unit_size > 1
-        ? `${product.sale_unit_display} ${toPersianDigits(product.unit_size)} عددی`
+        ? `${product.sale_unit_display} ${toPersianDigits(
+            product.unit_size,
+          )} عددی`
         : product.sale_unit_display;
+
+  const numericOriginalPrice =
+    originalPrice === null || originalPrice === undefined
+      ? null
+      : Number(originalPrice);
+
+  const numericCurrentPrice = Number(product.price);
+
+  const hasDiscount =
+    numericOriginalPrice !== null &&
+    Number.isFinite(numericOriginalPrice) &&
+    Number.isFinite(numericCurrentPrice) &&
+    numericOriginalPrice > numericCurrentPrice;
 
   useEffect(() => {
     return () => {
@@ -59,6 +76,7 @@ export function ProductCard({
     }
 
     onAddToCart(product);
+
     setIsAdded(true);
 
     if (animationTimer.current) {
@@ -67,71 +85,154 @@ export function ProductCard({
 
     animationTimer.current = setTimeout(() => {
       setIsAdded(false);
-    }, 1400);
-  };
-
-  const handleToggleFavorite = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onToggleFavorite(product);
+    }, ADDED_FEEDBACK_DURATION_MS);
   };
 
   return (
     <article
       dir="rtl"
-      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] bg-[#181a18] transition duration-300 hover:-translate-y-1"
+      className="
+        group
+        relative
+        flex
+        min-w-0
+        flex-col
+        overflow-hidden
+        rounded-xl
+        
+        bg-background-secondary
+
+        transition-[transform]
+        duration-300
+        ease-out
+
+        lg:hover:-translate-y-1
+
+        motion-reduce:transform-none
+        motion-reduce:transition-none
+      "
     >
-      <div className="relative pb-0">
+      <button
+        type="button"
+        onClick={() => onSelectProduct(product)}
+        aria-label={`مشاهده محصول ${product.name}`}
+        className="
+          relative
+          block
+          aspect-square
+          w-full
+          overflow-hidden
+          bg-background-primary
+          text-right
+
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-inset
+          focus-visible:ring-action-primary
+        "
+      >
+        <CatalogImage
+          src={getProductImageUrl(product.cover_image)}
+          alt={product.name}
+          sizes={imageSizes}
+          quality={80}
+          className="
+            object-cover
+            object-center
+            transition-transform
+            duration-500
+            ease-out
+
+            lg:group-hover:scale-[1.03]
+
+            motion-reduce:transform-none
+            motion-reduce:transition-none
+          "
+        />
+      </button>
+
+      <div
+        className="
+          flex
+          min-h-[140px]
+          flex-1
+          flex-col
+          px-3
+          pb-3
+          pt-3
+
+          sm:px-4
+          sm:pb-4
+          sm:pt-4
+
+          lg:min-h-[138px]
+        "
+      >
         <button
           type="button"
           onClick={() => onSelectProduct(product)}
-          className="relative block aspect-square w-full overflow-hidden rounded-t-[17px] bg-[#0e110f] text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a23c]"
-          aria-label={`مشاهده محصول ${product.name}`}
-        >
-          <CatalogImage
-            src={getProductImageUrl(product.cover_image)}
-            alt={product.name}
-            sizes={imageSizes}
-            quality={75}
-            className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.055]"
-          />
+          className="
+            block
+            w-full
+            text-right
 
-          <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
-        </button>
-
-        <button
-          type="button"
-          onClick={handleToggleFavorite}
-          aria-label={`افزودن ${product.name} به علاقه‌مندی‌ها`}
-          className="absolute left-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-black/35 text-white/85 shadow-lg backdrop-blur-md transition duration-200 hover:bg-black/55 active:scale-90 sm:h-9 sm:w-9"
+            focus-visible:outline-none
+            focus-visible:text-text-brand
+          "
         >
-          <Heart className="h-4 w-4" aria-hidden="true" />
-        </button>
-      </div>
+          <h3
+            className="
+              truncate
+              text-base
+              font-bold
+              leading-6
+              text-text-primary
 
-      <div className="flex flex-1 flex-col gap-y-3 px-3 pb-6 pt-3 sm:px-3.5">
-        <button
-          type="button"
-          onClick={() => onSelectProduct(product)}
-          className="block w-full text-right focus-visible:outline-none"
-        >
-          <h3 className="truncate text-[16px] font-bold leading-6 text-text-primary sm:text-sm">
+              lg:text-lg
+            "
+          >
             {product.name}
           </h3>
         </button>
 
-        <div className="mb-3 flex min-w-0 items-end justify-between gap-2">
-          <div className="flex w-full items-center justify-between">
-            <span className="block text-[12px] font-bold text-border-subtle sm:text-[10px]">
-              {packageLabel}
-            </span>
-          </div>
-        </div>
+        <p
+          className="
+            mt-1
+            truncate
+            text-sm
+            leading-6
+            text-text-secondary
+          "
+        >
+          {packageLabel}
+        </p>
 
-        <div className="flex items-center justify-between">
-          <span className="block whitespace-nowrap text-[15px] font-bold tracking-tight text-text-primary">
-            {formatTomanAmount(product.price)}
-            <span className="mr-1 text-[10px] font-medium">تومان</span>
-          </span>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            <span className="whitespace-nowrap text-sm font-bold text-text-primary sm:text-base">
+              {formatTomanAmount(product.price)}
+
+              <span className="mr-1 text-xs font-medium text-text-secondary">
+                تومان
+              </span>
+            </span>
+
+            {hasDiscount ? (
+              <span
+                className="
+                  whitespace-nowrap
+                  text-xs
+                  text-text-tertiary
+                  line-through
+                  decoration-text-tertiary
+                "
+              >
+                {formatTomanAmount(numericOriginalPrice)}
+
+                <span className="mr-1 text-[10px]">تومان</span>
+              </span>
+            ) : null}
+          </div>
 
           <button
             type="button"
@@ -142,23 +243,49 @@ export function ProductCard({
                 ? `افزودن ${product.name} به سبد خرید`
                 : `${product.name} ناموجود است`
             }
-            className={`mt-auto inline-flex h-10 items-center justify-center gap-1.5 overflow-hidden rounded-[12px] px-4 text-[12px] font-bold transition-all duration-300 active:scale-[0.98] sm:h-11 ${
-              !isAvailable
-                ? "cursor-not-allowed bg-white/[0.04] text-white/30"
-                : isAdded
-                  ? "border-[#e2c86f]/25 bg-[#d3b555] text-[#171811] shadow-[0_8px_20px_rgba(199,162,60,0.16)]"
-                  : "border-[#41604e]/25 bg-text-accent text-background-secondary hover:bg-[#2b4c3a]"
-            }`}
+            className={`
+              inline-flex
+              min-h-9
+              shrink-0
+              items-center
+              justify-center
+              gap-1.5
+              rounded-lg
+              px-3
+              text-xs
+              font-bold
+
+              transition-[background-color,color,transform,opacity]
+              duration-200
+
+              active:scale-[0.98]
+
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-action-primary
+              focus-visible:ring-offset-2
+              focus-visible:ring-offset-background-secondary
+
+              sm:min-h-10
+              sm:px-4
+
+              ${
+                !isAvailable
+                  ? "cursor-not-allowed bg-background-tertiary text-text-disabled"
+                  : isAdded
+                    ? "bg-feedback-success text-background-primary"
+                    : "bg-action-primary text-background-primary hover:opacity-90"
+              }
+            `}
           >
             {!isAvailable ? (
               <>
-                <PackageX className="h-3.5 w-3.5 shrink-0" />
-                <span>ناموجود</span>
+                <span className="text-white text-center">ناموجود</span>
               </>
             ) : isAdded ? (
               <>
-                <Check className="h-4 w-4 shrink-0" />
-                <span>به سبد اضافه شد</span>
+                <Check className="size-4 shrink-0" aria-hidden="true" />
+                <span>اضافه شد</span>
               </>
             ) : (
               <span>افزودن به سبد</span>

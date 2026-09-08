@@ -70,3 +70,10 @@ cookie supplied by Django.
 The development configuration explicitly allows credentialed requests from
 `http://localhost:3000` and `http://127.0.0.1:3000`. Secure cookies remain
 disabled for plain-HTTP local development and should be enabled in production.
+
+## Magazine
+
+The dedicated `magazine` app provides public category, article list, and article
+detail endpoints, with editorial management in Django Admin. See
+[the Magazine API guide](../docs/magazine-api.md) for publishing rules, structured
+content format, related products/articles, pagination, and response examples.

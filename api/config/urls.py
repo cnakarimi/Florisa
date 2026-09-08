@@ -15,6 +15,7 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/", include("products.urls")),
     path("api/", include("orders.urls")),
+    path("api/magazine/", include("magazine.urls")),
 ]
 
 if settings.ENABLE_API_DOCS:

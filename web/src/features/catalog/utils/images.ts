@@ -21,6 +21,13 @@ function getRepositoryImageUrl(
 export function getProductImageUrl(
   filename: string | null | undefined,
 ): string | null {
+  const value = filename?.trim();
+  if (value && /^https?:\/\//i.test(value)) {
+    return value;
+  }
+  if (value?.startsWith("/media/")) {
+    return value;
+  }
   return getRepositoryImageUrl(PRODUCT_IMAGE_BASE_PATH, filename);
 }
 

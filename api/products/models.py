@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Q
 
 from products.validators import validate_repository_image_path
+from media_store.fields import UploadImageField
 
 
 class Category(models.Model):
@@ -91,6 +92,10 @@ class Product(models.Model):
         validators=[MinValueValidator(1)],
     )
     cover_image = models.CharField("تصویر اصلی", max_length=255, blank=True, null=True)
+    cover_upload = UploadImageField(
+        "آپلود تصویر اصلی", upload_to="products/covers/%Y/%m/", blank=True,
+        help_text="JPG / PNG / WebP، حداکثر ۵ مگابایت؛ جایگزین تصویر اصلی می‌شود.",
+    )
     is_active = models.BooleanField("فعال", default=True)
     is_featured = models.BooleanField("ویژه", default=False)
     featured_order = models.PositiveIntegerField("ترتیب نمایش ویژه", default=0)
@@ -366,7 +371,11 @@ class ProductImage(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="images", verbose_name="محصول"
     )
-    image = models.CharField("تصویر", max_length=255)
+    image = models.CharField("مسیر تصویر موجود", max_length=255, blank=True)
+    image_upload = UploadImageField(
+        "آپلود تصویر", upload_to="products/images/%Y/%m/", blank=True,
+        help_text="JPG / PNG / WebP، حداکثر ۵ مگابایت؛ جایگزین مسیر تصویر می‌شود.",
+    )
     alt_text = models.CharField("متن جایگزین", max_length=180, blank=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
     created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
@@ -379,6 +388,11 @@ class ProductImage(models.Model):
     def __str__(self) -> str:
         return f"تصویر {self.product}"
 
+    def clean(self):
+        super().clean()
+        if not self.image and not self.image_upload:
+            raise ValidationError({"image_upload": "تصویر یا مسیر تصویر را وارد کنید."})
+
 
 class HomeSlide(models.Model):
     admin_title = models.CharField(
@@ -387,7 +401,7 @@ class HomeSlide(models.Model):
         help_text="فقط برای شناسایی اسلاید در پنل مدیریت نمایش داده می‌شود.",
     )
     title = models.CharField("عنوان اصلی", max_length=120)
-    mobile_image = models.ImageField(
+    mobile_image = UploadImageField(
         "تصویر موبایل",
         upload_to="home/slides/mobile/%Y/%m/",
         help_text=(
@@ -395,7 +409,7 @@ class HomeSlide(models.Model):
             "سوژه و فضای امن متن را در مرکز نگه دارید."
         ),
     )
-    desktop_image = models.ImageField(
+    desktop_image = UploadImageField(
         "تصویر دسکتاپ",
         upload_to="home/slides/desktop/%Y/%m/",
         help_text=(

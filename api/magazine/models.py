@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from magazine.validators import validate_article_content
+from media_store.fields import UploadImageField
 
 
 class MagazineCategory(models.Model):
@@ -39,7 +40,7 @@ class Article(models.Model):
     title = models.CharField("عنوان", max_length=200)
     slug = models.SlugField("نامک", max_length=220, unique=True)
     excerpt = models.CharField("خلاصه", max_length=300, blank=True)
-    cover_image = models.ImageField(
+    cover_image = UploadImageField(
         "تصویر اصلی",
         upload_to="magazine/covers/%Y/%m/",
         blank=True,

@@ -71,6 +71,13 @@ The development configuration explicitly allows credentialed requests from
 `http://localhost:3000` and `http://127.0.0.1:3000`. Secure cookies remain
 disabled for plain-HTTP local development and should be enabled in production.
 
+## Uploaded media
+
+Local development stores uploads on disk. Production uses the existing PostgreSQL
+database as temporary small-image storage, with no additional paid infrastructure.
+See [media storage](../docs/media-storage.md) for required deployment settings,
+migrations, upload limits, recovery of missing images, and the later S3/R2 switch.
+
 ## Magazine
 
 The dedicated `magazine` app provides public category, article list, and article

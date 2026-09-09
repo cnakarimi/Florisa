@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from magazine.models import Article, MagazineCategory
 from products.models import Product
+from products.serializers import ProductListSerializer
 
 
 class MagazineCategorySummarySerializer(serializers.ModelSerializer):
@@ -35,7 +36,8 @@ class ArticleListSerializer(serializers.ModelSerializer):
 
 class MagazineProductSerializer(serializers.ModelSerializer):
     # Preserve the catalog's filename/path contract for existing product assets.
-    cover_image = serializers.CharField(allow_blank=True, allow_null=True, read_only=True)
+    cover_image = serializers.SerializerMethodField()
+    get_cover_image = ProductListSerializer.get_cover_image
     sale_unit_display = serializers.CharField(source="get_sale_unit_display", read_only=True)
     is_in_stock = serializers.BooleanField(read_only=True)
 

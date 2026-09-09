@@ -61,7 +61,15 @@ class HomeSlideSerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
-    image = serializers.CharField(read_only=True)
+    image = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.CharField())
+    def get_image(self, image: ProductImage):
+        if image.image_upload:
+            url = image.image_upload.url
+            request = self.context.get("request")
+            return request.build_absolute_uri(url) if request else url
+        return image.image
 
     class Meta:
         model = ProductImage
@@ -107,7 +115,15 @@ class CutFlowerDetailsSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySummarySerializer(read_only=True)
-    cover_image = serializers.CharField(allow_blank=True, allow_null=True, read_only=True)
+    cover_image = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.CharField(allow_blank=True, allow_null=True))
+    def get_cover_image(self, product: Product):
+        if product.cover_upload:
+            url = product.cover_upload.url
+            request = self.context.get("request")
+            return request.build_absolute_uri(url) if request else url
+        return product.cover_image
     product_type_display = serializers.CharField(source="get_product_type_display", read_only=True)
     sale_unit_display = serializers.CharField(source="get_sale_unit_display", read_only=True)
     is_in_stock = serializers.BooleanField(read_only=True)

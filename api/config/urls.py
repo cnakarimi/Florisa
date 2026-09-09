@@ -7,10 +7,12 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from config.views import health
+from media_store.views import stored_media
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("media/<path:name>", stored_media, name="stored-media"),
     path("api/health/", health, name="health"),
     path("api/auth/", include("accounts.urls")),
     path("api/", include("products.urls")),
@@ -32,8 +34,8 @@ if settings.ENABLE_API_DOCS:
         ),
     ]
 
-if settings.DEBUG:
-    urlpatterns += static(
+if settings.DEBUG and settings.MEDIA_STORAGE_BACKEND == "filesystem":
+    urlpatterns = static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,
-    )
+    ) + urlpatterns

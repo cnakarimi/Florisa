@@ -29,7 +29,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 0
-    fields = ("image", "alt_text", "sort_order")
+    fields = ("image", "image_upload", "alt_text", "sort_order")
     ordering = ("sort_order", "id")
 
 
@@ -140,6 +140,7 @@ class TypedProductAdmin(admin.ModelAdmin):
                     "short_description",
                     "description",
                     "cover_image",
+                    "cover_upload",
                 )
             },
         ),

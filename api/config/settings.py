@@ -68,10 +68,12 @@ INSTALLED_APPS = [
     "products.apps.ProductsConfig",
     "orders.apps.OrdersConfig",
     "magazine.apps.MagazineConfig",
+    "media_store",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "media_store.uploads.UploadLimitMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -145,8 +147,14 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", str(BASE_DIR / "media")))
+
+FILE_UPLOAD_HANDLERS = [
+    "media_store.uploads.LimitedUploadHandler",
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+]
 
 STORAGES = {
     "default": {
@@ -161,9 +169,15 @@ STORAGES = {
 
 MEDIA_STORAGE_BACKEND = os.getenv(
     "MEDIA_STORAGE_BACKEND",
-    "filesystem",
+    "filesystem" if DEBUG else "database",
 ).strip().lower()
-if MEDIA_STORAGE_BACKEND == "s3":
+if MEDIA_STORAGE_BACKEND == "database":
+    if not DEBUG and DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+        raise ImproperlyConfigured(
+            "Production database media requires persistent PostgreSQL via DATABASE_URL.",
+        )
+    STORAGES["default"] = {"BACKEND": "media_store.storage.DatabaseMediaStorage"}
+elif MEDIA_STORAGE_BACKEND == "s3":
     AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "").strip()
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "").strip()
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "").strip()
@@ -198,7 +212,12 @@ if MEDIA_STORAGE_BACKEND == "s3":
     AWS_S3_FILE_OVERWRITE = False
 elif MEDIA_STORAGE_BACKEND != "filesystem":
     raise ImproperlyConfigured(
-        "MEDIA_STORAGE_BACKEND must be 'filesystem' or 's3'.",
+        "MEDIA_STORAGE_BACKEND must be 'filesystem', 'database', or 's3'.",
+    )
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        "Local filesystem media is development-only. Set MEDIA_STORAGE_BACKEND=database "
+        "with persistent PostgreSQL, or configure external storage.",
     )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

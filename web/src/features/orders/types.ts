@@ -38,6 +38,13 @@ export interface CheckoutItemInput {
   quantity: number;
 }
 
+export interface SubmitOrderInput {
+  address_id: number;
+  items: CheckoutItemInput[];
+  idempotency_key: string;
+  customer_note?: string;
+}
+
 export interface PreviewItem {
   product_id: number;
   product_name: string;
@@ -70,7 +77,10 @@ export type OrderStatus =
   | "delivered"
   | "canceled";
 
-export interface OrderItem extends Omit<PreviewItem, "product_id" | "stock_quantity" | "minimum_order_quantity"> {
+export interface OrderItem extends Omit<
+  PreviewItem,
+  "product_id" | "stock_quantity" | "minimum_order_quantity"
+> {
   id: number;
   product: number | null;
 }

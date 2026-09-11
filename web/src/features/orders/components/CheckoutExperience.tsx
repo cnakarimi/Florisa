@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import {
   ArrowRight,
   Banknote,
@@ -10,17 +11,17 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { formatToman, toPersianDigits } from "@/utils/persian";
 import {
   createAddress,
   listAddresses,
-  mapCartToCheckoutItems,
   previewCart,
   submitOrder,
 } from "@/features/orders/api/orders";
+import { parseOrderItemErrors } from "@/features/orders/api/runtime";
 import { AddressForm } from "@/features/orders/components/AddressForm";
 import type {
   AddressInput,
@@ -33,103 +34,148 @@ import {
   clearCheckoutAttempt,
   getCheckoutAttemptKey,
 } from "@/features/orders/utils/checkoutAttempt";
-import { completeCheckout } from "@/features/orders/utils/request";
+import {
+  completeCheckout,
+  mapCartToCheckoutItems,
+} from "@/features/orders/utils/request";
 import {
   ApiError,
   type ApiFieldErrors,
   getApiErrorMessage,
 } from "@/lib/api/client";
+import { formatToman, toPersianDigits } from "@/utils/persian";
 
-const EMPTY_ADDRESS = emptyAddressInput({ is_default: true });
-
-function record(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-}
+const EMPTY_ADDRESS = emptyAddressInput({
+  is_default: true,
+});
 
 export function CheckoutExperience() {
   const router = useRouter();
   const cart = useCart();
+
   const checkoutItems = useMemo(
     () => mapCartToCheckoutItems(cart.items),
     [cart.items],
   );
+
   const attemptKey = useRef("");
+
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     null,
   );
   const [preview, setPreview] = useState<CartPreview | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
+
   const [showAddressForm, setShowAddressForm] = useState(false);
+
   const [addressInput, setAddressInput] = useState<AddressInput>(EMPTY_ADDRESS);
+
   const [addressFieldErrors, setAddressFieldErrors] = useState<ApiFieldErrors>(
     {},
   );
+
   const [addressFormError, setAddressFormError] = useState("");
+
   const [customerNote, setCustomerNote] = useState("");
   const [error, setError] = useState("");
+
   const [itemErrors, setItemErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
+    if (checkoutItems.length === 0) {
+      return;
+    }
+
     let current = true;
+
+    setIsLoading(true);
+    setError("");
+
     attemptKey.current = getCheckoutAttemptKey(checkoutItems);
+
     Promise.all([listAddresses(), previewCart(checkoutItems)])
       .then(([savedAddresses, result]) => {
-        if (!current) return;
+        if (!current) {
+          return;
+        }
+
         setAddresses(savedAddresses);
+
         setSelectedAddressId(
           savedAddresses.find((address) => address.is_default)?.id ??
             savedAddresses[0]?.id ??
             null,
         );
+
         setShowAddressForm(savedAddresses.length === 0);
+
         setPreview(result);
       })
       .catch((requestError) => {
-        if (current) setError(getApiErrorMessage(requestError));
+        if (!current) {
+          return;
+        }
+
+        setError(getApiErrorMessage(requestError));
       })
       .finally(() => {
-        if (current) setIsLoading(false);
+        if (current) {
+          setIsLoading(false);
+        }
       });
+
     return () => {
       current = false;
     };
   }, [checkoutItems]);
 
   const saveAddress = async (payload: AddressInput) => {
-    if (isSavingAddress) return;
+    if (isSavingAddress) {
+      return;
+    }
+
     setAddressFieldErrors({});
     setAddressFormError("");
     setIsSavingAddress(true);
+
     try {
       const address = await createAddress(payload);
+
       setAddresses((current) => upsertAddress(current, address));
+
       setSelectedAddressId(address.id);
       setShowAddressForm(false);
       setAddressInput(EMPTY_ADDRESS);
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setAddressFieldErrors(requestError.fieldErrors);
+
         setAddressFormError(
-          Object.keys(requestError.fieldErrors).length
+          Object.keys(requestError.fieldErrors).length > 0
             ? ""
             : getApiErrorMessage(requestError),
         );
-      } else setAddressFormError(getApiErrorMessage(requestError));
+      } else {
+        setAddressFormError(getApiErrorMessage(requestError));
+      }
     } finally {
       setIsSavingAddress(false);
     }
   };
 
   const submit = async () => {
-    if (isSubmitting || !selectedAddressId || !preview) return;
+    if (isSubmitting || !selectedAddressId || !preview) {
+      return;
+    }
+
     setError("");
     setItemErrors({});
     setIsSubmitting(true);
+
     try {
       const order = await completeCheckout(
         () =>
@@ -138,33 +184,24 @@ export function CheckoutExperience() {
             items: checkoutItems,
             idempotency_key: attemptKey.current,
             ...(customerNote.trim()
-              ? { customer_note: customerNote.trim() }
+              ? {
+                  customer_note: customerNote.trim(),
+                }
               : {}),
           }),
         cart.clearCart,
       );
+
       clearCheckoutAttempt();
+
       router.replace(
         `/orders/${encodeURIComponent(order.public_number)}/success`,
       );
     } catch (requestError) {
       if (requestError instanceof ApiError) {
-        const raw = record(requestError.rawData);
-        const errors = raw?.item_errors;
-        if (Array.isArray(errors)) {
-          const mapped: Record<number, string> = {};
-          for (const item of errors) {
-            const value = record(item);
-            const productId = Number(value?.product_id);
-            if (
-              Number.isInteger(productId) &&
-              typeof value?.message === "string"
-            )
-              mapped[productId] = value.message;
-          }
-          setItemErrors(mapped);
-        }
+        setItemErrors(parseOrderItemErrors(requestError.rawData));
       }
+
       setError(getApiErrorMessage(requestError, ["address_id", "items"]));
     } finally {
       setIsSubmitting(false);
@@ -199,8 +236,10 @@ export function CheckoutExperience() {
         >
           <ArrowRight className="h-5 w-5" />
         </button>
+
         <div>
           <h1 className="text-lg font-black">تسویه حساب</h1>
+
           <p className="text-xs text-zinc-500">ثبت سفارش با پرداخت در محل</p>
         </div>
       </header>
@@ -221,6 +260,7 @@ export function CheckoutExperience() {
               <MapPin className="h-5 w-5 text-emerald-400" />
               نشانی تحویل
             </h2>
+
             <button
               type="button"
               onClick={() => setShowAddressForm((value) => !value)}
@@ -230,14 +270,20 @@ export function CheckoutExperience() {
               نشانی جدید
             </button>
           </div>
+
           <p className="mb-3 rounded-xl bg-amber-400/10 px-3 py-2 text-[11px] leading-5 text-amber-200">
             ارسال در نسخه فعلی فقط در شهر تهران انجام می‌شود.
           </p>
+
           <div className="space-y-2">
             {addresses.map((address) => (
               <label
                 key={address.id}
-                className={`block cursor-pointer rounded-2xl border p-3 ${selectedAddressId === address.id ? "border-amber-400/50 bg-amber-400/5" : "border-white/10 bg-black/10"}`}
+                className={`block cursor-pointer rounded-2xl border p-3 ${
+                  selectedAddressId === address.id
+                    ? "border-amber-400/50 bg-amber-400/5"
+                    : "border-white/10 bg-black/10"
+                }`}
               >
                 <div className="flex gap-3">
                   <input
@@ -247,10 +293,12 @@ export function CheckoutExperience() {
                     onChange={() => setSelectedAddressId(address.id)}
                     className="accent-amber-400"
                   />
+
                   <div>
                     <p className="text-sm font-bold">
                       {address.title || "نشانی"} · {address.recipient_name}
                     </p>
+
                     <p className="mt-1 text-xs leading-6 text-zinc-400">
                       {address.district ? `${address.district}، ` : ""}
                       {address.address_line}
@@ -261,6 +309,7 @@ export function CheckoutExperience() {
               </label>
             ))}
           </div>
+
           {showAddressForm ? (
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 p-3">
               <AddressForm
@@ -273,8 +322,12 @@ export function CheckoutExperience() {
                 formError={addressFormError}
                 onFieldChange={(field) =>
                   setAddressFieldErrors((current) => {
-                    const next = { ...current };
+                    const next = {
+                      ...current,
+                    };
+
                     delete next[field];
+
                     return next;
                   })
                 }
@@ -286,6 +339,7 @@ export function CheckoutExperience() {
 
         <section className="rounded-3xl border border-white/10 bg-[#171921] p-4">
           <h2 className="mb-4 text-sm font-bold">خلاصه سفارش</h2>
+
           {preview ? (
             <div className="space-y-3">
               {preview.items.map((item) => (
@@ -300,17 +354,21 @@ export function CheckoutExperience() {
                       sizes="64px"
                     />
                   </div>
+
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">
                       {item.product_name}
                     </p>
+
                     <p className="mt-1 text-xs text-zinc-400">
                       {toPersianDigits(item.quantity)} {item.sale_unit_display}{" "}
                       × {formatToman(Number(item.unit_price))}
                     </p>
+
                     <p className="mt-1 text-sm font-black text-amber-400">
                       {formatToman(Number(item.line_total))}
                     </p>
+
                     {itemErrors[item.product_id] ? (
                       <p className="mt-1 text-xs text-rose-300">
                         {itemErrors[item.product_id]}
@@ -319,8 +377,11 @@ export function CheckoutExperience() {
                   </div>
                 </div>
               ))}
+
               <MoneyRow label="جمع کالاها" value={preview.subtotal} />
+
               <MoneyRow label="هزینه ارسال" value={preview.delivery_fee} />
+
               <MoneyRow label="مبلغ نهایی" value={preview.total} strong />
             </div>
           ) : null}
@@ -329,8 +390,10 @@ export function CheckoutExperience() {
         <section className="rounded-3xl border border-emerald-400/20 bg-emerald-400/5 p-4">
           <div className="flex items-center gap-3">
             <Banknote className="h-6 w-6 text-emerald-400" />
+
             <div>
               <h2 className="text-sm font-bold">پرداخت در محل</h2>
+
               <p className="mt-1 text-xs text-zinc-400">
                 مبلغ سفارش هنگام تحویل دریافت می‌شود.
               </p>
@@ -368,8 +431,10 @@ export function CheckoutExperience() {
             )}
             ثبت نهایی سفارش
           </button>
+
           <div>
             <p className="text-[10px] text-zinc-500">مبلغ نهایی</p>
+
             <p className="font-black text-amber-400">
               {preview ? formatToman(Number(preview.total)) : "—"}
             </p>
@@ -391,9 +456,12 @@ function MoneyRow({
 }) {
   return (
     <div
-      className={`flex items-center justify-between text-sm ${strong ? "border-t border-white/10 pt-3 font-black" : "text-zinc-400"}`}
+      className={`flex items-center justify-between text-sm ${
+        strong ? "border-t border-white/10 pt-3 font-black" : "text-zinc-400"
+      }`}
     >
       <span>{label}</span>
+
       <span className={strong ? "text-lg text-amber-400" : "text-zinc-200"}>
         {formatToman(Number(value))}
       </span>

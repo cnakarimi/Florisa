@@ -1,4 +1,9 @@
-import type { CartPreview, Order, PreviewItem, UserAddress } from "@/features/orders/types";
+import type {
+  CartPreview,
+  Order,
+  PreviewItem,
+  UserAddress,
+} from "@/features/orders/types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -61,11 +66,19 @@ export function isCartPreview(value: unknown): value is CartPreview {
 }
 
 export function isOrder(value: unknown): value is Order {
-  const statuses = ["pending", "confirmed", "preparing", "out_for_delivery", "delivered", "canceled"];
+  const statuses = [
+    "pending",
+    "confirmed",
+    "preparing",
+    "out_for_delivery",
+    "delivered",
+    "canceled",
+  ];
   return (
     isRecord(value) &&
     typeof value.public_number === "string" &&
-    typeof value.status === "string" && statuses.includes(value.status) &&
+    typeof value.status === "string" &&
+    statuses.includes(value.status) &&
     typeof value.status_display === "string" &&
     value.payment_method === "cash_on_delivery" &&
     typeof value.payment_method_display === "string" &&
@@ -105,4 +118,30 @@ export function isOrder(value: unknown): value is Order {
         typeof item.cover_image === "string",
     )
   );
+}
+export function parseOrderItemErrors(value: unknown): Record<number, string> {
+  if (!isRecord(value) || !Array.isArray(value.item_errors)) {
+    return {};
+  }
+
+  const errors: Record<number, string> = {};
+
+  for (const item of value.item_errors) {
+    if (!isRecord(item)) {
+      continue;
+    }
+
+    const productId = Number(item.product_id);
+
+    if (
+      Number.isInteger(productId) &&
+      productId > 0 &&
+      typeof item.message === "string" &&
+      item.message.trim()
+    ) {
+      errors[productId] = item.message;
+    }
+  }
+
+  return errors;
 }

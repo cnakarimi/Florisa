@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,14 +14,14 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/hooks/AuthProvider";
+
+import { BottomNav } from "@/components/navigation/BottomNav";
+import { CartPageLoading } from "@/features/cart/components/CartPageLoading";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import type { CartItem } from "@/features/cart/types";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { BottomNav } from "@/components/layout/BottomNav";
 import { formatToman, toPersianDigits } from "@/utils/persian";
-import { CartPageLoading } from "./CartPageLoading";
 
 interface CartPageExperienceProps {
   initialMessage?: string;
@@ -30,24 +31,24 @@ export function CartPageExperience({
   initialMessage = "",
 }: CartPageExperienceProps) {
   const router = useRouter();
-  const auth = useAuth();
   const cart = useCart();
+
+  const { isHydrated, items, refreshCartItems } = cart;
+
   const hasRefreshedRef = useRef(false);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [checkoutError, setCheckoutError] = useState(initialMessage);
 
   useEffect(() => {
-    if (
-      !cart.isHydrated ||
-      cart.items.length === 0 ||
-      hasRefreshedRef.current
-    ) {
+    if (!isHydrated || items.length === 0 || hasRefreshedRef.current) {
       return;
     }
 
     hasRefreshedRef.current = true;
-    cart.refreshCartItems(true).catch(() => undefined);
-  }, [cart]);
+
+    refreshCartItems(true).catch(() => undefined);
+  }, [isHydrated, items.length, refreshCartItems]);
 
   if (!cart.isHydrated) {
     return (
@@ -63,14 +64,21 @@ export function CartPageExperience({
       router.back();
       return;
     }
+
     router.push("/");
   };
 
   const confirmRemove = (item: CartItem) => {
-    if (window.confirm(`«${item.product.name}» از سبد خرید حذف شود؟`)) {
-      cart.removeItem(item.product.id);
-      setCheckoutError("");
+    const shouldRemove = window.confirm(
+      `«${item.product.name}» از سبد خرید حذف شود؟`,
+    );
+
+    if (!shouldRemove) {
+      return;
     }
+
+    cart.removeItem(item.product.id);
+    setCheckoutError("");
   };
 
   const decreaseItem = (item: CartItem) => {
@@ -78,19 +86,25 @@ export function CartPageExperience({
       confirmRemove(item);
       return;
     }
+
     cart.decreaseItem(item.product.id);
     setCheckoutError("");
   };
 
   const clearCart = () => {
     setIsMenuOpen(false);
-    if (window.confirm("همه کالاهای سبد خرید حذف شوند؟")) {
-      cart.clearCart();
-      setCheckoutError("");
+
+    const shouldClear = window.confirm("همه کالاهای سبد خرید حذف شوند؟");
+
+    if (!shouldClear) {
+      return;
     }
+
+    cart.clearCart();
+    setCheckoutError("");
   };
 
-  const continueToCheckout = async () => {
+  const continueToCheckout = () => {
     setCheckoutError("");
 
     if (cart.items.length === 0) {
@@ -98,21 +112,7 @@ export function CartPageExperience({
       return;
     }
 
-    const result = await cart.refreshCartItems(true);
-    if (!result.isValid) {
-      setCheckoutError(
-        result.error ||
-          "برخی کالاهای سبد خرید ناموجود یا دارای تعداد نامعتبر هستند. لطفاً سبد را بررسی کنید.",
-      );
-      return;
-    }
-
-    if (auth.initializationError) {
-      setCheckoutError("وضعیت ورود شما بررسی نشد. لطفاً دوباره تلاش کنید.");
-      return;
-    }
-
-    router.push(auth.isAuthenticated ? "/checkout" : "/auth?next=%2Fcheckout");
+    router.push("/checkout");
   };
 
   return (
@@ -146,6 +146,7 @@ export function CartPageExperience({
             >
               <MoreVertical className="h-5 w-5" />
             </button>
+
             {isMenuOpen ? (
               <div className="absolute left-0 top-11 z-30 w-36 rounded-xl border border-white/10 bg-[#1b1d28] p-1 shadow-xl">
                 <button
@@ -184,13 +185,16 @@ export function CartPageExperience({
           {cart.items.length === 0 ? (
             <section className="space-y-4 rounded-3xl border border-white/10 bg-[#14151e] p-8 py-20 text-center text-zinc-400">
               <ShoppingBag className="mx-auto h-16 w-16 text-amber-400/50" />
+
               <h2 className="text-lg font-bold text-white">
                 سبد خرید شما خالی است
               </h2>
+
               <p className="mx-auto max-w-xs text-xs leading-relaxed text-zinc-400">
                 می‌توانید تازه‌ترین گل‌های فلوریسا را ببینید و بدون نیاز به
                 ورود، به سبد خریدتان اضافه کنید.
               </p>
+
               <button
                 type="button"
                 onClick={() => router.push("/shop")}
@@ -208,11 +212,15 @@ export function CartPageExperience({
                     !item.product.is_in_stock ||
                     item.product.stock_quantity <
                       item.product.minimum_order_quantity;
+
                   const isAtMinimum =
                     item.quantity <= item.product.minimum_order_quantity;
+
                   const isAtMaximum =
                     item.quantity >= item.product.stock_quantity;
+
                   const itemUnits = item.quantity * item.product.unit_size;
+
                   const itemSubtotal = item.quantity * item.product.price;
 
                   return (
@@ -227,7 +235,9 @@ export function CartPageExperience({
                           type="button"
                           onClick={() =>
                             router.push(
-                              `/products/${encodeURIComponent(item.product.slug)}`,
+                              `/products/${encodeURIComponent(
+                                item.product.slug,
+                              )}`,
                             )
                           }
                           className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/5 bg-[#0d0e12]"
@@ -246,6 +256,7 @@ export function CartPageExperience({
                               <h2 className="truncate text-sm font-extrabold leading-tight text-white">
                                 {item.product.name}
                               </h2>
+
                               <p className="mt-1 truncate text-[11px] text-zinc-400">
                                 {item.product.product_identity}
                                 {item.product.color
@@ -253,6 +264,7 @@ export function CartPageExperience({
                                   : ""}
                               </p>
                             </div>
+
                             <button
                               type="button"
                               onClick={() => confirmRemove(item)}
@@ -268,6 +280,7 @@ export function CartPageExperience({
                               <p className="text-[10px] text-zinc-500">
                                 جمع این کالا
                               </p>
+
                               <p className="text-sm font-black text-amber-400">
                                 {formatToman(itemSubtotal)}
                               </p>
@@ -291,9 +304,11 @@ export function CartPageExperience({
                                   "−"
                                 )}
                               </button>
+
                               <span className="w-5 text-center text-xs font-bold text-white">
                                 {toPersianDigits(item.quantity)}
                               </span>
+
                               <button
                                 type="button"
                                 onClick={() =>
@@ -313,12 +328,16 @@ export function CartPageExperience({
                       <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
                         <CartItemFact
                           label={`تعداد ${item.product.sale_unit_display}`}
-                          value={`${toPersianDigits(item.quantity)} ${item.product.sale_unit_display}`}
+                          value={`${toPersianDigits(item.quantity)} ${
+                            item.product.sale_unit_display
+                          }`}
                         />
+
                         <CartItemFact
                           label="تعداد در هر واحد"
                           value={toPersianDigits(item.product.unit_size)}
                         />
+
                         <CartItemFact
                           label="مجموع تعداد"
                           value={toPersianDigits(itemUnits)}
@@ -348,21 +367,26 @@ export function CartPageExperience({
               <section className="rounded-2xl border border-white/10 bg-[#141620] p-4 shadow-lg">
                 <div className="mb-4 flex items-center gap-2">
                   <Flower2 className="h-5 w-5 text-emerald-400" />
+
                   <h2 className="text-sm font-bold text-white">
                     خلاصه سبد خرید
                   </h2>
                 </div>
+
                 <div className="space-y-3 text-xs">
                   <SummaryRow
                     label="تعداد کالا"
                     value={`${toPersianDigits(cart.totalItems)} مورد`}
                   />
+
                   <SummaryRow
                     label="مجموع واحدهای فروش"
                     value={toPersianDigits(cart.totalQuantity)}
                   />
+
                   <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-bold">
                     <span className="text-zinc-300">مبلغ کل محصولات</span>
+
                     <span className="text-base font-black text-amber-400">
                       {formatToman(cart.subtotal)}
                     </span>
@@ -391,7 +415,7 @@ export function CartPageExperience({
               <button
                 type="button"
                 onClick={continueToCheckout}
-                disabled={cart.isRefreshing || auth.isInitializing}
+                disabled={cart.isRefreshing}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-3 text-xs font-black text-black shadow-xl shadow-amber-500/10 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:text-sm"
               >
                 {cart.isRefreshing ? (
@@ -406,11 +430,13 @@ export function CartPageExperience({
                 <span className="block text-[11px] font-medium text-zinc-400">
                   جمع نهایی
                 </span>
+
                 <span className="mt-0.5 block text-base font-black tracking-tight text-amber-400">
                   {formatToman(cart.subtotal)}
                 </span>
               </div>
             </div>
+
             <button
               type="button"
               onClick={() => router.push("/shop")}
@@ -422,6 +448,7 @@ export function CartPageExperience({
           </div>
         ) : null}
       </main>
+
       <BottomNav />
     </>
   );
@@ -431,6 +458,7 @@ function CartItemFact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-white/[0.03] px-2 py-2">
       <p className="text-[9px] text-zinc-500">{label}</p>
+
       <p className="mt-1 text-[11px] font-bold text-zinc-200">{value}</p>
     </div>
   );
@@ -440,6 +468,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between text-zinc-300">
       <span className="text-zinc-400">{label}</span>
+
       <span className="font-bold">{value}</span>
     </div>
   );

@@ -1,31 +1,24 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import {
-  ArrowRight,
-  Flower2,
-  Layers3,
-  Leaf,
-  Package,
-  ShoppingBag,
-  Tag,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 
 import type {
   CatalogProduct,
   CatalogProductDetail,
 } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
-import { getSaleUnitLabel } from "@/features/catalog/utils/product";
 import { toPersianDigits } from "@/utils/persian";
 
 import { ProductGallery, type GalleryImage } from "./ProductGallery";
 import { ProductImageZoomDialog } from "./ProductImageZoomDialog";
 import { ProductInfo } from "./ProductInfo";
+import { ProductOptions } from "./ProductOptions";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import {
   CutFlowerSpecifications,
-  PlantSpecifications,
+  PlantDetails,
+  ProductCareTips,
 } from "./ProductSpecifications";
 
 interface ProductDetailViewProps {
@@ -92,12 +85,16 @@ export function ProductDetailView({
 
   const minimumQuantity = Math.max(1, product.minimum_order_quantity);
 
-  const maximumQuantity = Math.max(minimumQuantity, product.stock_quantity);
-
   const canBuy =
     product.is_in_stock && product.stock_quantity >= minimumQuantity;
 
-  const [quantity, setQuantity] = useState(minimumQuantity);
+  /*
+   * Quantity selector is not part of the new mobile design yet.
+   * Until its final behavior is defined, cart additions use
+   * the product's minimum order quantity.
+   */
+  const quantity = minimumQuantity;
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
@@ -105,20 +102,27 @@ export function ProductDetailView({
 
   const totalPrice = product.price * quantity;
 
-  const isLowStock =
-    canBuy && product.stock_quantity <= Math.max(minimumQuantity + 3, 5);
+  /*
+   * Keep the actual details object instead of storing a boolean.
+   * Once these values are checked in JSX, TypeScript can correctly
+   * narrow away null.
+   */
+  const plantDetails =
+    product.product_type === "plant" ? product.details : null;
 
-  const isPlantProduct = product.product_type === "plant";
-
-  const salesUnit = getSaleUnitLabel(product);
+  const cutFlowerDetails =
+    product.product_type === "cut_flower" ? product.details : null;
 
   return (
     <main
       dir="rtl"
       className="min-h-dvh bg-background-primary text-right text-text-primary selection:bg-action-primary/30 selection:text-text-inverse"
     >
-      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-secondary pb-8 shadow-large md:pb-32">
-        <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-border-subtle bg-background-secondary/90 px-4 backdrop-blur-xl sm:px-6 md:px-8">
+      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-secondary pb-24 shadow-large md:pb-32">
+        {/* Temporary desktop header.
+            Mobile navigation lives inside ProductGallery.
+            Desktop will be redesigned after its Figma is complete. */}
+        <header className="sticky top-0 z-30 hidden h-[68px] items-center justify-between border-b border-border-subtle bg-background-secondary/90 px-8 backdrop-blur-xl md:flex">
           <button
             type="button"
             onClick={onBack}
@@ -154,114 +158,76 @@ export function ProductDetailView({
           </button>
         </header>
 
-        <div className="grid gap-7 px-4 pt-4 sm:px-6 sm:pt-6 md:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] md:items-start md:gap-8 md:px-8 md:pt-8">
+        {/* Gallery + primary product information */}
+        <div className="grid gap-0 md:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] md:items-start md:gap-8 md:px-8 md:pt-8">
           <ProductGallery
             gallery={gallery}
             selectedImage={selectedImage}
-            isFeatured={product.is_featured}
-            isLowStock={isLowStock}
+            cartCount={cartCount}
+            onBack={onBack}
+            onNavigateToCart={onNavigateToCart}
             onSelectImage={setSelectedImage}
             onOpenZoom={() => setIsZoomOpen(true)}
           />
 
-          <section className="min-w-0 md:pt-2">
+          <section className="min-w-0 px-4 py-4 sm:px-6 md:px-0 md:py-0 md:pt-2">
             <ProductInfo
               product={product}
               isFavorite={isFavorite}
               onToggleFavorite={onToggleFavorite}
             />
 
+            {plantDetails ? <ProductOptions /> : null}
+
             <ProductPurchasePanel
               product={product}
               quantity={quantity}
-              minimumQuantity={minimumQuantity}
-              maximumQuantity={maximumQuantity}
               canBuy={canBuy}
-              salesUnit={salesUnit}
               totalPrice={totalPrice}
-              onQuantityChange={setQuantity}
               onAddToCart={onAddToCart}
             />
           </section>
         </div>
 
-        <section
-          className="mt-8 px-4 sm:px-6 md:px-8"
-          aria-labelledby="product-specifications"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2
-              id="product-specifications"
-              className="text-sm font-extrabold text-text-primary sm:text-base"
-            >
-              مشخصات محصول
-            </h2>
+        {/* Quick plant-care information */}
+        {plantDetails ? <ProductCareTips details={plantDetails} /> : null}
 
-            <span className="mr-4 h-px flex-1 bg-border-subtle" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <DetailStat
-              icon={
-                isPlantProduct ? (
-                  <Leaf className="size-[18px]" aria-hidden="true" />
-                ) : (
-                  <Flower2 className="size-[18px]" aria-hidden="true" />
-                )
-              }
-              label="تعداد در هر واحد فروش"
-              value={`${toPersianDigits(product.unit_size)} ${
-                product.product_type === "cut_flower" ? "شاخه" : "عدد"
-              }`}
-            />
-
-            <DetailStat
-              icon={<Package className="size-[18px]" aria-hidden="true" />}
-              label="موجودی"
-              value={
-                canBuy
-                  ? `${toPersianDigits(product.stock_quantity)} ${salesUnit}`
-                  : "ناموجود"
-              }
-            />
-
-            <DetailStat
-              icon={<Layers3 className="size-[18px]" aria-hidden="true" />}
-              label="حداقل سفارش"
-              value={`${toPersianDigits(minimumQuantity)} ${salesUnit}`}
-            />
-
-            <DetailStat
-              icon={<Tag className="size-[18px]" aria-hidden="true" />}
-              label="دسته‌بندی"
-              value={product.category.name}
-            />
-          </div>
-        </section>
-
-        {product.product_type === "plant" && product.details ? (
-          <PlantSpecifications details={product.details} />
-        ) : product.product_type === "cut_flower" && product.details ? (
-          <CutFlowerSpecifications details={product.details} />
-        ) : null}
-
+        {/* Product description */}
         {product.description || product.short_description ? (
           <section
-            className="mx-4 mt-9 border-t border-border-subtle pt-7 sm:mx-6 md:mx-8 md:mt-11"
+            className="px-4 py-4 sm:px-6 md:px-8"
             aria-labelledby="product-description"
           >
             <h2
               id="product-description"
-              className="text-base font-extrabold text-text-primary sm:text-lg"
+              className="text-base font-bold leading-6 text-text-primary"
             >
-              درباره این محصول
+              توضیحات
             </h2>
 
-            <p className="mt-3 max-w-3xl whitespace-pre-line text-[13px] leading-7 text-text-secondary sm:text-sm sm:leading-8">
+            <p className="mt-3 max-w-3xl whitespace-pre-line text-[13px] leading-6 text-text-secondary sm:text-sm sm:leading-7">
               {product.description || product.short_description}
             </p>
           </section>
         ) : null}
+
+        {/* Detailed plant specifications */}
+        {plantDetails ? <PlantDetails details={plantDetails} /> : null}
+
+        {/* Cut-flower specifications remain on the existing design
+            until the cut-flower detail page is redesigned. */}
+        {cutFlowerDetails ? (
+          <CutFlowerSpecifications details={cutFlowerDetails} />
+        ) : null}
+
+        {/*
+          Remaining mobile sections:
+
+          <ReviewsSection />
+          <RelatedProducts />
+          <RelatedArticles />
+          <Footer />
+        */}
       </div>
 
       <ProductImageZoomDialog
@@ -270,34 +236,5 @@ export function ProductDetailView({
         onClose={() => setIsZoomOpen(false)}
       />
     </main>
-  );
-}
-
-function DetailStat({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface-muted p-3.5 sm:p-4">
-      <span className="mb-3 grid size-8 place-items-center rounded-xl bg-background-primary text-text-brand">
-        {icon}
-      </span>
-
-      <p className="text-[9px] text-text-secondary sm:text-[10px]">{label}</p>
-
-      <p className="mt-1.5 text-[11px] font-bold leading-5 text-text-primary sm:text-xs">
-        {value}
-      </p>
-
-      <span
-        aria-hidden="true"
-        className="absolute bottom-0 right-4 h-px w-8 bg-action-primary/50"
-      />
-    </div>
   );
 }

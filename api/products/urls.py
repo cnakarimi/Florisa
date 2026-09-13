@@ -5,6 +5,7 @@ from products.views import (
     HomeSlideListView,
     ProductDetailView,
     ProductListView,
+    ProductReviewListView,
 )
 
 
@@ -18,5 +19,10 @@ urlpatterns = [
         "products/<slug:slug>/",
         ProductDetailView.as_view(),
         name="product-detail",
+    ),
+    path(
+        "products/<slug:slug>/reviews/",
+        ProductReviewListView.as_view(),
+        name="product-review-list",
     ),
 ]

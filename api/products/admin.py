@@ -13,6 +13,7 @@ from products.models import (
     PlantDetails,
     Product,
     ProductImage,
+    ProductReview,
 )
 
 
@@ -266,6 +267,24 @@ class ProductImageAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "alt_text")
     autocomplete_fields = ("product",)
     ordering = ("product", "sort_order", "id")
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        "product",
+        "reviewer_name",
+        "rating",
+        "is_approved",
+        "created_at",
+    )
+    list_editable = ("is_approved",)
+    list_filter = ("rating", "is_approved")
+    search_fields = ("product__name", "product__slug", "reviewer_name", "comment")
+    autocomplete_fields = ("product", "user")
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-created_at", "-id")
+    list_select_related = ("product",)
 
 
 class HomeSlideAdminForm(forms.ModelForm):

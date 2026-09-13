@@ -1,7 +1,8 @@
 from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, RegexValidator
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Q
 
@@ -392,6 +393,60 @@ class ProductImage(models.Model):
         super().clean()
         if not self.image and not self.image_upload:
             raise ValidationError({"image_upload": "تصویر یا مسیر تصویر را وارد کنید."})
+
+
+class ProductReview(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="محصول",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="product_reviews",
+        blank=True,
+        null=True,
+        verbose_name="کاربر",
+    )
+    reviewer_name = models.CharField("نام نویسنده", max_length=150)
+    rating = models.PositiveSmallIntegerField(
+        "امتیاز",
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    comment = models.TextField("متن دیدگاه")
+    is_approved = models.BooleanField("تأیید شده", default=False)
+    demo_key = models.CharField(
+        "شناسه دیدگاه نمایشی",
+        max_length=80,
+        unique=True,
+        blank=True,
+        null=True,
+        editable=False,
+    )
+    created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
+    updated_at = models.DateTimeField("زمان به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+        verbose_name = "دیدگاه محصول"
+        verbose_name_plural = "دیدگاه‌های محصولات"
+        indexes = (
+            models.Index(
+                fields=("product", "is_approved", "-created_at", "-id"),
+                name="prod_review_visible_idx",
+            ),
+        )
+        constraints = (
+            models.CheckConstraint(
+                condition=Q(rating__gte=1, rating__lte=5),
+                name="product_review_rating_1_5",
+            ),
+        )
+
+    def __str__(self) -> str:
+        return f"{self.reviewer_name} — {self.product} ({self.rating}/5)"
 
 
 class HomeSlide(models.Model):

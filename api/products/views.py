@@ -1,16 +1,18 @@
-from django.db.models import Q, QuerySet
+from django.db.models import Avg, Count, Q, QuerySet
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 
-from products.models import Category, CutFlowerDetails, HomeSlide, PlantDetails, Product
+from products.models import Category, CutFlowerDetails, HomeSlide, PlantDetails, Product, ProductReview
 from products.pagination import ProductPagination
 from products.serializers import (
     CategorySerializer,
     HomeSlideSerializer,
     ProductDetailSerializer,
     ProductListSerializer,
+    ProductReviewSerializer,
 )
 
 
@@ -184,4 +186,28 @@ class ProductDetailView(RetrieveAPIView):
         Product.objects.filter(is_active=True, category__is_active=True)
         .select_related("category", "plant_details", "cut_flower_details")
         .prefetch_related("images")
+        .annotate(
+            rating_average=Avg(
+                "reviews__rating",
+                filter=Q(reviews__is_approved=True),
+            ),
+            review_count=Count(
+                "reviews",
+                filter=Q(reviews__is_approved=True),
+            ),
+        )
     )
+
+
+class ProductReviewListView(ListAPIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    serializer_class = ProductReviewSerializer
+    pagination_class = ProductPagination
+
+    def get_queryset(self) -> QuerySet[ProductReview]:
+        product = get_object_or_404(
+            Product.objects.filter(is_active=True, category__is_active=True).only("pk"),
+            slug=self.kwargs["slug"],
+        )
+        return ProductReview.objects.filter(product=product, is_approved=True)

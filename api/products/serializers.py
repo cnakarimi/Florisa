@@ -8,6 +8,7 @@ from products.models import (
     PlantDetails,
     Product,
     ProductImage,
+    ProductReview,
 )
 
 
@@ -74,6 +75,20 @@ class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ("id", "image", "alt_text", "sort_order")
+        read_only_fields = fields
+
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductReview
+        fields = (
+            "id",
+            "reviewer_name",
+            "rating",
+            "comment",
+            "created_at",
+            "updated_at",
+        )
         read_only_fields = fields
 
 
@@ -192,11 +207,15 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(ProductListSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    rating_average = serializers.FloatField(read_only=True, allow_null=True)
+    review_count = serializers.IntegerField(read_only=True)
 
     class Meta(ProductListSerializer.Meta):
         fields = ProductListSerializer.Meta.fields + (
             "description",
             "images",
+            "rating_average",
+            "review_count",
             "created_at",
             "updated_at",
         )

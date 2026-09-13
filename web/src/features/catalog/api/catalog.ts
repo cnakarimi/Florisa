@@ -1,14 +1,17 @@
+import { ApiError, apiRequest } from "@/lib/api/client";
+
 import type {
   CatalogCategory,
   CatalogProductDetail,
   PaginatedCatalogProducts,
+  PaginatedProductReviews,
   ProductQuery,
 } from "@/features/catalog/types";
-import { ApiError, apiRequest } from "@/lib/api/client";
 
 import {
   isCategory,
   isPaginatedProducts,
+  isPaginatedProductReviews,
   isProductDetail,
 } from "./runtime";
 
@@ -66,5 +69,20 @@ export async function getProductDetail(
   if (!isProductDetail(data)) {
     throw new ApiError("پاسخ جزئیات محصول از سرور معتبر نیست.", 502, {}, data);
   }
+  return data;
+}
+export async function getProductReviews(
+  slug: string,
+  force = false,
+): Promise<PaginatedProductReviews> {
+  const data = await cachedRequest<unknown>(
+    `/api/products/${encodeURIComponent(slug)}/reviews/`,
+    force,
+  );
+
+  if (!isPaginatedProductReviews(data)) {
+    throw new Error("Invalid product reviews response.");
+  }
+
   return data;
 }

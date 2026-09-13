@@ -4,6 +4,10 @@ import type {
   CatalogProductDetail,
   PaginatedCatalogProducts,
 } from "@/features/catalog/types";
+import type {
+  CatalogProductReview,
+  PaginatedProductReviews,
+} from "@/features/catalog/types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -46,10 +50,14 @@ export function isProduct(value: unknown): value is CatalogProduct {
   if (!isRecord(value) || !hasSharedProductFields(value)) return false;
   if (value.details !== null && !isRecord(value.details)) return false;
   if (value.product_type === "plant") {
-    return value.details === null || typeof value.details.plant_type === "string";
+    return (
+      value.details === null || typeof value.details.plant_type === "string"
+    );
   }
   if (value.product_type === "cut_flower") {
-    return value.details === null || typeof value.details.flower_type === "string";
+    return (
+      value.details === null || typeof value.details.flower_type === "string"
+    );
   }
   return false;
 }
@@ -82,5 +90,37 @@ export function isPaginatedProducts(
     (typeof value.previous === "string" || value.previous === null) &&
     Array.isArray(value.results) &&
     value.results.every(isProduct)
+  );
+}
+export function isProductReview(value: unknown): value is CatalogProductReview {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.id === "number" &&
+    typeof value.reviewer_name === "string" &&
+    typeof value.rating === "number" &&
+    value.rating >= 1 &&
+    value.rating <= 5 &&
+    typeof value.comment === "string" &&
+    typeof value.created_at === "string" &&
+    typeof value.updated_at === "string"
+  );
+}
+
+export function isPaginatedProductReviews(
+  value: unknown,
+): value is PaginatedProductReviews {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.count === "number" &&
+    (value.next === null || typeof value.next === "string") &&
+    (value.previous === null || typeof value.previous === "string") &&
+    Array.isArray(value.results) &&
+    value.results.every(isProductReview)
   );
 }

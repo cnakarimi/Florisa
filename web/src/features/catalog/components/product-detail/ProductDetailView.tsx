@@ -6,6 +6,7 @@ import { ArrowRight, ShoppingBag } from "lucide-react";
 import type {
   CatalogProduct,
   CatalogProductDetail,
+  CatalogProductReview,
 } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { toPersianDigits } from "@/utils/persian";
@@ -15,6 +16,7 @@ import { ProductImageZoomDialog } from "./ProductImageZoomDialog";
 import { ProductInfo } from "./ProductInfo";
 import { ProductOptions } from "./ProductOptions";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
+import { ProductReviews } from "./ProductReviews";
 import {
   CutFlowerSpecifications,
   PlantDetails,
@@ -23,8 +25,14 @@ import {
 
 interface ProductDetailViewProps {
   product: CatalogProductDetail;
+
+  reviews: CatalogProductReview[];
+  areReviewsLoading: boolean;
+  reviewsError: string | null;
+
   cartCount: number;
   isFavorite: boolean;
+
   onBack: () => void;
   onNavigateToCart: () => void;
   onToggleFavorite: (product: CatalogProduct) => void;
@@ -33,6 +41,9 @@ interface ProductDetailViewProps {
 
 export function ProductDetailView({
   product,
+  reviews,
+  areReviewsLoading,
+  reviewsError,
   cartCount,
   isFavorite,
   onBack,
@@ -89,9 +100,11 @@ export function ProductDetailView({
     product.is_in_stock && product.stock_quantity >= minimumQuantity;
 
   /*
-   * Quantity selector is not part of the new mobile design yet.
-   * Until its final behavior is defined, cart additions use
-   * the product's minimum order quantity.
+   * Quantity selection is not part of the current
+   * mobile Product Detail design.
+   *
+   * Until that interaction is designed, Add to Cart
+   * uses the product's minimum order quantity.
    */
   const quantity = minimumQuantity;
 
@@ -103,9 +116,8 @@ export function ProductDetailView({
   const totalPrice = product.price * quantity;
 
   /*
-   * Keep the actual details object instead of storing a boolean.
-   * Once these values are checked in JSX, TypeScript can correctly
-   * narrow away null.
+   * Keep the actual detail object so TypeScript
+   * can correctly narrow the product type.
    */
   const plantDetails =
     product.product_type === "plant" ? product.details : null;
@@ -118,7 +130,7 @@ export function ProductDetailView({
       dir="rtl"
       className="min-h-dvh bg-background-primary text-right text-text-primary selection:bg-action-primary/30 selection:text-text-inverse"
     >
-      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-secondary pb-24 shadow-large md:pb-32">
+      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32">
         {/* Temporary desktop header.
             Mobile navigation lives inside ProductGallery.
             Desktop will be redesigned after its Figma is complete. */}
@@ -211,19 +223,25 @@ export function ProductDetailView({
           </section>
         ) : null}
 
-        {/* Detailed plant specifications */}
+        {/* Product-specific details */}
         {plantDetails ? <PlantDetails details={plantDetails} /> : null}
 
-        {/* Cut-flower specifications remain on the existing design
-            until the cut-flower detail page is redesigned. */}
         {cutFlowerDetails ? (
           <CutFlowerSpecifications details={cutFlowerDetails} />
         ) : null}
 
+        {/* Product reviews */}
+        <ProductReviews
+          reviews={reviews}
+          reviewCount={product.review_count}
+          ratingAverage={product.rating_average}
+          isLoading={areReviewsLoading}
+          error={reviewsError}
+        />
+
         {/*
           Remaining mobile sections:
 
-          <ReviewsSection />
           <RelatedProducts />
           <RelatedArticles />
           <Footer />

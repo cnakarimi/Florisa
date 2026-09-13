@@ -1,13 +1,13 @@
-import {
-  Droplets,
-  Flower2,
-  Gauge,
-  Sun,
-  Thermometer,
-  Truck,
-} from "lucide-react";
+import { Flower2, Sun, Truck } from "lucide-react";
 
 import type { ReactNode } from "react";
+
+import {
+  LightIcon,
+  ShovelIcon,
+  TemperatureIcon,
+  WateringIcon,
+} from "@/components/icons";
 
 import type {
   CutFlowerProductDetails,
@@ -47,7 +47,7 @@ export function ProductCareTips({ details }: { details: PlantProductDetails }) {
     items.push({
       label: "آبیاری",
       value: details.watering_requirement_display,
-      icon: <Droplets className="size-5" aria-hidden="true" />,
+      icon: <WateringIcon size={24} />,
     });
   }
 
@@ -55,7 +55,7 @@ export function ProductCareTips({ details }: { details: PlantProductDetails }) {
     items.push({
       label: "نور",
       value: details.light_requirement_display,
-      icon: <Sun className="size-5" aria-hidden="true" />,
+      icon: <LightIcon size={24} />,
     });
   }
 
@@ -63,7 +63,7 @@ export function ProductCareTips({ details }: { details: PlantProductDetails }) {
     items.push({
       label: "دما",
       value: temperature,
-      icon: <Thermometer className="size-5" aria-hidden="true" />,
+      icon: <TemperatureIcon size={24} />,
     });
   }
 
@@ -71,7 +71,7 @@ export function ProductCareTips({ details }: { details: PlantProductDetails }) {
     items.push({
       label: "نگهداری",
       value: details.care_difficulty_display,
-      icon: <Gauge className="size-5" aria-hidden="true" />,
+      icon: <ShovelIcon size={24} />,
     });
   }
 
@@ -81,23 +81,31 @@ export function ProductCareTips({ details }: { details: PlantProductDetails }) {
 
   return (
     <section
-      className="grid grid-cols-4 gap-2 px-4 py-4"
+      className="grid grid-cols-4 gap-3 bg-background-primary px-4 py-4"
       aria-label="راهنمای سریع نگهداری گیاه"
     >
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex min-w-0 flex-col items-center gap-2 rounded-xl bg-surface-muted px-2 py-3 text-center"
+          className="flex h-[116px] min-w-0 flex-col items-center bg-background-secondary px-1 py-3 text-center"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-action-primary/10 text-text-brand">
-            {item.icon}
+          <span className="relative grid size-10 shrink-0 place-items-center">
+            {/* Icon background */}
+            <span
+              className="absolute inset-0 rounded-[12px] bg-text-brand opacity-10"
+              aria-hidden="true"
+            />
+
+            <span className="relative z-10 grid place-items-center text-text-brand">
+              {item.icon}
+            </span>
           </span>
 
-          <p className="text-xs font-bold leading-5 text-text-primary">
+          <p className="mt-2 text-xs font-medium leading-5 text-text-primary">
             {item.label}
           </p>
 
-          <p className="line-clamp-2 text-[10px] leading-4 text-text-secondary">
+          <p className="mt-1 line-clamp-2 text-[10px] font-normal leading-4 text-text-secondary">
             {item.value}
           </p>
         </div>
@@ -119,13 +127,6 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
         }
       : null,
 
-    details.plant_size_display
-      ? {
-          label: "اندازه گیاه",
-          value: details.plant_size_display,
-        }
-      : null,
-
     details.approximate_height_cm !== null
       ? {
           label: "ارتفاع گیاه",
@@ -135,7 +136,7 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
 
     details.pot_included && details.pot_size_cm !== null
       ? {
-          label: "اندازه گلدان",
+          label: "قطر گلدان",
           value: `${toPersianDigits(details.pot_size_cm)} سانتی‌متر`,
         }
       : null,
@@ -147,31 +148,29 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
         }
       : null,
 
-    details.pot_included && details.pot_color
+    details.care_difficulty_display
       ? {
-          label: "رنگ گلدان",
-          value: details.pot_color,
+          label: "سطح نگهداری",
+          value: details.care_difficulty_display,
         }
       : null,
 
-    details.quality_grade_display
+    details.color
       ? {
-          label: "درجه کیفیت",
-          value: details.quality_grade_display,
+          label: "رنگ برگ",
+          value: details.color,
         }
       : null,
+
+    {
+      label: "مناسب برای",
+      value: "داخل خانه",
+    },
 
     details.pet_friendly !== null
       ? {
           label: "حیوانات خانگی",
-          value: details.pet_friendly ? "سازگار" : "سازگار نیست",
-        }
-      : null,
-
-    details.has_drainage !== null && details.pot_included
-      ? {
-          label: "زهکشی گلدان",
-          value: details.has_drainage ? "دارد" : "ندارد",
+          value: details.pet_friendly ? "مناسب" : "احتیاط",
         }
       : null,
   ].filter((item): item is SpecificationItem => item !== null);
@@ -181,7 +180,10 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
   }
 
   return (
-    <section className="px-4 py-4" aria-labelledby="plant-details-title">
+    <section
+      className="bg-background-primary px-4 py-4"
+      aria-labelledby="plant-details-title"
+    >
       <h2
         id="plant-details-title"
         className="text-base font-bold leading-6 text-text-primary"
@@ -189,11 +191,13 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
         جزئیات گیاه
       </h2>
 
-      <dl className="mt-3">
-        {items.map((item) => (
+      <dl className="mt-3 overflow-hidden rounded-xl bg-background-secondary px-3 py-1">
+        {items.map((item, index) => (
           <div
             key={item.label}
-            className="flex min-h-12 items-center justify-between gap-4 border-b border-border-subtle py-3 last:border-b-0"
+            className={`flex min-h-12 items-center justify-between gap-4 ${
+              index < items.length - 1 ? "border-b border-border-subtle/60" : ""
+            }`}
           >
             <dt className="shrink-0 text-[13px] font-normal leading-5 text-text-secondary">
               {item.label}
@@ -209,13 +213,10 @@ export function PlantDetails({ details }: { details: PlantProductDetails }) {
   );
 }
 
-/*
- * Temporary compatibility wrapper.
- *
- * ProductDetailView currently imports PlantSpecifications.
- * In the next step we'll render ProductCareTips and PlantDetails separately
- * so ProductDescription can sit between them, exactly like the Figma design.
- */
+/* -------------------------------------------------------------------------- */
+/*                         Backward compatibility                             */
+/* -------------------------------------------------------------------------- */
+
 export function PlantSpecifications({
   details,
 }: {
@@ -252,6 +253,7 @@ function SpecificationsSection({
     <section className="mx-4 mt-8 rounded-[22px] border border-border-subtle bg-surface-muted p-4 sm:mx-6 sm:p-5 md:mx-8">
       <h2 className="mb-4 flex items-center gap-2 text-sm font-extrabold text-text-primary">
         <span className="text-text-brand">{icon}</span>
+
         {title}
       </h2>
 

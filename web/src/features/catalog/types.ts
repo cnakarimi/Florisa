@@ -39,25 +39,35 @@ export interface ProductCategorySummary {
 export interface PlantProductDetails {
   plant_type: string;
   color: string;
+
   plant_size: PlantSize | "";
   plant_size_display: string;
+
   approximate_height_cm: number | null;
+
   quality_grade: QualityGrade | "";
   quality_grade_display: string;
+
   pet_friendly: boolean | null;
+
   pot_included: boolean;
   pot_material: string;
   pot_color: string;
   pot_size_cm: number | null;
   has_drainage: boolean | null;
+
   light_requirement: LightRequirement | "";
   light_requirement_display: string;
+
   watering_requirement: WateringRequirement | "";
   watering_requirement_display: string;
+
   care_difficulty: CareDifficulty | "";
   care_difficulty_display: string;
+
   ideal_temperature_min: number | null;
   ideal_temperature_max: number | null;
+
   care_notes: string;
   shipping_notes: string;
 }
@@ -66,15 +76,22 @@ export interface CutFlowerProductDetails {
   flower_type: string;
   variety: string;
   color: string;
+
   stem_length_cm: number | null;
+
   flower_grade: QualityGrade | "";
   flower_grade_display: string;
+
   vase_life_days: number | null;
+
   origin: string;
+
   fragrance_level: FragranceLevel | "";
   fragrance_level_display: string;
+
   seasonal_availability: SeasonalAvailability | "";
   seasonal_availability_display: string;
+
   care_notes: string;
   shipping_notes: string;
 }
@@ -83,17 +100,25 @@ interface ProductBase {
   id: number;
   name: string;
   slug: string;
+
   product_type_display: string;
+
   short_description: string;
+
   price: number;
   stock_quantity: number;
+
   sale_unit: SaleUnit;
   sale_unit_display: string;
+
   unit_size: number;
   minimum_order_quantity: number;
+
   cover_image: string | null;
+
   is_featured: boolean;
   is_in_stock: boolean;
+
   category: ProductCategorySummary;
 }
 
@@ -118,7 +143,12 @@ export interface CatalogProductImage {
 
 export type CatalogProductDetail = CatalogProduct & {
   description: string;
+
   images: CatalogProductImage[];
+
+  rating_average: number | null;
+  review_count: number;
+
   created_at: string;
   updated_at: string;
 };
@@ -151,36 +181,72 @@ export function isProductOrdering(value: unknown): value is ProductOrdering {
 export interface ProductQuery {
   category?: string | null;
   search?: string;
+
   product_type?: ProductType;
+
   min_price?: number;
   max_price?: number;
+
   in_stock?: boolean;
+
   sale_unit?: SaleUnit;
+
   is_featured?: boolean;
+
   /** @deprecated Use is_featured for the public API contract. */
   featured?: boolean;
+
   ordering?: ProductOrdering;
+
   plant_size?: PlantSize;
+
   min_height?: number;
   max_height?: number;
+
   quality_grade?: QualityGrade;
+
   pet_friendly?: boolean;
+
   pot_included?: boolean;
   pot_material?: string;
   pot_color?: string;
   has_drainage?: boolean;
+
   light_requirement?: LightRequirement;
   watering_requirement?: WateringRequirement;
   care_difficulty?: CareDifficulty;
+
   flower_type?: string;
   variety?: string;
   color?: string;
+
   min_stem_length?: number;
   max_stem_length?: number;
+
   flower_grade?: QualityGrade;
+
   min_vase_life?: number;
+
   fragrance_level?: FragranceLevel;
+
   seasonal_availability?: SeasonalAvailability;
+
   page?: number;
   page_size?: number;
+}
+
+export interface CatalogProductReview {
+  id: number;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedProductReviews {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: CatalogProductReview[];
 }

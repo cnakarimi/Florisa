@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowRight, Maximize2, ShoppingBag } from "lucide-react";
-
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { toPersianDigits } from "@/utils/persian";
 import { BackIcon } from "@/components/icons/BackIcon";
@@ -67,7 +65,7 @@ export function ProductGallery({
           <CartIcon className="" aria-hidden="true" />
 
           {cartCount > 0 ? (
-            <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-action-primary text-[9px] font-bold leading-none text-text-inverse">
+            <span className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-text-brand text-[9px] font-bold leading-none text-black">
               {toPersianDigits(cartCount)}
             </span>
           ) : null}

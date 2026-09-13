@@ -5,9 +5,15 @@ import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { CartDrawer } from "@/components/layout/CartDrawer";
+import {
+  getProductDetail,
+  getProductReviews,
+} from "@/features/catalog/api/catalog";
+import type {
+  CatalogProductDetail,
+  CatalogProductReview,
+} from "@/features/catalog/types";
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { getProductDetail } from "@/features/catalog/api/catalog";
-import type { CatalogProductDetail } from "@/features/catalog/types";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
@@ -23,16 +29,68 @@ export function ProductDetailExperience({
   slug,
 }: ProductDetailExperienceProps) {
   const router = useRouter();
+
   const cart = useCart();
   const { favorites, toggleFavorite } = useFavorites();
 
   const [product, setProduct] = useState<CatalogProductDetail | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  const [reviews, setReviews] = useState<CatalogProductReview[]>([]);
+  const [areReviewsLoading, setAreReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+
+  /*
+   * Product reviews
+   */
+  useEffect(() => {
+    let isCurrent = true;
+
+    Promise.resolve().then(() => {
+      if (!isCurrent) {
+        return;
+      }
+
+      setAreReviewsLoading(true);
+      setReviewsError(null);
+      setReviews([]);
+    });
+
+    getProductReviews(slug, retryKey > 0)
+      .then((result) => {
+        if (!isCurrent) {
+          return;
+        }
+
+        setReviews(result.results);
+      })
+      .catch((requestError: unknown) => {
+        if (!isCurrent) {
+          return;
+        }
+
+        setReviewsError(getApiErrorMessage(requestError));
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setAreReviewsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [retryKey, slug]);
+
+  /*
+   * Product detail
+   */
   useEffect(() => {
     let isCurrent = true;
 
@@ -49,9 +107,11 @@ export function ProductDetailExperience({
 
     getProductDetail(slug, retryKey > 0)
       .then((result) => {
-        if (isCurrent) {
-          setProduct(result);
+        if (!isCurrent) {
+          return;
         }
+
+        setProduct(result);
       })
       .catch((requestError: unknown) => {
         if (!isCurrent) {
@@ -76,6 +136,9 @@ export function ProductDetailExperience({
     };
   }, [retryKey, slug]);
 
+  /*
+   * Document title
+   */
   useEffect(() => {
     if (!product) {
       return;
@@ -99,10 +162,16 @@ export function ProductDetailExperience({
     router.push("/");
   }, [router]);
 
+  /*
+   * Loading
+   */
   if (isLoading) {
     return <ProductDetailLoading />;
   }
 
+  /*
+   * Error / not found
+   */
   if (isNotFound || error || !product) {
     return (
       <main
@@ -148,11 +217,16 @@ export function ProductDetailExperience({
       <ProductDetailView
         key={product.id}
         product={product}
+        reviews={reviews}
+        areReviewsLoading={areReviewsLoading}
+        reviewsError={reviewsError}
         cartCount={cart.isHydrated ? cart.totalQuantity : 0}
         isFavorite={isFavorite}
         onBack={goBack}
         onNavigateToCart={() => router.push("/cart")}
-        onToggleFavorite={() => toggleFavorite(product)}
+        onToggleFavorite={(selectedProduct) => {
+          toggleFavorite(selectedProduct);
+        }}
         onAddToCart={(selectedProduct, quantity) => {
           cart.addItem(selectedProduct, quantity);
           setIsCartOpen(true);

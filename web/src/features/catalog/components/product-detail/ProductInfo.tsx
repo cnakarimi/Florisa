@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Heart, HeartIcon, Share2, Star } from "lucide-react";
+
+import {
+  HeartOutlineIcon,
+  ShareIcon,
+  StarIcon,
+} from "@/components/icons";
 
 import type {
   CatalogProduct,
   CatalogProductDetail,
 } from "@/features/catalog/types";
+
 import { toPersianDigits } from "@/utils/persian";
-import { ShareIcon } from "@/components/icons/ShareButton";
-import { HeartOutlineIcon } from "@/components/icons/HeartOutlineIcon";
-import { StarIcon } from "@/components/icons/StarIcon";
 
 interface ProductInfoProps {
   product: CatalogProductDetail;
@@ -25,21 +28,20 @@ export function ProductInfo({
 }: ProductInfoProps) {
   const [shareStatus, setShareStatus] = useState("");
 
-  const shareTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shareTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const plantDetails =
-    product.product_type === "plant" ? product.details : null;
+    product.product_type === "plant"
+      ? product.details
+      : null;
 
   const productSubtitle =
     plantDetails?.pot_included && plantDetails.pot_material
       ? `گلدان - ${plantDetails.pot_material}`
       : product.category.name;
 
-  /*
-   * Rating is currently mock UI because the product API
-   * does not expose review aggregation yet.
-   */
-  const rating = 4.2;
+  const rating = product.rating_average;
 
   useEffect(() => {
     return () => {
@@ -71,14 +73,22 @@ export function ProductInfo({
     try {
       if (navigator.share) {
         await navigator.share(shareData);
+
         showShareStatus("اشتراک‌گذاری شد");
+
         return;
       }
 
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(
+        window.location.href,
+      );
+
       showShareStatus("لینک محصول کپی شد");
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
+      if (
+        error instanceof DOMException &&
+        error.name === "AbortError"
+      ) {
         return;
       }
 
@@ -87,7 +97,10 @@ export function ProductInfo({
   };
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="product-name">
+    <section
+      className="flex flex-col gap-3"
+      aria-labelledby="product-name"
+    >
       {/* Top row */}
       <div className="flex items-center justify-between gap-4">
         <h1
@@ -111,15 +124,21 @@ export function ProductInfo({
             type="button"
             onClick={() => onToggleFavorite(product)}
             className={`grid size-8 place-items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary ${
-              isFavorite ? "text-red-500" : "text-red-500 hover:text-red-400"
+              isFavorite
+                ? "text-red-500"
+                : "text-red-500 hover:text-red-400"
             }`}
             aria-label={
-              isFavorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"
+              isFavorite
+                ? "حذف از علاقه‌مندی‌ها"
+                : "افزودن به علاقه‌مندی‌ها"
             }
             aria-pressed={isFavorite}
           >
             <HeartOutlineIcon
-              className={`${isFavorite ? "bg-error-100" : ""}`}
+              className={
+                isFavorite ? "bg-error-100" : undefined
+              }
               aria-hidden="true"
             />
           </button>
@@ -132,20 +151,26 @@ export function ProductInfo({
           {productSubtitle}
         </p>
 
-        <div className="flex shrink-0 items-center gap-1 pl-1.5">
-          <span className="text-xs font-medium leading-5 text-text-primary">
-            {toPersianDigits(rating)}
-          </span>
-          <StarIcon
-            className="size-3.5 fill-current text-text-brand mb-1"
-            aria-hidden="true"
-          />
-        </div>
+        {rating !== null ? (
+          <div className="flex shrink-0 items-center gap-1 pl-1.5">
+            <span className="text-xs font-medium leading-5 text-text-primary">
+              {toPersianDigits(rating.toFixed(1))}
+            </span>
+
+            <StarIcon
+              className="mb-1 size-3.5 fill-current text-text-brand"
+              aria-hidden="true"
+            />
+          </div>
+        ) : null}
       </div>
 
       {shareStatus ? (
-        <p className="sr-only" role="status" aria-live="polite">
-          <Check aria-hidden="true" />
+        <p
+          className="sr-only"
+          role="status"
+          aria-live="polite"
+        >
           {shareStatus}
         </p>
       ) : null}

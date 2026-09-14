@@ -135,16 +135,11 @@ export function Footer() {
       className={[
         "site-footer",
         "relative",
-        "mt-12",
         "w-full",
         "border-t",
         "border-border-subtle/20",
         "bg-background-secondary",
         "text-text-primary",
-
-        "sm:mt-16",
-
-        "lg:mt-0",
 
         pathname === "/" ? "" : "md:hidden",
       ].join(" ")}
@@ -154,13 +149,14 @@ export function Footer() {
           mx-auto
           w-full
           max-w-[1600px]
+
           px-4
           pb-6
-          pt-8
+          pt-12
 
           sm:px-6
           sm:pb-8
-          sm:pt-10
+          sm:pt-16
 
           lg:px-8
           lg:pb-8

@@ -435,4 +435,5 @@
   --shadow-large: 0 25px 50px 0 #00000040;
   --shadow-brand: 0 4px 6px 0 #e8c24a33, 0 10px 15px 0 #e8c24a33;
   --shadow-navbar: 0 4px 6px 0 #0000001a, 0 10px 15px 0 #0000001a;
+  --shadow-purchase: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }

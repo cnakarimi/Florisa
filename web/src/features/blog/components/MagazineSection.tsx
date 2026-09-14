@@ -77,11 +77,11 @@ export function MagazineSection() {
         lg:pb-20
         lg:pt-0
       "
-      aria-labelledby="home-magazine-title"
+      aria-labelledby="magazine-title"
     >
       <div className="mb-5 lg:mb-8">
         <h2
-          id="home-magazine-title"
+          id="magazine-title"
           className="
             text-mobile-heading-lg
             text-text-primary

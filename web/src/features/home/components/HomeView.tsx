@@ -3,13 +3,13 @@
 import { DesktopHeader } from "@/components/layout/DesktopHeader";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
+import { MagazineSection } from "@/features/blog/components/MagazineSection";
 
 import type { HomeExperiencePresentationProps } from "../types";
 
 import { CategoriesSection } from "./CategoriesSection";
 import { FeaturesGrid } from "./FeaturesGrid";
 import { HomeHero } from "./HomeHero";
-import { MagazineSection } from "./MagazineSection";
 import { ProductsSection } from "./ProductsSection";
 
 export function HomeView({

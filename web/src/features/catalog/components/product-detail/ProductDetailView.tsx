@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 
+import { MagazineSection } from "@/features/blog/components/MagazineSection";
 import type {
   CatalogProduct,
   CatalogProductDetail,
@@ -260,11 +261,10 @@ export function ProductDetailView({
           }}
         />
 
-        {/*
-          Remaining mobile sections:
-
-          <RelatedArticles />
-        */}
+        {/* Shared static magazine content is temporary; replace with backend-driven related articles later. */}
+        <div className="px-4 sm:px-6 md:px-8 lg:contents">
+          <MagazineSection />
+        </div>
       </div>
 
       <ProductImageZoomDialog

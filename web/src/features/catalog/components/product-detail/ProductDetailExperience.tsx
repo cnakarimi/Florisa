@@ -5,8 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { CartDrawer } from "@/components/layout/CartDrawer";
-
 import {
   getProductDetail,
   getRelatedProducts,
@@ -50,8 +48,6 @@ export function ProductDetailExperience({
   const [isNotFound, setIsNotFound] = useState(false);
 
   const [retryKey, setRetryKey] = useState(0);
-
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [reviews, setReviews] = useState<CatalogProductReview[]>([]);
 
@@ -297,12 +293,8 @@ export function ProductDetailExperience({
         }}
         onAddToCart={(selectedProduct, quantity) => {
           cart.addItem(selectedProduct, quantity);
-
-          setIsCartOpen(true);
         }}
       />
-
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 }

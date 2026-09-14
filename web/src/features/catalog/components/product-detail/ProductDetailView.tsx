@@ -8,6 +8,8 @@ import type {
   CatalogProductDetail,
   CatalogProductReview,
 } from "@/features/catalog/types";
+import { RelatedProducts } from "./RelatedProducts";
+
 import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { toPersianDigits } from "@/utils/persian";
 
@@ -30,12 +32,17 @@ interface ProductDetailViewProps {
   areReviewsLoading: boolean;
   reviewsError: string | null;
 
+  relatedProducts: CatalogProduct[];
+  areRelatedProductsLoading: boolean;
+
   cartCount: number;
   isFavorite: boolean;
 
   onBack: () => void;
   onNavigateToCart: () => void;
+  onSelectProduct: (product: CatalogProduct) => void;
   onToggleFavorite: (product: CatalogProduct) => void;
+
   onAddToCart: (product: CatalogProduct, quantity: number) => void;
 }
 
@@ -44,10 +51,13 @@ export function ProductDetailView({
   reviews,
   areReviewsLoading,
   reviewsError,
+  relatedProducts,
+  areRelatedProductsLoading,
   cartCount,
   isFavorite,
   onBack,
   onNavigateToCart,
+  onSelectProduct,
   onToggleFavorite,
   onAddToCart,
 }: ProductDetailViewProps) {
@@ -238,13 +248,22 @@ export function ProductDetailView({
           isLoading={areReviewsLoading}
           error={reviewsError}
         />
+        <RelatedProducts
+          products={relatedProducts}
+          isLoading={areRelatedProductsLoading}
+          onSelectProduct={onSelectProduct}
+          onAddToCart={(relatedProduct) => {
+            onAddToCart(
+              relatedProduct,
+              Math.max(1, relatedProduct.minimum_order_quantity),
+            );
+          }}
+        />
 
         {/*
           Remaining mobile sections:
 
-          <RelatedProducts />
           <RelatedArticles />
-          <Footer />
         */}
       </div>
 

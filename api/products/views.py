@@ -27,6 +27,13 @@ PRODUCT_ORDERING_FIELDS = {
 PRODUCT_ORDERING_CHOICES = tuple(PRODUCT_ORDERING_FIELDS)
 
 
+def public_product_queryset() -> QuerySet[Product]:
+    return Product.objects.filter(
+        is_active=True,
+        category__is_active=True,
+    ).select_related("category", "plant_details", "cut_flower_details")
+
+
 class ProductFilterSerializer(serializers.Serializer):
     search = serializers.CharField(required=False, allow_blank=False, max_length=200)
     product_type = serializers.ChoiceField(required=False, choices=Product.ProductType.choices)
@@ -112,10 +119,7 @@ class ProductListView(ListAPIView):
         filters.is_valid(raise_exception=True)
         values = filters.validated_data
 
-        queryset = Product.objects.filter(
-            is_active=True,
-            category__is_active=True,
-        ).select_related("category", "plant_details", "cut_flower_details")
+        queryset = public_product_queryset()
 
         direct_filters = {
             "product_type": "product_type",
@@ -183,8 +187,7 @@ class ProductDetailView(RetrieveAPIView):
     serializer_class = ProductDetailSerializer
     lookup_field = "slug"
     queryset = (
-        Product.objects.filter(is_active=True, category__is_active=True)
-        .select_related("category", "plant_details", "cut_flower_details")
+        public_product_queryset()
         .prefetch_related("images")
         .annotate(
             rating_average=Avg(
@@ -197,6 +200,25 @@ class ProductDetailView(RetrieveAPIView):
             ),
         )
     )
+
+
+class ProductRelatedListView(ListAPIView):
+    """Up to eight public products in the same category, newest first."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    serializer_class = ProductListSerializer
+    pagination_class = None
+    queryset = public_product_queryset()
+    result_limit = 8
+    ordering = (*PRODUCT_ORDERING_FIELDS["newest"], "-id")
+
+    def get_queryset(self) -> QuerySet[Product]:
+        queryset = super().get_queryset()
+        product = get_object_or_404(queryset, slug=self.kwargs["slug"])
+        related = queryset.filter(category_id=product.category_id).exclude(pk=product.pk)
+        # Keep ordering separate from eligibility for future ranking changes.
+        return related.order_by(*self.ordering)[:self.result_limit]
 
 
 class ProductReviewListView(ListAPIView):

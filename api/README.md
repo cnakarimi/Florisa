@@ -71,6 +71,65 @@ The development configuration explicitly allows credentialed requests from
 `http://localhost:3000` and `http://127.0.0.1:3000`. Secure cookies remain
 disabled for plain-HTTP local development and should be enabled in production.
 
+## Related products
+
+`GET /api/products/<slug>/related/` is public and read-only. It returns up to
+eight products in the current product's category, excluding the current product.
+Both the current product and every returned product must be active and belong
+to an active category, matching the public catalog and detail endpoint. An
+unknown or hidden current product returns HTTP 404 with the usual `{"detail": "..."}`
+error. Out-of-stock products remain eligible; product type is not an additional
+filter.
+
+Results use the catalog's newest-first default, with descending ID as a stable
+tie-breaker (`-created_at`, `-id`). Selection and ordering are separate in
+`ProductRelatedListView.get_queryset()` so future ranking can be added before
+the limit without changing visibility or serialization.
+
+HTTP 200 returns a plain JSON array, or `[]` when there are no matches. Pagination
+is disabled because this is a fixed maximum of eight, following the existing
+unpaginated categories and home-slides endpoints. There is no `count`, `next`,
+`previous`, or `results` wrapper. Query parameters (including catalog filters,
+ordering, page, page_size, and limit) do not change this fixed selection.
+
+Each array item uses the unchanged `ProductListSerializer`, exactly the same
+representation as an item in `/api/products/`'s `results` array:
+
+```json
+[
+  {
+    "id": 42,
+    "name": "Pothos",
+    "slug": "pothos",
+    "product_type": "plant",
+    "product_type_display": "گیاه",
+    "short_description": "",
+    "price": 450000,
+    "stock_quantity": 0,
+    "sale_unit": "pot",
+    "sale_unit_display": "گلدان",
+    "unit_size": 1,
+    "minimum_order_quantity": 1,
+    "cover_image": "golden-pothos.webp",
+    "is_featured": false,
+    "is_in_stock": false,
+    "category": {"id": 2, "name": "Indoor plants", "slug": "indoor-plants"},
+    "details": null,
+    "price_per_bundle": 450000,
+    "stock_bundles": 0,
+    "stems_per_bundle": 1,
+    "minimum_order_bundles": 1
+  }
+]
+```
+
+`details` uses the existing plant/cut-flower detail representation, or is `null`
+when those details are missing or inconsistent (as in this example). The four
+legacy commercial aliases and existing image URL behavior are preserved. No
+admin-only fields or detail-only images, description, or review aggregates are
+added. Category and both detail relations are joined in the shared public
+queryset: a populated response takes two queries regardless of result count.
+
 ## Uploaded media
 
 Local development stores uploads on disk. Production uses the existing PostgreSQL

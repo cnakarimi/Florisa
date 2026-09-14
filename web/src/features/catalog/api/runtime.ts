@@ -2,10 +2,8 @@ import type {
   CatalogCategory,
   CatalogProduct,
   CatalogProductDetail,
-  PaginatedCatalogProducts,
-} from "@/features/catalog/types";
-import type {
   CatalogProductReview,
+  PaginatedCatalogProducts,
   PaginatedProductReviews,
 } from "@/features/catalog/types";
 
@@ -47,27 +45,45 @@ function hasSharedProductFields(value: Record<string, unknown>): boolean {
 }
 
 export function isProduct(value: unknown): value is CatalogProduct {
-  if (!isRecord(value) || !hasSharedProductFields(value)) return false;
-  if (value.details !== null && !isRecord(value.details)) return false;
+  if (!isRecord(value) || !hasSharedProductFields(value)) {
+    return false;
+  }
+
+  if (value.details !== null && !isRecord(value.details)) {
+    return false;
+  }
+
   if (value.product_type === "plant") {
     return (
       value.details === null || typeof value.details.plant_type === "string"
     );
   }
+
   if (value.product_type === "cut_flower") {
     return (
       value.details === null || typeof value.details.flower_type === "string"
     );
   }
+
   return false;
 }
 
+export function isProductList(value: unknown): value is CatalogProduct[] {
+  return Array.isArray(value) && value.every(isProduct);
+}
+
 export function isProductDetail(value: unknown): value is CatalogProductDetail {
-  if (!isRecord(value) || !isProduct(value)) return false;
+  if (!isRecord(value) || !isProduct(value)) {
+    return false;
+  }
+
   return (
     typeof value.description === "string" &&
     typeof value.created_at === "string" &&
     typeof value.updated_at === "string" &&
+    (value.rating_average === null ||
+      typeof value.rating_average === "number") &&
+    typeof value.review_count === "number" &&
     Array.isArray(value.images) &&
     value.images.every(
       (image) =>
@@ -92,6 +108,7 @@ export function isPaginatedProducts(
     value.results.every(isProduct)
   );
 }
+
 export function isProductReview(value: unknown): value is CatalogProductReview {
   if (!isRecord(value)) {
     return false;

@@ -93,6 +93,9 @@ class CatalogAPITests(APITestCase):
     def results(self, response):
         return response.data["results"]
 
+    def related_url(self, product):
+        return reverse("products:product-related-list", kwargs={"slug": product.slug})
+
     def test_subtype_payloads_are_discriminated_and_image_contract_is_preserved(self):
         plant = self.make_plant(cover_image="golden-pothos.webp")
         flower = self.make_cut_flower()
@@ -328,6 +331,175 @@ class CatalogAPITests(APITestCase):
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
 
+    def test_related_products_match_category_without_requiring_matching_type(self):
+        current = self.make_plant()
+        plant = self.make_plant()
+        flower = self.make_cut_flower(category=current.category)
+        self.make_plant(category=self.flower_category)
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual([item["id"] for item in response.data], [plant.id, flower.id])
+        self.assertTrue(all(item["category"]["id"] == current.category_id for item in response.data))
+
+    def test_related_products_exclude_current_product(self):
+        current = self.make_plant()
+        related = self.make_plant()
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([item["id"] for item in response.data], [related.id])
+
+    def test_related_products_exclude_inactive_products(self):
+        current = self.make_plant()
+        visible = self.make_plant()
+        self.make_plant(is_active=False)
+        self.make_plant(category=self.inactive_category)
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([item["id"] for item in response.data], [visible.id])
+
+    def test_related_products_include_out_of_stock_current_and_related_products(self):
+        current = self.make_plant(stock_quantity=0)
+        related = self.make_plant(stock_quantity=0)
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([item["id"] for item in response.data], [related.id])
+        self.assertFalse(response.data[0]["is_in_stock"])
+
+    def test_related_products_unknown_current_product_returns_detail_404(self):
+        kwargs = {"slug": "missing-product"}
+
+        response = self.client.get(reverse("products:product-related-list", kwargs=kwargs))
+        detail_response = self.client.get(reverse("products:product-detail", kwargs=kwargs))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, detail_response.data)
+
+    def test_related_products_inactive_current_product_returns_detail_404(self):
+        current = self.make_plant(is_active=False)
+        self.make_plant()
+
+        response = self.client.get(self.related_url(current))
+        detail_response = self.client.get(
+            reverse("products:product-detail", kwargs={"slug": current.slug})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, detail_response.data)
+
+    def test_related_products_current_product_in_inactive_category_returns_detail_404(self):
+        current = self.make_plant(category=self.inactive_category)
+        self.make_plant(category=self.inactive_category)
+
+        response = self.client.get(self.related_url(current))
+        detail_response = self.client.get(
+            reverse("products:product-detail", kwargs={"slug": current.slug})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, detail_response.data)
+
+    def test_related_products_limit_and_ordering_are_stable_even_at_timestamp_ties(self):
+        current = self.make_plant()
+        products = [self.make_plant() for _ in range(10)]
+        now = timezone.now()
+        Product.objects.filter(pk__in=[product.pk for product in products]).update(created_at=now)
+        # Give the highest ID an older timestamp to verify timestamp takes priority.
+        Product.objects.filter(pk=products[-1].pk).update(created_at=now - timedelta(days=1))
+        expected_ids = [product.id for product in reversed(products[1:-1])]
+
+        for _ in range(2):
+            response = self.client.get(self.related_url(current))
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 8)
+            self.assertEqual([item["id"] for item in response.data], expected_ids)
+
+    def test_related_products_ignore_pagination_and_catalog_filter_parameters(self):
+        current = self.make_plant()
+        for _ in range(10):
+            self.make_plant(stock_quantity=0)
+        expected = self.client.get(self.related_url(current))
+
+        response = self.client.get(
+            self.related_url(current),
+            {
+                "page": 2,
+                "page_size": 100,
+                "limit": 100,
+                "category": self.flower_category.slug,
+                "in_stock": "true",
+                "ordering": "price",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 8)
+        self.assertEqual(response.data, expected.data)
+
+    def test_related_products_empty_set_returns_successful_empty_array(self):
+        current = self.make_plant()
+        self.make_cut_flower()
+        self.make_plant(is_active=False)
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), [])
+
+    def test_related_products_use_existing_catalog_representation(self):
+        current = self.make_plant()
+        self.make_plant(cover_image="golden-pothos.webp")
+        self.make_cut_flower(category=current.category, cover_upload="products/covers/rose.webp")
+        self.make_plant().plant_details.delete()
+        catalog_response = self.client.get(reverse("products:product-list"))
+        catalog_by_id = {item["id"]: item for item in self.results(catalog_response)}
+
+        response = self.client.get(self.related_url(current))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        for item in response.data:
+            with self.subTest(product=item["id"]):
+                self.assertEqual(item, catalog_by_id[item["id"]])
+                self.assertTrue({"category", "details", "cover_image", "price"}.issubset(item))
+                self.assertTrue(
+                    {"is_active", "featured_order", "cover_upload", "description", "images"}
+                    .isdisjoint(item)
+                )
+
+    def test_related_products_load_category_and_both_detail_types_in_two_queries(self):
+        current = self.make_plant()
+        self.make_plant()
+
+        with self.assertNumQueries(2):
+            response = self.client.get(self.related_url(current))
+        self.assertEqual(len(response.data), 1)
+
+        for index in range(7):
+            factory = self.make_plant if index % 2 else self.make_cut_flower
+            factory(category=current.category)
+
+        with self.assertNumQueries(2):
+            response = self.client.get(self.related_url(current))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 8)
+        self.assertTrue(all(item["details"] is not None for item in response.data))
+
+    def test_related_products_endpoint_is_read_only(self):
+        current = self.make_plant()
+
+        response = self.client.post(self.related_url(current), {})
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def test_schema_documents_polymorphic_details_and_filters(self):
         response = self.client.get(reverse("schema"), HTTP_ACCEPT="application/vnd.oai.openapi+json")
         schema = json.loads(response.content)
@@ -335,6 +507,14 @@ class CatalogAPITests(APITestCase):
         parameters = {parameter["name"] for parameter in path["parameters"]}
         self.assertTrue({"product_type", "min_price", "plant_size", "flower_type"}.issubset(parameters))
         self.assertIn("ProductDetails", schema["components"]["schemas"])
+
+        related_path = schema["paths"]["/api/products/{slug}/related/"]["get"]
+        related_schema = related_path["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(related_schema["type"], "array")
+        self.assertEqual(
+            related_schema["items"]["$ref"], "#/components/schemas/ProductList"
+        )
+        self.assertEqual({parameter["name"] for parameter in related_path["parameters"]}, {"slug"})
 
         ordering_parameter = next(
             parameter

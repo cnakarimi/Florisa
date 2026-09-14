@@ -1,20 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { CartDrawer } from "@/components/layout/CartDrawer";
+
 import {
   getProductDetail,
+  getRelatedProducts,
   getProductReviews,
 } from "@/features/catalog/api/catalog";
+
 import type {
+  CatalogProduct,
   CatalogProductDetail,
   CatalogProductReview,
 } from "@/features/catalog/types";
+
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { useFavorites } from "@/features/favorites/hooks/FavoritesProvider";
+
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 
 import { CatalogFeedback } from "../CatalogFeedback";
@@ -31,20 +38,31 @@ export function ProductDetailExperience({
   const router = useRouter();
 
   const cart = useCart();
+
   const { favorites, toggleFavorite } = useFavorites();
 
   const [product, setProduct] = useState<CatalogProductDetail | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
+
   const [isNotFound, setIsNotFound] = useState(false);
+
   const [retryKey, setRetryKey] = useState(0);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const [reviews, setReviews] = useState<CatalogProductReview[]>([]);
+
   const [areReviewsLoading, setAreReviewsLoading] = useState(true);
+
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+
+  const [relatedProducts, setRelatedProducts] = useState<CatalogProduct[]>([]);
+
+  const [areRelatedProductsLoading, setAreRelatedProductsLoading] =
+    useState(true);
 
   /*
    * Product reviews
@@ -89,6 +107,50 @@ export function ProductDetailExperience({
   }, [retryKey, slug]);
 
   /*
+   * Related products
+   *
+   * This content is secondary, so a request
+   * failure must never break the product page.
+   */
+  useEffect(() => {
+    let isCurrent = true;
+
+    Promise.resolve().then(() => {
+      if (!isCurrent) {
+        return;
+      }
+
+      setAreRelatedProductsLoading(true);
+      setRelatedProducts([]);
+    });
+
+    getRelatedProducts(slug, retryKey > 0)
+      .then((result) => {
+        if (!isCurrent) {
+          return;
+        }
+
+        setRelatedProducts(result);
+      })
+      .catch(() => {
+        if (!isCurrent) {
+          return;
+        }
+
+        setRelatedProducts([]);
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setAreRelatedProductsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [retryKey, slug]);
+
+  /*
    * Product detail
    */
   useEffect(() => {
@@ -120,6 +182,7 @@ export function ProductDetailExperience({
 
         if (requestError instanceof ApiError && requestError.status === 404) {
           setIsNotFound(true);
+
           return;
         }
 
@@ -156,22 +219,24 @@ export function ProductDetailExperience({
   const goBack = useCallback(() => {
     if (window.history.length > 1) {
       router.back();
+
       return;
     }
 
     router.push("/");
   }, [router]);
 
-  /*
-   * Loading
-   */
+  const openProduct = useCallback(
+    (selectedProduct: CatalogProduct) => {
+      router.push(`/products/${encodeURIComponent(selectedProduct.slug)}`);
+    },
+    [router],
+  );
+
   if (isLoading) {
     return <ProductDetailLoading />;
   }
 
-  /*
-   * Error / not found
-   */
   if (isNotFound || error || !product) {
     return (
       <main
@@ -220,15 +285,19 @@ export function ProductDetailExperience({
         reviews={reviews}
         areReviewsLoading={areReviewsLoading}
         reviewsError={reviewsError}
+        relatedProducts={relatedProducts}
+        areRelatedProductsLoading={areRelatedProductsLoading}
         cartCount={cart.isHydrated ? cart.totalQuantity : 0}
         isFavorite={isFavorite}
         onBack={goBack}
         onNavigateToCart={() => router.push("/cart")}
+        onSelectProduct={openProduct}
         onToggleFavorite={(selectedProduct) => {
           toggleFavorite(selectedProduct);
         }}
         onAddToCart={(selectedProduct, quantity) => {
           cart.addItem(selectedProduct, quantity);
+
           setIsCartOpen(true);
         }}
       />

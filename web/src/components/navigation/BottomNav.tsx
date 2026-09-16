@@ -106,7 +106,7 @@ export function BottomNav() {
     <nav
       data-mobile-bottom-nav
       aria-label="ناوبری اصلی"
-      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-screen-lg overflow-visible bg-background-secondary"
+      className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-screen-lg overflow-visible bg-background-secondary shadow-purchase"
     >
       <LayoutGroup id="florisa-bottom-navigation">
         <div dir="ltr" className="grid h-12 grid-cols-5 overflow-visible px-2">

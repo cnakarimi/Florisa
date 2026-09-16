@@ -2,7 +2,7 @@
 
 import { DesktopHeader } from "@/components/layout/DesktopHeader";
 import { BottomNav } from "@/components/navigation/BottomNav";
-import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
+import { MobileTopNavbar } from "@/components/navigation/MobileTopNavbar";
 import { MagazineSection } from "@/features/blog/components/MagazineSection";
 
 import type { HomeExperiencePresentationProps } from "../types";
@@ -45,7 +45,7 @@ export function HomeView({
       className="min-h-dvh overflow-x-clip bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white lg:bg-[#0d0f0e]"
     >
       <div className="lg:hidden">
-        <ScrollNavbar
+        <MobileTopNavbar
           searchQuery=""
           onSearch={onSearch}
           onLogoClick={scrollToTop}
@@ -55,7 +55,7 @@ export function HomeView({
       <DesktopHeader cartCount={cartCount} />
 
       <div className="relative mx-auto min-h-dvh w-full bg-background-primary">
-        <main>
+        <main className="pt-14 sm:pt-16 lg:pt-0">
           <HomeHero slides={homeSlides} status={homeSlidesStatus} />
 
           <div className="px-4 sm:px-6 md:px-8 lg:contents">

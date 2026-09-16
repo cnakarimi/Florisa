@@ -2,9 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
-import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
-
-export function ShopNavigationScrollNavbar() {
+import { MobileTopNavbar } from "@/components/navigation/MobileTopNavbar";
+export function ShopTopNavbar() {
   const router = useRouter();
   const searchQuery = "";
 
@@ -18,7 +17,7 @@ export function ShopNavigationScrollNavbar() {
   };
 
   return (
-    <ScrollNavbar
+    <MobileTopNavbar
       searchQuery={searchQuery}
       onSearch={handleSearch}
       onLogoClick={() => {

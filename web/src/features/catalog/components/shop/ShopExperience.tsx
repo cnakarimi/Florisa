@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ScrollNavbar } from "@/components/navigation/ScrollNavbar";
+import { MobileTopNavbar } from "@/components/navigation/MobileTopNavbar";
 import { useCart } from "@/features/cart/hooks/CartProvider";
 import { ShopCatalog } from "@/features/catalog/components/shop/ShopCatalog";
 import { useCatalog } from "@/features/catalog/hooks/useCatalog";
@@ -103,7 +103,7 @@ export function ShopExperience({ initialQuery = {} }: ShopExperienceProps) {
     <div className="min-h-dvh bg-black text-zinc-100 selection:bg-[#c7a23c]/30 selection:text-white">
       <div className="relative mx-auto min-h-dvh w-full max-w-screen-lg overflow-x-hidden bg-[#111211] shadow-2xl shadow-black md:pb-24">
         <main className="px-4 sm:px-6 md:px-8">
-          <ScrollNavbar
+          <MobileTopNavbar
             searchQuery={searchQuery}
             onSearch={handleNavbarSearch}
             onLogoClick={() => {

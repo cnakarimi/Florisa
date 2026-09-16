@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { BottomNav } from "@/components/navigation/BottomNav";
 import { AccountNavigation } from "./AccountNavigation";
 
 export function AccountPageShell({

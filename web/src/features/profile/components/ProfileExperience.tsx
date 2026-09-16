@@ -6,7 +6,7 @@ import { AuthStateScreen } from "@/features/auth/components/AuthStateScreen";
 import { useAuth } from "@/features/auth/hooks/AuthProvider";
 import { clearPendingPhone } from "@/features/auth/utils/storage";
 import { useCart } from "@/features/cart/hooks/CartProvider";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { BottomNav } from "@/components/navigation/BottomNav";
 import { ProfileView } from "@/features/profile/components/ProfileView";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 import { withNext } from "@/features/auth/utils/redirect";

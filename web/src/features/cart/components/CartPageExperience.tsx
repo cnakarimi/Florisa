@@ -77,7 +77,7 @@ export function CartPageExperience({
       return;
     }
 
-    cart.removeItem(item.product.id);
+    cart.removeItem(item.line_id);
     setCheckoutError("");
   };
 
@@ -87,7 +87,7 @@ export function CartPageExperience({
       return;
     }
 
-    cart.decreaseItem(item.product.id);
+    cart.decreaseItem(item.line_id);
     setCheckoutError("");
   };
 
@@ -109,6 +109,11 @@ export function CartPageExperience({
 
     if (cart.items.length === 0) {
       setCheckoutError("سبد خرید شما خالی است.");
+      return;
+    }
+
+    if (cart.hasInvalidItems) {
+      setCheckoutError("لطفاً خطاهای کالاهای سبد را پیش از تسویه برطرف کنید.");
       return;
     }
 
@@ -225,7 +230,7 @@ export function CartPageExperience({
 
                   return (
                     <article
-                      key={item.product.id}
+                      key={item.line_id}
                       className={`relative rounded-2xl border bg-[#141620] p-3.5 shadow-xl ${
                         isUnavailable ? "border-rose-400/30" : "border-white/10"
                       }`}
@@ -312,7 +317,7 @@ export function CartPageExperience({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  cart.increaseItem(item.product.id)
+                                  cart.increaseItem(item.line_id)
                                 }
                                 disabled={isUnavailable || isAtMaximum}
                                 className="flex h-6 w-6 items-center justify-center rounded-md font-bold text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
@@ -327,24 +332,39 @@ export function CartPageExperience({
 
                       <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/5 pt-3 text-center">
                         <CartItemFact
-                          label={`تعداد ${item.product.sale_unit_display}`}
+                          label={
+                            item.product.product_type === "plant"
+                              ? "تعداد گلدان"
+                              : item.product.product_type === "arrangement"
+                                ? "تعداد گل‌آرایی کامل"
+                                : "تعداد دسته"
+                          }
                           value={`${toPersianDigits(item.quantity)} ${
                             item.product.sale_unit_display
                           }`}
                         />
 
                         <CartItemFact
-                          label="تعداد در هر واحد"
-                          value={toPersianDigits(item.product.unit_size)}
+                          label={item.product.product_type === "cut_flower" ? "شاخه در هر دسته" : "واحد هر کالا"}
+                          value={
+                            item.product.product_type === "cut_flower"
+                              ? `${toPersianDigits(item.product.unit_size)} شاخه`
+                              : toPersianDigits(item.product.unit_size)
+                          }
                         />
 
                         <CartItemFact
-                          label="مجموع تعداد"
+                          label={item.product.product_type === "cut_flower" ? "مجموع شاخه" : "مجموع کالا"}
                           value={toPersianDigits(itemUnits)}
                         />
                       </div>
 
-                      {isUnavailable ? (
+                      {item.product.validation_message ? (
+                        <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-3 py-2 text-[11px] text-rose-300">
+                          <PackageX className="h-4 w-4 shrink-0" />
+                          {item.product.validation_message}
+                        </p>
+                      ) : isUnavailable ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-rose-500/10 px-3 py-2 text-[11px] text-rose-300">
                           <PackageX className="h-4 w-4 shrink-0" />
                           این کالا دیگر در دسترس نیست و باید از سبد حذف شود.
@@ -415,7 +435,7 @@ export function CartPageExperience({
               <button
                 type="button"
                 onClick={continueToCheckout}
-                disabled={cart.isRefreshing}
+                disabled={cart.isRefreshing || cart.hasInvalidItems}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-3 text-xs font-black text-black shadow-xl shadow-amber-500/10 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60 sm:text-sm"
               >
                 {cart.isRefreshing ? (

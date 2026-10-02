@@ -6,7 +6,16 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from products.models import Category, CutFlowerDetails, PlantDetails, Product, ProductImage
+from products.models import (
+    ArrangementComposition,
+    ArrangementDetails,
+    Category,
+    CutFlowerDetails,
+    CutFlowerVariant,
+    PlantDetails,
+    Product,
+    ProductImage,
+)
 
 
 class CatalogAPITests(APITestCase):
@@ -88,7 +97,98 @@ class CatalogAPITests(APITestCase):
         }
         detail_values.update(detail_overrides)
         CutFlowerDetails.objects.create(product=product, **detail_values)
+        CutFlowerVariant.objects.create(
+            product=product,
+            color=detail_values["color"] or "پیش‌فرض",
+            price=product.price,
+            stock_quantity=product.stock_quantity,
+        )
         return product
+
+    def make_arrangement(self, **overrides):
+        detail_overrides = overrides.pop("details", {})
+        sequence = Product.objects.count() + 1
+        values = {
+            "category": self.flower_category,
+            "name": f"باکس گل {sequence}",
+            "slug": f"arrangement-{sequence}",
+            "product_type": Product.ProductType.ARRANGEMENT,
+            "price": 1_500_000,
+            "stock_quantity": 4,
+            "sale_unit": Product.SaleUnit.ITEM,
+            "unit_size": 1,
+            "minimum_order_quantity": 1,
+        }
+        values.update(overrides)
+        product = Product.objects.create(**values)
+        details = ArrangementDetails.objects.create(
+            product=product,
+            arrangement_type=ArrangementDetails.ArrangementType.FLOWER_BOX,
+            approximate_dimensions="۳۰ × ۲۰ سانتی‌متر",
+            dominant_color_theme="صورتی",
+            design_style="مدرن",
+            **detail_overrides,
+        )
+        ArrangementComposition.objects.create(
+            arrangement=details, label="برگ اکالیپتوس", sort_order=2
+        )
+        ArrangementComposition.objects.create(
+            arrangement=details, label="رز صورتی", stem_count=12, sort_order=1
+        )
+        return product
+
+    def test_arrangement_detail_serializes_ordered_composition(self):
+        product = self.make_arrangement()
+        response = self.client.get(
+            reverse("products:product-detail", kwargs={"slug": product.slug})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["product_type"], "arrangement")
+        self.assertEqual(response.data["sale_unit"], "item")
+        self.assertEqual(response.data["unit_size"], 1)
+        self.assertEqual(
+            [item["label"] for item in response.data["details"]["composition"]],
+            ["رز صورتی", "برگ اکالیپتوس"],
+        )
+
+    def test_cut_flower_catalog_uses_active_variant_price_and_stock(self):
+        product = self.make_cut_flower(price=999_999, stock_quantity=999)
+        first = product.cut_flower_variants.get()
+        first.price = 120_000
+        first.stock_quantity = 2
+        first.save()
+        CutFlowerVariant.objects.create(
+            product=product, color="سفید", price=90_000, stock_quantity=4
+        )
+        CutFlowerVariant.objects.create(
+            product=product, color="غیرفعال", price=1, stock_quantity=100, is_active=False
+        )
+
+        response = self.client.get(reverse("products:product-detail", kwargs={"slug": product.slug}))
+
+        self.assertEqual(response.data["price"], 90_000)
+        self.assertEqual(response.data["stock_quantity"], 6)
+        self.assertEqual(response.data["price_per_bundle"], 90_000)
+        self.assertEqual(response.data["stock_bundles"], 6)
+        self.assertTrue(response.data["has_purchasable_variant"])
+        self.assertEqual(len(response.data["details"]["variants"]), 2)
+
+    def test_cut_flower_with_no_active_variant_is_explicitly_unavailable(self):
+        product = self.make_cut_flower(price=999_999, stock_quantity=999)
+        product.cut_flower_variants.update(is_active=False)
+
+        detail = self.client.get(
+            reverse("products:product-detail", kwargs={"slug": product.slug})
+        ).data
+        in_stock = self.client.get(reverse("products:product-list"), {"in_stock": "true"})
+
+        self.assertEqual(detail["price"], 0)
+        self.assertEqual(detail["stock_quantity"], 0)
+        self.assertFalse(detail["is_in_stock"])
+        self.assertFalse(detail["has_purchasable_variant"])
+        self.assertEqual(detail["details"]["variants"], [])
+        self.assertNotIn(product.id, [item["id"] for item in self.results(in_stock)])
 
     def results(self, response):
         return response.data["results"]
@@ -322,9 +422,9 @@ class CatalogAPITests(APITestCase):
     def test_list_and_detail_queries_are_optimized(self):
         product = self.make_plant()
         ProductImage.objects.create(product=product, image="one.jpg")
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             list_response = self.client.get(reverse("products:product-list"))
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             detail_response = self.client.get(
                 reverse("products:product-detail", kwargs={"slug": product.slug})
             )
@@ -475,11 +575,11 @@ class CatalogAPITests(APITestCase):
                     .isdisjoint(item)
                 )
 
-    def test_related_products_load_category_and_both_detail_types_in_two_queries(self):
+    def test_related_products_prefetch_all_typed_details_without_n_plus_one_queries(self):
         current = self.make_plant()
         self.make_plant()
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(self.related_url(current))
         self.assertEqual(len(response.data), 1)
 
@@ -487,7 +587,7 @@ class CatalogAPITests(APITestCase):
             factory = self.make_plant if index % 2 else self.make_cut_flower
             factory(category=current.category)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.client.get(self.related_url(current))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 8)

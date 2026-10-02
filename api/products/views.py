@@ -1,11 +1,36 @@
-from django.db.models import Avg, Count, Q, QuerySet
+from django.db.models import (
+    Avg,
+    BigIntegerField,
+    Case,
+    Count,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Sum,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 
-from products.models import Category, CutFlowerDetails, HomeSlide, PlantDetails, Product, ProductReview
+from products.models import (
+    ArrangementDetails,
+    Category,
+    CutFlowerDetails,
+    CutFlowerVariant,
+    HomeSlide,
+    PlantDetails,
+    Product,
+    ProductReview,
+)
 from products.pagination import ProductPagination
 from products.serializers import (
     CategorySerializer,
@@ -18,8 +43,8 @@ from products.serializers import (
 
 PRODUCT_ORDERING_FIELDS = {
     "newest": ("-created_at",),
-    "price": ("price",),
-    "-price": ("-price",),
+    "price": ("catalog_price",),
+    "-price": ("-catalog_price",),
     "name": ("name",),
     "-name": ("-name",),
     "featured": ("featured_order", "id"),
@@ -28,10 +53,38 @@ PRODUCT_ORDERING_CHOICES = tuple(PRODUCT_ORDERING_FIELDS)
 
 
 def public_product_queryset() -> QuerySet[Product]:
+    active_variants = CutFlowerVariant.objects.filter(product_id=OuterRef("pk"), is_active=True)
+    purchasable_variants = active_variants.filter(
+        stock_quantity__gte=OuterRef("minimum_order_quantity"),
+    )
+    minimum_price = active_variants.order_by("price", "pk").values("price")[:1]
+    total_stock = (
+        active_variants.values("product_id")
+        .annotate(total=Sum("stock_quantity"))
+        .values("total")[:1]
+    )
     return Product.objects.filter(
         is_active=True,
         category__is_active=True,
-    ).select_related("category", "plant_details", "cut_flower_details")
+    ).select_related("category", "plant_details", "arrangement_details", "cut_flower_details").prefetch_related(
+        "arrangement_details__composition", "cut_flower_variants"
+    ).annotate(
+        active_variant_min_price=Subquery(minimum_price, output_field=BigIntegerField()),
+        active_variant_stock=Coalesce(
+            Subquery(total_stock, output_field=IntegerField()),
+            0,
+        ),
+        has_purchasable_variant=Exists(purchasable_variants),
+    ).annotate(
+        catalog_price=Case(
+            When(
+                product_type=Product.ProductType.CUT_FLOWER,
+                then=Coalesce("active_variant_min_price", Value(0)),
+            ),
+            default=F("price"),
+            output_field=BigIntegerField(),
+        ),
+    )
 
 
 class ProductFilterSerializer(serializers.Serializer):
@@ -72,6 +125,10 @@ class ProductFilterSerializer(serializers.Serializer):
     min_vase_life = serializers.IntegerField(required=False, min_value=0)
     fragrance_level = serializers.ChoiceField(required=False, choices=CutFlowerDetails.FragranceLevel.choices)
     seasonal_availability = serializers.ChoiceField(required=False, choices=CutFlowerDetails.SeasonalAvailability.choices)
+    bloom_opening_stage = serializers.ChoiceField(required=False, choices=CutFlowerDetails.BloomOpeningStage.choices)
+    arrangement_type = serializers.ChoiceField(required=False, choices=ArrangementDetails.ArrangementType.choices)
+    dominant_color_theme = serializers.CharField(required=False, allow_blank=False, max_length=120)
+    design_style = serializers.CharField(required=False, allow_blank=False, max_length=120)
 
     def validate(self, attrs):
         for minimum, maximum in (
@@ -124,8 +181,8 @@ class ProductListView(ListAPIView):
         direct_filters = {
             "product_type": "product_type",
             "category": "category__slug",
-            "min_price": "price__gte",
-            "max_price": "price__lte",
+            "min_price": "catalog_price__gte",
+            "max_price": "catalog_price__lte",
             "sale_unit": "sale_unit",
             "is_featured": "is_featured",
             "featured": "is_featured",
@@ -145,25 +202,42 @@ class ProductListView(ListAPIView):
             "min_vase_life": "cut_flower_details__vase_life_days__gte",
             "fragrance_level": "cut_flower_details__fragrance_level",
             "seasonal_availability": "cut_flower_details__seasonal_availability",
+            "bloom_opening_stage": "cut_flower_details__bloom_opening_stage",
+            "arrangement_type": "arrangement_details__arrangement_type",
         }
         for parameter, lookup in direct_filters.items():
             if parameter in values:
                 queryset = queryset.filter(**{lookup: values[parameter]})
 
         if values.get("in_stock") is True:
-            queryset = queryset.filter(stock_quantity__gt=0)
+            queryset = queryset.filter(
+                Q(product_type=Product.ProductType.CUT_FLOWER, has_purchasable_variant=True)
+                | ~Q(product_type=Product.ProductType.CUT_FLOWER)
+                & Q(stock_quantity__gte=F("minimum_order_quantity"))
+            )
         elif values.get("in_stock") is False:
-            queryset = queryset.filter(stock_quantity=0)
+            queryset = queryset.filter(
+                Q(product_type=Product.ProductType.CUT_FLOWER, has_purchasable_variant=False)
+                | ~Q(product_type=Product.ProductType.CUT_FLOWER)
+                & Q(stock_quantity__lt=F("minimum_order_quantity"))
+            )
 
         for parameter, lookup in (
             ("pot_material", "plant_details__pot_material__iexact"),
             ("pot_color", "plant_details__pot_color__iexact"),
             ("flower_type", "cut_flower_details__flower_type__iexact"),
             ("variety", "cut_flower_details__variety__iexact"),
-            ("color", "cut_flower_details__color__iexact"),
+            ("dominant_color_theme", "arrangement_details__dominant_color_theme__iexact"),
+            ("design_style", "arrangement_details__design_style__iexact"),
         ):
             if parameter in values:
                 queryset = queryset.filter(**{lookup: values[parameter]})
+
+        if "color" in values:
+            queryset = queryset.filter(
+                cut_flower_variants__color__iexact=values["color"],
+                cut_flower_variants__is_active=True,
+            ).distinct()
 
         search = values.get("search")
         if search:
@@ -174,8 +248,11 @@ class ProductListView(ListAPIView):
                 | Q(plant_details__color__icontains=search)
                 | Q(cut_flower_details__flower_type__icontains=search)
                 | Q(cut_flower_details__variety__icontains=search)
-                | Q(cut_flower_details__color__icontains=search)
-            )
+                | Q(cut_flower_variants__color__icontains=search, cut_flower_variants__is_active=True)
+                | Q(arrangement_details__dominant_color_theme__icontains=search)
+                | Q(arrangement_details__design_style__icontains=search)
+                | Q(arrangement_details__composition__label__icontains=search)
+            ).distinct()
 
         ordering = values.get("ordering", "newest")
         return queryset.order_by(*PRODUCT_ORDERING_FIELDS[ordering])
@@ -188,7 +265,7 @@ class ProductDetailView(RetrieveAPIView):
     lookup_field = "slug"
     queryset = (
         public_product_queryset()
-        .prefetch_related("images")
+        .prefetch_related("images", "arrangement_details__composition", "cut_flower_variants")
         .annotate(
             rating_average=Avg(
                 "reviews__rating",

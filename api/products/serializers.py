@@ -2,8 +2,11 @@ from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_fiel
 from rest_framework import serializers
 
 from products.models import (
+    ArrangementComposition,
+    ArrangementDetails,
     Category,
     CutFlowerDetails,
+    CutFlowerVariant,
     HomeSlide,
     PlantDetails,
     Product,
@@ -111,12 +114,25 @@ class PlantDetailsSerializer(serializers.ModelSerializer):
         )
 
 
+class CutFlowerVariantSerializer(serializers.ModelSerializer):
+    is_in_stock = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = CutFlowerVariant
+        fields = ("id", "color", "price", "stock_quantity", "is_active", "is_in_stock")
+        read_only_fields = fields
+
+
 class CutFlowerDetailsSerializer(serializers.ModelSerializer):
     flower_grade_display = serializers.CharField(source="get_flower_grade_display", read_only=True)
     fragrance_level_display = serializers.CharField(source="get_fragrance_level_display", read_only=True)
     seasonal_availability_display = serializers.CharField(
         source="get_seasonal_availability_display", read_only=True
     )
+    bloom_opening_stage_display = serializers.CharField(
+        source="get_bloom_opening_stage_display", read_only=True
+    )
+    variants = serializers.SerializerMethodField()
 
     class Meta:
         model = CutFlowerDetails
@@ -125,6 +141,39 @@ class CutFlowerDetailsSerializer(serializers.ModelSerializer):
             "flower_grade_display",
             "fragrance_level_display",
             "seasonal_availability_display",
+            "bloom_opening_stage_display",
+            "variants",
+        )
+
+    @extend_schema_field(CutFlowerVariantSerializer(many=True))
+    def get_variants(self, details: CutFlowerDetails):
+        variants = [
+            variant
+            for variant in details.product.cut_flower_variants.all()
+            if variant.is_active
+        ]
+        return CutFlowerVariantSerializer(variants, many=True).data
+
+
+class ArrangementCompositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArrangementComposition
+        fields = ("id", "label", "stem_count", "sort_order")
+        read_only_fields = fields
+
+
+class ArrangementDetailsSerializer(serializers.ModelSerializer):
+    arrangement_type_display = serializers.CharField(
+        source="get_arrangement_type_display", read_only=True
+    )
+    composition = ArrangementCompositionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ArrangementDetails
+        exclude = ("id", "product")
+        read_only_fields = tuple(field.name for field in ArrangementDetails._meta.fields) + (
+            "arrangement_type_display",
+            "composition",
         )
 
 
@@ -141,12 +190,15 @@ class ProductListSerializer(serializers.ModelSerializer):
         return product.cover_image
     product_type_display = serializers.CharField(source="get_product_type_display", read_only=True)
     sale_unit_display = serializers.CharField(source="get_sale_unit_display", read_only=True)
-    is_in_stock = serializers.BooleanField(read_only=True)
+    price = serializers.SerializerMethodField()
+    stock_quantity = serializers.SerializerMethodField()
+    is_in_stock = serializers.SerializerMethodField()
+    has_purchasable_variant = serializers.SerializerMethodField()
     details = serializers.SerializerMethodField()
 
     # Backward-compatible commercial aliases. New clients should use the canonical names.
-    price_per_bundle = serializers.IntegerField(source="price", read_only=True)
-    stock_bundles = serializers.IntegerField(source="stock_quantity", read_only=True)
+    price_per_bundle = serializers.SerializerMethodField()
+    stock_bundles = serializers.SerializerMethodField()
     stems_per_bundle = serializers.IntegerField(source="unit_size", read_only=True)
     minimum_order_bundles = serializers.IntegerField(
         source="minimum_order_quantity", read_only=True
@@ -155,27 +207,67 @@ class ProductListSerializer(serializers.ModelSerializer):
     @extend_schema_field(
         PolymorphicProxySerializer(
             component_name="ProductDetails",
-            serializers=[PlantDetailsSerializer, CutFlowerDetailsSerializer],
+            serializers=[PlantDetailsSerializer, ArrangementDetailsSerializer, CutFlowerDetailsSerializer],
             resource_type_field_name=None,
             allow_null=True,
         )
     )
     def get_details(self, product: Product):
         plant_details = getattr(product, "plant_details", None)
+        arrangement_details = getattr(product, "arrangement_details", None)
         cut_flower_details = getattr(product, "cut_flower_details", None)
         if (
             product.product_type == Product.ProductType.PLANT
             and plant_details is not None
+            and arrangement_details is None
             and cut_flower_details is None
         ):
             return PlantDetailsSerializer(plant_details).data
         if (
+            product.product_type == Product.ProductType.ARRANGEMENT
+            and arrangement_details is not None
+            and plant_details is None
+            and cut_flower_details is None
+        ):
+            return ArrangementDetailsSerializer(arrangement_details).data
+        if (
             product.product_type == Product.ProductType.CUT_FLOWER
             and cut_flower_details is not None
             and plant_details is None
+            and arrangement_details is None
         ):
             return CutFlowerDetailsSerializer(cut_flower_details).data
         return None
+
+    def get_price(self, product: Product) -> int:
+        if product.product_type == Product.ProductType.CUT_FLOWER:
+            value = getattr(product, "active_variant_min_price", None)
+            return value if value is not None else 0
+        return product.price
+
+    def get_stock_quantity(self, product: Product) -> int:
+        if product.product_type == Product.ProductType.CUT_FLOWER:
+            return getattr(product, "active_variant_stock", None) or 0
+        return product.stock_quantity
+
+    def get_has_purchasable_variant(self, product: Product) -> bool:
+        if product.product_type != Product.ProductType.CUT_FLOWER:
+            return product.stock_quantity >= product.minimum_order_quantity
+        value = getattr(product, "has_purchasable_variant", None)
+        if value is not None:
+            return bool(value)
+        return product.cut_flower_variants.filter(
+            is_active=True, stock_quantity__gte=product.minimum_order_quantity
+        ).exists()
+
+    def get_is_in_stock(self, product: Product) -> bool:
+        return self.get_has_purchasable_variant(product)
+
+    def get_price_per_bundle(self, product: Product) -> int:
+        return self.get_price(product)
+
+    def get_stock_bundles(self, product: Product) -> int:
+        return self.get_stock_quantity(product)
 
     class Meta:
         model = Product
@@ -195,6 +287,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "cover_image",
             "is_featured",
             "is_in_stock",
+            "has_purchasable_variant",
             "category",
             "details",
             "price_per_bundle",

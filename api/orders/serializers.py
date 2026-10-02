@@ -77,6 +77,9 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
 class CheckoutItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(min_value=1, max_value=2_147_483_647)
+    variant_id = serializers.IntegerField(
+        required=False, allow_null=True, min_value=1, max_value=2_147_483_647
+    )
     quantity = serializers.IntegerField(min_value=1, max_value=1_000_000)
 
 
@@ -84,9 +87,9 @@ class CartPreviewRequestSerializer(serializers.Serializer):
     items = CheckoutItemInputSerializer(many=True, allow_empty=False, max_length=100)
 
     def validate_items(self, items):
-        product_ids = [item["product_id"] for item in items]
-        if len(product_ids) != len(set(product_ids)):
-            raise serializers.ValidationError("هر محصول باید فقط یک‌بار در سبد ارسال شود.")
+        identities = [(item["product_id"], item.get("variant_id")) for item in items]
+        if len(identities) != len(set(identities)):
+            raise serializers.ValidationError("هر محصول و تنوع رنگ باید فقط یک‌بار در سبد ارسال شود.")
         return items
 
 
@@ -98,6 +101,8 @@ class OrderCreateRequestSerializer(CartPreviewRequestSerializer):
 
 class CartPreviewItemSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
+    variant_id = serializers.IntegerField(allow_null=True)
+    variant_color = serializers.CharField(allow_blank=True)
     product_name = serializers.CharField()
     product_type = serializers.CharField()
     sale_unit = serializers.CharField()
@@ -124,7 +129,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = (
-            "id", "product", "product_name", "product_type", "sale_unit",
+            "id", "product", "variant", "variant_id_snapshot", "variant_color",
+            "product_name", "product_type", "sale_unit",
             "sale_unit_display", "unit_size", "quantity", "unit_price",
             "line_total", "cover_image",
         )

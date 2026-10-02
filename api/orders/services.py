@@ -6,12 +6,13 @@ from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
 from orders.models import Order, OrderItem, UserAddress
-from products.models import Product
+from products.models import CutFlowerVariant, Product
 
 
 @dataclass(frozen=True)
 class ValidatedLine:
     product: Product
+    variant: CutFlowerVariant | None
     quantity: int
     unit_price: Decimal
     line_total: Decimal
@@ -23,35 +24,87 @@ def delivery_fee_for(*, address: UserAddress, subtotal: Decimal) -> Decimal:
 
 
 def validate_products(items: list[dict], *, lock: bool) -> list[ValidatedLine]:
-    product_ids = sorted(item["product_id"] for item in items)
-    queryset = Product.objects.filter(pk__in=product_ids).select_related("category")
+    product_ids = sorted({item["product_id"] for item in items})
+    queryset = Product.objects.filter(pk__in=product_ids).select_related("category").order_by("pk")
     if lock:
         queryset = queryset.select_for_update()
     products = {product.pk: product for product in queryset}
+    requested_variant_ids = sorted(
+        {item["variant_id"] for item in items if item.get("variant_id") is not None}
+    )
+    variant_queryset = CutFlowerVariant.objects.filter(pk__in=requested_variant_ids).order_by("pk")
+    if lock:
+        variant_queryset = variant_queryset.select_for_update()
+    variants = {variant.pk: variant for variant in variant_queryset}
+
+    legacy_product_ids = sorted(
+        {
+            item["product_id"]
+            for item in items
+            if item.get("variant_id") is None
+            and products.get(item["product_id"])
+            and products[item["product_id"]].product_type == Product.ProductType.CUT_FLOWER
+        }
+    )
+    legacy_queryset = CutFlowerVariant.objects.filter(
+        product_id__in=legacy_product_ids, is_active=True
+    ).order_by("product_id", "pk")
+    if lock:
+        legacy_queryset = legacy_queryset.select_for_update()
+    legacy_variants: dict[int, list[CutFlowerVariant]] = {}
+    for variant in legacy_queryset:
+        legacy_variants.setdefault(variant.product_id, []).append(variant)
     errors = []
     lines = []
+    resolved_identities = set()
     for item in items:
         product_id = item["product_id"]
         quantity = item["quantity"]
+        requested_variant_id = item.get("variant_id")
         product = products.get(product_id)
+        variant = variants.get(requested_variant_id) if requested_variant_id is not None else None
         message = None
         if product is None:
             message = "محصول پیدا نشد."
         elif not product.is_active or not product.category.is_active:
             message = "این محصول در حال حاضر قابل سفارش نیست."
-        elif product.stock_quantity <= 0:
+        elif product.product_type == Product.ProductType.CUT_FLOWER:
+            if requested_variant_id is None:
+                candidates = legacy_variants.get(product_id, [])
+                if len(candidates) == 1:
+                    variant = candidates[0]
+                elif not candidates:
+                    message = "این محصول تنوع رنگ فعال ندارد."
+                else:
+                    message = "انتخاب رنگ برای این محصول الزامی است."
+            elif variant is None or variant.product_id != product_id:
+                message = "تنوع رنگ انتخاب‌شده متعلق به این محصول نیست."
+            elif not variant.is_active:
+                message = "تنوع رنگ انتخاب‌شده غیرفعال است."
+        elif requested_variant_id is not None:
+            message = "تنوع رنگ برای این نوع محصول مجاز نیست."
+
+        stock_quantity = variant.stock_quantity if variant is not None else product.stock_quantity
+        resolved_identity = (product_id, variant.pk if variant else None)
+        if message is None and resolved_identity in resolved_identities:
+            message = "هر محصول و تنوع رنگ باید فقط یک‌بار در سبد ارسال شود."
+        if message is None and stock_quantity <= 0:
             message = "این محصول ناموجود است."
-        elif quantity < product.minimum_order_quantity:
+        elif message is None and quantity < product.minimum_order_quantity:
             message = f"حداقل تعداد سفارش {product.minimum_order_quantity} {product.get_sale_unit_display()} است."
-        elif quantity > product.stock_quantity:
-            message = f"تنها {product.stock_quantity} {product.get_sale_unit_display()} موجود است."
+        elif message is None and quantity > stock_quantity:
+            message = f"تنها {stock_quantity} {product.get_sale_unit_display()} موجود است."
         if message:
-            errors.append({"product_id": product_id, "message": message})
+            errors.append(
+                {"product_id": product_id, "variant_id": requested_variant_id, "message": message}
+            )
             continue
-        unit_price = Decimal(product.price)
+        resolved_identities.add(resolved_identity)
+        unit_price = Decimal(variant.price if variant is not None else product.price)
         lines.append(
             ValidatedLine(
                 product=product,
+                variant=variant,
                 quantity=quantity,
                 unit_price=unit_price,
                 line_total=unit_price * quantity,
@@ -71,6 +124,8 @@ def preview_cart(*, user, items: list[dict], address: UserAddress | None = None)
         "items": [
             {
                 "product_id": line.product.pk,
+                "variant_id": line.variant.pk if line.variant else None,
+                "variant_color": line.variant.color if line.variant else "",
                 "product_name": line.product.name,
                 "product_type": line.product.product_type,
                 "sale_unit": line.product.sale_unit,
@@ -80,7 +135,9 @@ def preview_cart(*, user, items: list[dict], address: UserAddress | None = None)
                 "unit_price": str(line.unit_price.quantize(Decimal("1"))),
                 "line_total": str(line.line_total.quantize(Decimal("1"))),
                 "cover_image": line.product.cover_image or "",
-                "stock_quantity": line.product.stock_quantity,
+                "stock_quantity": (
+                    line.variant.stock_quantity if line.variant else line.product.stock_quantity
+                ),
                 "minimum_order_quantity": line.product.minimum_order_quantity,
             }
             for line in lines
@@ -134,6 +191,9 @@ def create_order(*, user, address_id: int, items: list[dict], idempotency_key, c
             OrderItem(
                 order=order,
                 product=line.product,
+                variant=line.variant,
+                variant_id_snapshot=line.variant.pk if line.variant else None,
+                variant_color=line.variant.color if line.variant else "",
                 product_name=line.product.name,
                 product_type=line.product.product_type,
                 sale_unit=line.product.sale_unit,
@@ -148,6 +208,10 @@ def create_order(*, user, address_id: int, items: list[dict], idempotency_key, c
         ]
     )
     for line in lines:
-        line.product.stock_quantity -= line.quantity
-        line.product.save(update_fields=("stock_quantity", "updated_at"))
+        if line.variant is not None:
+            line.variant.stock_quantity -= line.quantity
+            line.variant.save(update_fields=("stock_quantity", "updated_at"))
+        else:
+            line.product.stock_quantity -= line.quantity
+            line.product.save(update_fields=("stock_quantity", "updated_at"))
     return order, True

@@ -7,7 +7,7 @@ export interface CatalogCategory {
   sort_order: number;
 }
 
-export type ProductType = "plant" | "cut_flower";
+export type ProductType = "plant" | "arrangement" | "cut_flower";
 
 export type SaleUnit = "item" | "pot" | "stem" | "bunch" | "bouquet";
 
@@ -91,9 +91,42 @@ export interface CutFlowerProductDetails {
 
   seasonal_availability: SeasonalAvailability | "";
   seasonal_availability_display: string;
+  bloom_opening_stage: "closed" | "semi_open" | "open" | "mixed" | "";
+  bloom_opening_stage_display: string;
+
+  variants: CutFlowerVariant[];
 
   care_notes: string;
   shipping_notes: string;
+}
+
+export interface CutFlowerVariant {
+  id: number;
+  color: string;
+  price: number;
+  stock_quantity: number;
+  is_active: boolean;
+  is_in_stock: boolean;
+}
+
+export type ArrangementType = "bouquet" | "flower_box" | "basket";
+
+export interface ArrangementCompositionEntry {
+  id: number;
+  label: string;
+  stem_count: number | null;
+  sort_order: number;
+}
+
+export interface ArrangementProductDetails {
+  arrangement_type: ArrangementType;
+  arrangement_type_display: string;
+  approximate_dimensions: string;
+  dominant_color_theme: string;
+  design_style: string;
+  care_notes: string;
+  shipping_notes: string;
+  composition: ArrangementCompositionEntry[];
 }
 
 interface ProductBase {
@@ -118,6 +151,7 @@ interface ProductBase {
 
   is_featured: boolean;
   is_in_stock: boolean;
+  has_purchasable_variant: boolean;
 
   category: ProductCategorySummary;
 }
@@ -132,7 +166,12 @@ export interface CutFlowerProduct extends ProductBase {
   details: CutFlowerProductDetails | null;
 }
 
-export type CatalogProduct = PlantProduct | CutFlowerProduct;
+export interface ArrangementProduct extends ProductBase {
+  product_type: "arrangement";
+  details: ArrangementProductDetails | null;
+}
+
+export type CatalogProduct = PlantProduct | ArrangementProduct | CutFlowerProduct;
 
 export interface CatalogProductImage {
   id: number;
@@ -230,6 +269,10 @@ export interface ProductQuery {
   fragrance_level?: FragranceLevel;
 
   seasonal_availability?: SeasonalAvailability;
+  bloom_opening_stage?: CutFlowerProductDetails["bloom_opening_stage"];
+  arrangement_type?: ArrangementType;
+  dominant_color_theme?: string;
+  design_style?: string;
 
   page?: number;
   page_size?: number;

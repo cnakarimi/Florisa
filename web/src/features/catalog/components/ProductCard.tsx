@@ -32,6 +32,9 @@ export function ProductCard({
   const isAvailable =
     product.is_in_stock &&
     product.stock_quantity >= product.minimum_order_quantity;
+  const requiresColorSelection =
+    product.product_type === "cut_flower" &&
+    (product.details?.variants.filter((variant) => variant.is_active).length ?? 0) !== 1;
 
   const potMaterial =
     product.product_type === "plant"
@@ -72,6 +75,11 @@ export function ProductCard({
     event.stopPropagation();
 
     if (!isAvailable) {
+      return;
+    }
+
+    if (requiresColorSelection) {
+      onSelectProduct(product);
       return;
     }
 
@@ -240,7 +248,9 @@ export function ProductCard({
             disabled={!isAvailable}
             aria-label={
               isAvailable
-                ? `افزودن ${product.name} به سبد خرید`
+                ? requiresColorSelection
+                  ? `انتخاب رنگ ${product.name} در صفحه محصول`
+                  : `افزودن ${product.name} به سبد خرید`
                 : `${product.name} ناموجود است`
             }
             className={`
@@ -282,6 +292,8 @@ export function ProductCard({
               <>
                 <span className="text-white text-center">ناموجود</span>
               </>
+            ) : requiresColorSelection ? (
+              <span>انتخاب رنگ</span>
             ) : isAdded ? (
               <>
                 <Check className="size-4 shrink-0" aria-hidden="true" />

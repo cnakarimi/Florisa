@@ -8,7 +8,7 @@ from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from orders.models import Order, UserAddress
-from products.models import Category, Product
+from products.models import Category, CutFlowerVariant, Product
 
 
 class OrderAPITests(TestCase):
@@ -31,6 +31,12 @@ class OrderAPITests(TestCase):
             sale_unit=Product.SaleUnit.BUNCH,
             unit_size=10,
             minimum_order_quantity=2,
+        )
+        self.variant = CutFlowerVariant.objects.create(
+            product=self.product,
+            color="قرمز",
+            price=125_000,
+            stock_quantity=20,
         )
         self.address = UserAddress.objects.create(
             user=self.user,
@@ -196,6 +202,122 @@ class OrderAPITests(TestCase):
         self.assertEqual(response.data["delivery_fee"], "0")
         self.assertEqual(response.data["total"], "375000")
 
+    def test_multiple_colors_of_same_product_are_distinct_lines(self):
+        white = CutFlowerVariant.objects.create(
+            product=self.product, color="سفید", price=140_000, stock_quantity=7
+        )
+        self.login()
+        response = self.client.post(
+            "/api/orders/preview/",
+            {
+                "items": [
+                    {"product_id": self.product.pk, "variant_id": self.variant.pk, "quantity": 2},
+                    {"product_id": self.product.pk, "variant_id": white.pk, "quantity": 3},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["items"]), 2)
+        self.assertEqual(response.data["subtotal"], "670000")
+        self.assertEqual(
+            {item["variant_color"] for item in response.data["items"]}, {"قرمز", "سفید"}
+        )
+
+    def test_cut_flower_variant_must_belong_to_product_and_be_active(self):
+        other = Product.objects.create(
+            category=self.category,
+            name="میخک",
+            slug="carnation-order-test",
+            product_type=Product.ProductType.CUT_FLOWER,
+            price=10,
+            stock_quantity=10,
+            sale_unit=Product.SaleUnit.BUNCH,
+            unit_size=5,
+        )
+        wrong = CutFlowerVariant.objects.create(
+            product=other, color="صورتی", price=90_000, stock_quantity=5
+        )
+        inactive = CutFlowerVariant.objects.create(
+            product=self.product, color="زرد", price=100_000, stock_quantity=5, is_active=False
+        )
+        self.login()
+        for variant in (wrong, inactive):
+            with self.subTest(variant=variant.pk):
+                response = self.client.post(
+                    "/api/orders/preview/",
+                    {"items": [{"product_id": self.product.pk, "variant_id": variant.pk, "quantity": 2}]},
+                    format="json",
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(int(response.data["item_errors"][0]["variant_id"]), variant.pk)
+
+    def test_legacy_cut_flower_request_is_rejected_when_variant_is_ambiguous(self):
+        CutFlowerVariant.objects.create(
+            product=self.product, color="سفید", price=130_000, stock_quantity=5
+        )
+        self.login()
+        response = self.client.post(
+            "/api/orders/preview/",
+            {"items": [{"product_id": self.product.pk, "quantity": 2}]},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_variant_price_is_authoritative_and_snapshot_survives_deletion(self):
+        self.product.price = 1
+        self.product.stock_quantity = 999
+        self.product.save(update_fields=("price", "stock_quantity"))
+        self.variant.price = 175_000
+        self.variant.save(update_fields=("price",))
+        self.login()
+        payload = self.payload(
+            items=[
+                {
+                    "product_id": self.product.pk,
+                    "variant_id": self.variant.pk,
+                    "quantity": 2,
+                }
+            ]
+        )
+        response = self.client.post("/api/orders/", payload, format="json")
+        self.assertEqual(response.status_code, 201)
+        item = Order.objects.get().items.get()
+        variant_id = self.variant.pk
+        self.assertEqual(item.unit_price, Decimal("175000"))
+        self.assertEqual(item.variant_id_snapshot, variant_id)
+        self.assertEqual(item.variant_color, "قرمز")
+
+        self.variant.delete()
+        item.refresh_from_db()
+        self.assertIsNone(item.variant)
+        self.assertEqual(item.variant_id_snapshot, variant_id)
+        self.assertEqual(item.variant_color, "قرمز")
+
+    def test_multiple_variant_snapshots_survive_variant_deletion(self):
+        white = CutFlowerVariant.objects.create(
+            product=self.product, color="سفید", price=140_000, stock_quantity=5
+        )
+        self.login()
+        response = self.client.post(
+            "/api/orders/",
+            self.payload(
+                items=[
+                    {"product_id": self.product.pk, "variant_id": self.variant.pk, "quantity": 2},
+                    {"product_id": self.product.pk, "variant_id": white.pk, "quantity": 2},
+                ]
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.variant.delete()
+        white.delete()
+
+        items = list(Order.objects.get().items.order_by("variant_id_snapshot"))
+        self.assertEqual(len(items), 2)
+        self.assertTrue(all(item.variant is None for item in items))
+        self.assertEqual({item.variant_color for item in items}, {"قرمز", "سفید"})
+
     def test_duplicate_product_ids_and_minimum_are_rejected(self):
         self.login()
         duplicate = self.client.post(
@@ -224,8 +346,8 @@ class OrderAPITests(TestCase):
             400,
         )
         self.product.is_active = True
-        self.product.stock_quantity = 0
-        self.product.save(update_fields=("is_active", "stock_quantity"))
+        self.variant.stock_quantity = 0
+        self.variant.save(update_fields=("stock_quantity",))
         self.assertEqual(
             self.client.post("/api/orders/preview/", {"items": [{"product_id": self.product.pk, "quantity": 2}]}, format="json").status_code,
             400,
@@ -252,8 +374,8 @@ class OrderAPITests(TestCase):
         self.assertEqual(item.line_total, Decimal("250000"))
         self.assertEqual(item.unit_size, 10)
         self.assertEqual(order.address_line, self.address.address_line)
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.stock_quantity, 18)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 18)
 
     def test_failed_multi_item_order_rolls_back_completely(self):
         second = Product.objects.create(
@@ -276,9 +398,9 @@ class OrderAPITests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Order.objects.count(), 0)
-        self.product.refresh_from_db()
+        self.variant.refresh_from_db()
         second.refresh_from_db()
-        self.assertEqual(self.product.stock_quantity, 20)
+        self.assertEqual(self.variant.stock_quantity, 20)
         self.assertEqual(second.stock_quantity, 1)
 
     def test_idempotency_returns_same_order_without_second_decrement(self):
@@ -290,8 +412,8 @@ class OrderAPITests(TestCase):
         self.assertEqual(second.status_code, 200)
         self.assertEqual(first.data["public_number"], second.data["public_number"])
         self.assertEqual(Order.objects.count(), 1)
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.stock_quantity, 18)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 18)
 
     def test_order_access_is_owned_and_queries_are_prefetched(self):
         self.login()
@@ -315,5 +437,5 @@ class OrderAPITests(TestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 400)
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.stock_quantity, 20)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 20)

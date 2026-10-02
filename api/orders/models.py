@@ -163,6 +163,20 @@ class OrderItem(models.Model):
         blank=True,
         verbose_name="محصول",
     )
+    variant = models.ForeignKey(
+        "products.CutFlowerVariant",
+        on_delete=models.SET_NULL,
+        related_name="order_items",
+        null=True,
+        blank=True,
+        verbose_name="تنوع رنگ",
+    )
+    variant_id_snapshot = models.PositiveBigIntegerField(
+        "شناسه تنوع در زمان سفارش", null=True, blank=True, editable=False
+    )
+    variant_color = models.CharField(
+        "رنگ در زمان سفارش", max_length=80, blank=True, editable=False
+    )
     product_name = models.CharField("نام محصول", max_length=180, editable=False)
     product_type = models.CharField("نوع محصول", max_length=20, editable=False)
     sale_unit = models.CharField("واحد فروش", max_length=20, editable=False)
@@ -190,7 +204,16 @@ class OrderItem(models.Model):
         verbose_name = "قلم سفارش"
         verbose_name_plural = "اقلام سفارش"
         constraints = (
-            models.UniqueConstraint(fields=("order", "product"), name="unique_product_per_order"),
+            models.UniqueConstraint(
+                fields=("order", "product"),
+                condition=Q(variant__isnull=True, variant_id_snapshot__isnull=True),
+                name="unique_unvaried_product_per_order",
+            ),
+            models.UniqueConstraint(
+                fields=("order", "product", "variant"),
+                condition=Q(variant__isnull=False),
+                name="unique_product_variant_per_order",
+            ),
             models.CheckConstraint(condition=Q(quantity__gte=1), name="order_item_quantity_positive"),
             models.CheckConstraint(
                 condition=Q(unit_price__gte=0) & Q(line_total__gte=0),

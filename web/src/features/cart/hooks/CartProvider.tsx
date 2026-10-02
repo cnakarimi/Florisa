@@ -17,14 +17,16 @@ import {
   addCartSnapshot,
   calculateCartTotals,
   isCartItemValid,
-  normalizeCartQuantity,
+  makeCartLineId,
   productToCartSnapshot,
+  resolveCutFlowerVariant,
   setCartItemQuantity,
 } from "@/features/cart/logic";
 import { readStoredCart, writeStoredCart } from "@/features/cart/storage";
 import {
   CART_STORAGE_KEY,
   type CartItem,
+  type CartLineId,
   type CartRefreshResult,
 } from "@/features/cart/types";
 import { ApiError, getApiErrorMessage } from "@/lib/api/client";
@@ -42,15 +44,15 @@ interface CartContextValue {
   refreshError: string | null;
   hasInvalidItems: boolean;
 
-  addItem: (product: CatalogProduct, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  increaseItem: (productId: number) => void;
-  decreaseItem: (productId: number) => void;
-  setQuantity: (productId: number, quantity: number) => void;
+  addItem: (product: CatalogProduct, quantity?: number, variantId?: number) => void;
+  removeItem: (lineId: CartLineId) => void;
+  increaseItem: (lineId: CartLineId) => void;
+  decreaseItem: (lineId: CartLineId) => void;
+  setQuantity: (lineId: CartLineId, quantity: number) => void;
   clearCart: () => void;
 
-  hasItem: (productId: number) => boolean;
-  getItemQuantity: (productId: number) => number;
+  hasItem: (productId: number, variantId?: number) => boolean;
+  getItemQuantity: (productId: number, variantId?: number) => number;
 
   refreshCartItems: (force?: boolean) => Promise<CartRefreshResult>;
 }
@@ -114,8 +116,18 @@ export function CartProvider({ children }: CartProviderProps) {
   }, []);
 
   const addItem = useCallback(
-    (product: CatalogProduct, requestedQuantity?: number) => {
-      const snapshot = productToCartSnapshot(product);
+    (product: CatalogProduct, requestedQuantity?: number, variantId?: number) => {
+      const activeVariants =
+        product.product_type === "cut_flower"
+          ? (product.details?.variants.filter((variant) => variant.is_active) ?? [])
+          : [];
+      const variant =
+        activeVariants.find((item) => item.id === variantId) ??
+        (variantId === undefined && activeVariants.length === 1
+          ? activeVariants[0]
+          : null);
+      if (product.product_type === "cut_flower" && !variant) return;
+      const snapshot = productToCartSnapshot(product, variant);
 
       setItems((current) =>
         addCartSnapshot(current, snapshot, requestedQuantity),
@@ -124,37 +136,37 @@ export function CartProvider({ children }: CartProviderProps) {
     [],
   );
 
-  const removeItem = useCallback((productId: number) => {
+  const removeItem = useCallback((lineId: CartLineId) => {
     setItems((current) =>
-      current.filter((item) => item.product.id !== productId),
+      current.filter((item) => item.line_id !== lineId),
     );
   }, []);
 
-  const setQuantity = useCallback((productId: number, quantity: number) => {
-    setItems((current) => setCartItemQuantity(current, productId, quantity));
+  const setQuantity = useCallback((lineId: CartLineId, quantity: number) => {
+    setItems((current) => setCartItemQuantity(current, lineId, quantity));
   }, []);
 
-  const increaseItem = useCallback((productId: number) => {
+  const increaseItem = useCallback((lineId: CartLineId) => {
     setItems((current) => {
-      const item = current.find((item) => item.product.id === productId);
+      const item = current.find((item) => item.line_id === lineId);
 
       if (!item) {
         return current;
       }
 
-      return setCartItemQuantity(current, productId, item.quantity + 1);
+      return setCartItemQuantity(current, lineId, item.quantity + 1);
     });
   }, []);
 
-  const decreaseItem = useCallback((productId: number) => {
+  const decreaseItem = useCallback((lineId: CartLineId) => {
     setItems((current) => {
-      const item = current.find((item) => item.product.id === productId);
+      const item = current.find((item) => item.line_id === lineId);
 
       if (!item) {
         return current;
       }
 
-      return setCartItemQuantity(current, productId, item.quantity - 1);
+      return setCartItemQuantity(current, lineId, item.quantity - 1);
     });
   }, []);
 
@@ -164,13 +176,22 @@ export function CartProvider({ children }: CartProviderProps) {
   }, []);
 
   const hasItem = useCallback(
-    (productId: number) => items.some((item) => item.product.id === productId),
+    (productId: number, variantId?: number) =>
+      items.some(
+        (item) =>
+          item.product.id === productId &&
+          (variantId === undefined || item.product.variant_id === variantId),
+      ),
     [items],
   );
 
   const getItemQuantity = useCallback(
-    (productId: number) =>
-      items.find((item) => item.product.id === productId)?.quantity ?? 0,
+    (productId: number, variantId?: number) =>
+      items.find(
+        (item) =>
+          item.product.id === productId &&
+          (variantId === undefined || item.product.variant_id === variantId),
+      )?.quantity ?? 0,
     [items],
   );
 
@@ -199,15 +220,45 @@ export function CartProvider({ children }: CartProviderProps) {
               try {
                 const product = await getProductDetail(item.product.slug, true);
 
-                const snapshot = productToCartSnapshot(product);
+                let snapshot;
+                if (product.product_type === "cut_flower") {
+                  const resolution = resolveCutFlowerVariant(
+                    product,
+                    item.product.variant_id,
+                  );
+                  const selectedVariant = resolution.variant;
 
-                const quantity =
-                  normalizeCartQuantity(snapshot, item.quantity) ??
-                  Math.max(1, Math.trunc(snapshot.minimum_order_quantity));
+                  if (!selectedVariant) {
+                    return {
+                      ...item,
+                      product: {
+                        ...item.product,
+                        is_in_stock: false,
+                        requires_variant_selection: true,
+                        validation_message: resolution.message,
+                      },
+                    };
+                  }
+                  snapshot = productToCartSnapshot(product, selectedVariant);
+                } else {
+                  snapshot = productToCartSnapshot(product);
+                }
+
+                const minimum = Math.max(1, snapshot.minimum_order_quantity);
+                const validationMessage = item.quantity < minimum
+                  ? `حداقل تعداد سفارش به ${minimum} تغییر کرده است.`
+                  : item.quantity > snapshot.stock_quantity
+                    ? `موجودی فعلی ${snapshot.stock_quantity} ${snapshot.sale_unit_display} است.`
+                    : "";
+                const refreshedSnapshot = {
+                  ...snapshot,
+                  validation_message: validationMessage,
+                };
 
                 return {
-                  product: snapshot,
-                  quantity,
+                  line_id: makeCartLineId(snapshot.id, snapshot.variant_id),
+                  product: refreshedSnapshot,
+                  quantity: item.quantity,
                 };
               } catch (error) {
                 if (error instanceof ApiError && error.status === 404) {
@@ -217,6 +268,7 @@ export function CartProvider({ children }: CartProviderProps) {
                       ...item.product,
                       is_available: false,
                       is_in_stock: false,
+                      validation_message: "این محصول دیگر در دسترس نیست.",
                     },
                   };
                 }

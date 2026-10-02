@@ -12,7 +12,9 @@ interface ProductPurchasePanelProps {
   quantity: number;
   canBuy: boolean;
   totalPrice: number;
-  onAddToCart: (product: CatalogProduct, quantity: number) => void;
+  variantId?: number;
+  disabledLabel?: string;
+  onAddToCart: (product: CatalogProduct, quantity: number, variantId?: number) => void;
 }
 
 export function ProductPurchasePanel({
@@ -20,6 +22,8 @@ export function ProductPurchasePanel({
   quantity,
   canBuy,
   totalPrice,
+  variantId,
+  disabledLabel,
   onAddToCart,
 }: ProductPurchasePanelProps) {
   return (
@@ -62,7 +66,7 @@ rounded-t-[10px]
         {/* Add to cart */}
         <button
           type="button"
-          onClick={() => onAddToCart(product, quantity)}
+          onClick={() => onAddToCart(product, quantity, variantId)}
           disabled={!canBuy}
           className="
             flex
@@ -96,7 +100,7 @@ rounded-t-[10px]
             disabled:opacity-100
           "
         >
-          {canBuy ? "افزودن به سبد خرید" : "در حال حاضر ناموجود"}
+          {canBuy ? "افزودن به سبد خرید" : disabledLabel ?? "در حال حاضر ناموجود"}
         </button>
       </div>
     </div>

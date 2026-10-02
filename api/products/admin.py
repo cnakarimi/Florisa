@@ -5,9 +5,13 @@ from django.forms.models import BaseInlineFormSet
 from django.utils.html import format_html
 
 from products.models import (
+    Arrangement,
+    ArrangementComposition,
+    ArrangementDetails,
     Category,
     CutFlower,
     CutFlowerDetails,
+    CutFlowerVariant,
     HomeSlide,
     Plant,
     PlantDetails,
@@ -117,9 +121,41 @@ class CutFlowerDetailsInline(admin.StackedInline):
         "origin",
         "fragrance_level",
         "seasonal_availability",
+        "bloom_opening_stage",
         "care_notes",
         "shipping_notes",
     )
+
+
+class ArrangementDetailsInline(admin.StackedInline):
+    model = ArrangementDetails
+    formset = RequiredDetailsInlineFormSet
+    extra = 1
+    min_num = 1
+    max_num = 1
+    validate_min = True
+    validate_max = True
+    fields = (
+        "arrangement_type",
+        "approximate_dimensions",
+        "dominant_color_theme",
+        "design_style",
+        "care_notes",
+        "shipping_notes",
+    )
+
+
+class ArrangementCompositionInline(admin.TabularInline):
+    model = ArrangementComposition
+    extra = 1
+    fields = ("label", "stem_count", "sort_order")
+    ordering = ("sort_order", "id")
+
+
+class CutFlowerVariantInline(admin.TabularInline):
+    model = CutFlowerVariant
+    extra = 1
+    fields = ("color", "price", "stock_quantity", "is_active")
 
 
 class TypedProductAdmin(admin.ModelAdmin):
@@ -204,6 +240,7 @@ class PlantAdmin(TypedProductAdmin):
 @admin.register(CutFlower)
 class CutFlowerAdmin(TypedProductAdmin):
     product_type = Product.ProductType.CUT_FLOWER
+    readonly_fields = TypedProductAdmin.readonly_fields + ("price", "stock_quantity")
     list_display = (
         "name",
         "category",
@@ -218,13 +255,56 @@ class CutFlowerAdmin(TypedProductAdmin):
     )
     list_editable = ("is_featured", "featured_order")
     list_filter = ("category", "sale_unit", "is_active", "is_featured")
-    inlines = (CutFlowerDetailsInline, ProductImageInline)
+    inlines = (CutFlowerDetailsInline, CutFlowerVariantInline, ProductImageInline)
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
         initial.setdefault("sale_unit", Product.SaleUnit.BUNCH)
         initial.setdefault("unit_size", 20)
         return initial
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.price = 0
+            obj.stock_quantity = 0
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(Arrangement)
+class ArrangementAdmin(TypedProductAdmin):
+    product_type = Product.ProductType.ARRANGEMENT
+    list_display = (
+        "name", "category", "price", "stock_quantity", "is_active", "is_featured", "created_at"
+    )
+    list_filter = ("category", "is_active", "is_featured")
+    inlines = (ArrangementDetailsInline, ProductImageInline)
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial["sale_unit"] = Product.SaleUnit.ITEM
+        initial["unit_size"] = 1
+        return initial
+
+    def save_model(self, request, obj, form, change):
+        obj.sale_unit = Product.SaleUnit.ITEM
+        obj.unit_size = 1
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(ArrangementDetails)
+class ArrangementDetailsAdmin(admin.ModelAdmin):
+    list_display = ("product", "arrangement_type", "dominant_color_theme", "design_style")
+    search_fields = ("product__name", "dominant_color_theme", "design_style")
+    autocomplete_fields = ("product",)
+    inlines = (ArrangementCompositionInline,)
+
+
+@admin.register(CutFlowerVariant)
+class CutFlowerVariantAdmin(admin.ModelAdmin):
+    list_display = ("product", "color", "price", "stock_quantity", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("product__name", "color")
+    autocomplete_fields = ("product",)
 
 
 @admin.register(Product)

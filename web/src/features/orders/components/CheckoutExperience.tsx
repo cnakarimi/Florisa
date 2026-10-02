@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/features/cart/hooks/CartProvider";
+import { makeCartLineId } from "@/features/cart/logic";
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
 import {
@@ -83,7 +84,7 @@ export function CheckoutExperience() {
   const [customerNote, setCustomerNote] = useState("");
   const [error, setError] = useState("");
 
-  const [itemErrors, setItemErrors] = useState<Record<number, string>>({});
+  const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (checkoutItems.length === 0) {
@@ -94,6 +95,7 @@ export function CheckoutExperience() {
 
     setIsLoading(true);
     setError("");
+    setItemErrors({});
 
     attemptKey.current = getCheckoutAttemptKey(checkoutItems);
 
@@ -121,6 +123,9 @@ export function CheckoutExperience() {
         }
 
         setError(getApiErrorMessage(requestError));
+        if (requestError instanceof ApiError) {
+          setItemErrors(parseOrderItemErrors(requestError.rawData));
+        }
       })
       .finally(() => {
         if (current) {
@@ -254,6 +259,17 @@ export function CheckoutExperience() {
           </p>
         ) : null}
 
+        {!preview && Object.keys(itemErrors).length > 0 ? (
+          <div className="space-y-2" role="alert">
+            {cart.items.map((item) => itemErrors[item.line_id] ? (
+              <p key={item.line_id} className="text-xs text-rose-300">
+                {item.product.name}
+                {item.product.color ? `، ${item.product.color}` : ""}: {itemErrors[item.line_id]}
+              </p>
+            ) : null)}
+          </div>
+        ) : null}
+
         <section className="rounded-3xl border border-white/10 bg-[#171921] p-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-bold">
@@ -344,7 +360,7 @@ export function CheckoutExperience() {
             <div className="space-y-3">
               {preview.items.map((item) => (
                 <div
-                  key={item.product_id}
+                  key={makeCartLineId(item.product_id, item.variant_id)}
                   className="flex gap-3 border-b border-white/5 pb-3"
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/30">
@@ -365,13 +381,27 @@ export function CheckoutExperience() {
                       × {formatToman(Number(item.unit_price))}
                     </p>
 
+                    {item.variant_color ? (
+                      <p className="mt-1 text-xs text-zinc-400">
+                        رنگ: {item.variant_color}
+                      </p>
+                    ) : null}
+
+                    <p className="mt-1 text-[11px] text-zinc-500">
+                      {item.product_type === "cut_flower"
+                        ? `هر دسته ${toPersianDigits(item.unit_size)} شاخه`
+                        : item.product_type === "plant"
+                          ? "تعداد بر حسب گلدان"
+                          : "تعداد بر حسب گل‌آرایی کامل"}
+                    </p>
+
                     <p className="mt-1 text-sm font-black text-amber-400">
                       {formatToman(Number(item.line_total))}
                     </p>
 
-                    {itemErrors[item.product_id] ? (
+                    {itemErrors[makeCartLineId(item.product_id, item.variant_id)] ? (
                       <p className="mt-1 text-xs text-rose-300">
-                        {itemErrors[item.product_id]}
+                        {itemErrors[makeCartLineId(item.product_id, item.variant_id)]}
                       </p>
                     ) : null}
                   </div>

@@ -22,9 +22,13 @@ export function CheckoutGate() {
     isProfileComplete,
   } = auth;
 
-  const { isHydrated, items, isRefreshing, refreshCartItems } = cart;
+  const { isHydrated, items, refreshCartItems } = cart;
 
-  const hasStartedRef = useRef(false);
+  const refreshCartItemsRef = useRef(refreshCartItems);
+
+  useEffect(() => {
+    refreshCartItemsRef.current = refreshCartItems;
+  }, [refreshCartItems]);
 
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
@@ -34,12 +38,10 @@ export function CheckoutGate() {
       !isHydrated ||
       isInitializing ||
       initializationError ||
-      hasStartedRef.current
+      isReady
     ) {
       return;
     }
-
-    hasStartedRef.current = true;
 
     if (items.length === 0) {
       router.replace("/cart?checkout_error=empty");
@@ -50,7 +52,7 @@ export function CheckoutGate() {
 
     const prepareCheckout = async () => {
       try {
-        const result = await refreshCartItems(true);
+        const result = await refreshCartItemsRef.current(true);
 
         if (isCancelled) {
           return;
@@ -94,13 +96,13 @@ export function CheckoutGate() {
     isAuthenticated,
     isHydrated,
     isInitializing,
+    isReady,
     isProfileComplete,
     items.length,
-    refreshCartItems,
     router,
   ]);
 
-  if (!isHydrated || isInitializing || isRefreshing || !isReady) {
+  if (error || initializationError) {
     return (
       <main
         dir="rtl"
@@ -108,7 +110,7 @@ export function CheckoutGate() {
       >
         <div className="w-full max-w-md rounded-2xl border border-rose-400/20 bg-[#171921] p-6 text-center">
           <p className="text-sm leading-6 text-rose-300">
-            {error || "وضعیت ورود شما بررسی نشد."}
+            {error || initializationError}
           </p>
 
           <button

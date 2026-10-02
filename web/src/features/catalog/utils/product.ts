@@ -5,11 +5,14 @@ export function getProductIdentity(product: CatalogProduct): string {
   if (product.product_type === "plant") {
     return product.details?.plant_type ?? "";
   }
-  return product.details?.flower_type ?? "";
+  if (product.product_type === "cut_flower") {
+    return product.details?.flower_type ?? "";
+  }
+  return product.details?.arrangement_type_display ?? "";
 }
 
 export function getProductColor(product: CatalogProduct): string {
-  return product.details?.color ?? "";
+  return product.product_type === "plant" ? product.details?.color ?? "" : "";
 }
 
 export function getSaleUnitLabel(product: CatalogProduct): string {

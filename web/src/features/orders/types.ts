@@ -35,6 +35,7 @@ export interface AddressInput {
 
 export interface CheckoutItemInput {
   product_id: number;
+  variant_id?: number;
   quantity: number;
 }
 
@@ -47,6 +48,8 @@ export interface SubmitOrderInput {
 
 export interface PreviewItem {
   product_id: number;
+  variant_id: number | null;
+  variant_color: string;
   product_name: string;
   product_type: ProductType;
   sale_unit: SaleUnit;
@@ -79,10 +82,12 @@ export type OrderStatus =
 
 export interface OrderItem extends Omit<
   PreviewItem,
-  "product_id" | "stock_quantity" | "minimum_order_quantity"
+  "product_id" | "variant_id" | "stock_quantity" | "minimum_order_quantity"
 > {
   id: number;
   product: number | null;
+  variant: number | null;
+  variant_id_snapshot: number | null;
 }
 
 export interface Order {

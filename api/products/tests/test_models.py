@@ -3,7 +3,16 @@ from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
-from products.models import Category, CutFlowerDetails, PlantDetails, Product, ProductImage
+from products.models import (
+    ArrangementComposition,
+    ArrangementDetails,
+    Category,
+    CutFlowerDetails,
+    CutFlowerVariant,
+    PlantDetails,
+    Product,
+    ProductImage,
+)
 
 
 class ProductModelTests(TestCase):
@@ -57,6 +66,41 @@ class ProductModelTests(TestCase):
         details.full_clean()
         product.full_clean()
         self.assertEqual(product.cut_flower_details, details)
+
+    def test_arrangement_requires_item_unit_and_unit_size_one(self):
+        product = self.make_product(
+            Product.ProductType.ARRANGEMENT,
+            sale_unit=Product.SaleUnit.BOUQUET,
+            unit_size=2,
+        )
+        details = ArrangementDetails(
+            product=product,
+            arrangement_type=ArrangementDetails.ArrangementType.BOUQUET,
+        )
+        with self.assertRaises(ValidationError):
+            details.full_clean()
+
+    def test_arrangement_composition_label_and_stem_count_are_validated(self):
+        product = self.make_product(
+            Product.ProductType.ARRANGEMENT,
+            sale_unit=Product.SaleUnit.ITEM,
+            unit_size=1,
+        )
+        details = ArrangementDetails.objects.create(
+            product=product,
+            arrangement_type=ArrangementDetails.ArrangementType.BASKET,
+        )
+        with self.assertRaises(ValidationError):
+            ArrangementComposition(
+                arrangement=details, label=" ", stem_count=0
+            ).full_clean()
+
+    def test_cut_flower_variant_rejects_non_cut_flower_product(self):
+        product = self.make_product(Product.ProductType.PLANT)
+        variant = CutFlowerVariant(product=product, color="قرمز", price=100, stock_quantity=1)
+        with self.assertRaises(ValidationError) as error:
+            variant.full_clean()
+        self.assertIn("product", error.exception.message_dict)
 
     def test_mismatched_detail_type_is_rejected(self):
         product = self.make_product(Product.ProductType.PLANT)
@@ -119,7 +163,9 @@ class ProductModelTests(TestCase):
         self.assertIsNone(details.has_drainage)
 
     def test_minimum_order_cannot_exceed_positive_stock(self):
-        product = self.make_product(stock_quantity=2, minimum_order_quantity=3)
+        product = self.make_product(
+            Product.ProductType.PLANT, stock_quantity=2, minimum_order_quantity=3
+        )
 
         with self.assertRaises(ValidationError) as error:
             product.full_clean()
@@ -131,8 +177,12 @@ class ProductModelTests(TestCase):
             self.make_product(unit_size=0)
 
     def test_is_in_stock_uses_sale_unit_stock(self):
-        self.assertTrue(self.make_product(stock_quantity=2).is_in_stock)
-        self.assertFalse(self.make_product(stock_quantity=0).is_in_stock)
+        self.assertTrue(
+            self.make_product(Product.ProductType.PLANT, stock_quantity=2).is_in_stock
+        )
+        self.assertFalse(
+            self.make_product(Product.ProductType.PLANT, stock_quantity=0).is_in_stock
+        )
 
     def test_duplicate_slug_is_rejected(self):
         self.make_product(slug="same-slug")

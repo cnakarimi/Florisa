@@ -1,10 +1,12 @@
 import {
   CART_STORAGE_KEY,
   CART_STORAGE_VERSION,
+  LEGACY_CART_STORAGE_KEY,
   type CartItem,
   type CartProductSnapshot,
   type StoredCart,
 } from "./types.ts";
+import { makeCartLineId } from "./logic.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -60,12 +62,18 @@ function normalizeStoredItem(item: CartItem): CartItem {
   );
   const stock = Math.max(0, Math.trunc(stockQuantity));
   const requested = Math.max(1, Math.trunc(item.quantity));
-  const canMeetMinimum =
-    item.product.is_available &&
-    item.product.is_in_stock &&
-    stock >= minimum;
+  const variantId =
+    typeof legacy.variant_id === "number" &&
+    Number.isFinite(legacy.variant_id) &&
+    legacy.variant_id > 0
+    ? Math.trunc(legacy.variant_id)
+    : null;
+  const productType = legacy.product_type ?? "cut_flower";
+  const requiresVariantSelection =
+    productType === "cut_flower" && variantId === null;
 
   return {
+    line_id: makeCartLineId(Math.trunc(item.product.id), variantId),
     product: {
       ...item.product,
       id: Math.trunc(item.product.id),
@@ -81,14 +89,19 @@ function normalizeStoredItem(item: CartItem): CartItem {
         typeof legacy.sale_unit_display === "string"
           ? legacy.sale_unit_display
           : "دسته",
-      product_type: legacy.product_type ?? "cut_flower",
+      product_type: productType,
       product_identity: String(
         legacy.product_identity ?? legacy.flower_type ?? "",
       ),
+      variant_id: variantId,
+      requires_variant_selection: requiresVariantSelection,
+      validation_message: requiresVariantSelection
+        ? "رنگ این گل باید دوباره انتخاب شود."
+        : typeof legacy.validation_message === "string"
+          ? legacy.validation_message
+          : "",
     },
-    quantity: canMeetMinimum
-      ? Math.min(stock, Math.max(minimum, requested))
-      : requested,
+    quantity: requested,
   };
 }
 
@@ -101,21 +114,19 @@ export function parseStoredCart(rawValue: string | null): CartItem[] {
     const parsed: unknown = JSON.parse(rawValue);
     if (
       !isRecord(parsed) ||
-      parsed.version !== CART_STORAGE_VERSION ||
+      (parsed.version !== CART_STORAGE_VERSION && parsed.version !== 1) ||
       !Array.isArray(parsed.items)
     ) {
       return [];
     }
 
-    const uniqueItems = new Map<number, CartItem>();
+    const uniqueItems = new Map<string, CartItem>();
     for (const rawItem of parsed.items) {
       if (!isCartItem(rawItem)) {
         continue;
       }
-      uniqueItems.set(
-        Math.trunc(rawItem.product.id),
-        normalizeStoredItem(rawItem),
-      );
+      const normalized = normalizeStoredItem(rawItem);
+      uniqueItems.set(normalized.line_id, normalized);
     }
 
     return Array.from(uniqueItems.values());
@@ -130,7 +141,10 @@ export function readStoredCart(): CartItem[] {
   }
 
   try {
-    return parseStoredCart(window.localStorage.getItem(CART_STORAGE_KEY));
+    return parseStoredCart(
+      window.localStorage.getItem(CART_STORAGE_KEY) ??
+        window.localStorage.getItem(LEGACY_CART_STORAGE_KEY),
+    );
   } catch {
     return [];
   }
@@ -151,6 +165,7 @@ export function writeStoredCart(items: CartItem[]): void {
       CART_STORAGE_KEY,
       JSON.stringify(storedCart),
     );
+    window.localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
   } catch {
     // The in-memory cart remains usable when storage is unavailable.
   }

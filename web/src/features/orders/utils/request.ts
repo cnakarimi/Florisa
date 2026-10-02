@@ -3,6 +3,7 @@ import type { CheckoutItemInput } from "@/features/orders/types";
 interface CartItemLike {
   product: {
     id: number;
+    variant_id: number | null;
   };
   quantity: number;
 }
@@ -12,6 +13,9 @@ export function mapCartToCheckoutItems(
 ): CheckoutItemInput[] {
   return items.map((item) => ({
     product_id: item.product.id,
+    ...(item.product.variant_id !== null
+      ? { variant_id: item.product.variant_id }
+      : {}),
     quantity: item.quantity,
   }));
 }

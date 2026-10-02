@@ -42,6 +42,7 @@ class Category(models.Model):
 class Product(models.Model):
     class ProductType(models.TextChoices):
         PLANT = "plant", "گیاه"
+        ARRANGEMENT = "arrangement", "گل‌آرایی"
         CUT_FLOWER = "cut_flower", "گل شاخه‌ای"
 
     class SaleUnit(models.TextChoices):
@@ -128,6 +129,10 @@ class Product(models.Model):
 
     @property
     def is_in_stock(self) -> bool:
+        if self.product_type == self.ProductType.CUT_FLOWER and self.pk:
+            return self.cut_flower_variants.filter(
+                is_active=True, stock_quantity__gte=self.minimum_order_quantity
+            ).exists()
         return self.stock_quantity > 0
 
     def clean(self) -> None:
@@ -135,7 +140,8 @@ class Product(models.Model):
         errors: dict[str, str] = {}
 
         if (
-            self.stock_quantity is not None
+            self.product_type != self.ProductType.CUT_FLOWER
+            and self.stock_quantity is not None
             and self.minimum_order_quantity is not None
             and self.stock_quantity > 0
             and self.minimum_order_quantity > self.stock_quantity
@@ -143,6 +149,12 @@ class Product(models.Model):
             errors["minimum_order_quantity"] = (
                 "حداقل سفارش نمی‌تواند از موجودی بیشتر باشد."
             )
+
+        if self.product_type == self.ProductType.ARRANGEMENT:
+            if self.sale_unit != self.SaleUnit.ITEM:
+                errors["sale_unit"] = "واحد فروش گل‌آرایی کامل باید عدد باشد."
+            if self.unit_size != 1:
+                errors["unit_size"] = "اندازه واحد گل‌آرایی کامل باید ۱ باشد."
 
         if self.pk:
             original_type = (
@@ -156,11 +168,17 @@ class Product(models.Model):
                 )
 
             has_plant = PlantDetails.objects.filter(product_id=self.pk).exists()
+            has_arrangement = ArrangementDetails.objects.filter(product_id=self.pk).exists()
             has_cut_flower = CutFlowerDetails.objects.filter(product_id=self.pk).exists()
-            if self.product_type == self.ProductType.PLANT and (not has_plant or has_cut_flower):
+            detail_count = sum((has_plant, has_arrangement, has_cut_flower))
+            if self.product_type == self.ProductType.PLANT and (not has_plant or detail_count != 1):
                 errors["product_type"] = "محصول گیاهی باید فقط مشخصات گیاه داشته باشد."
+            if self.product_type == self.ProductType.ARRANGEMENT and (
+                not has_arrangement or detail_count != 1
+            ):
+                errors["product_type"] = "محصول گل‌آرایی باید فقط مشخصات گل‌آرایی داشته باشد."
             if self.product_type == self.ProductType.CUT_FLOWER and (
-                not has_cut_flower or has_plant
+                not has_cut_flower or detail_count != 1
             ):
                 errors["product_type"] = "گل شاخه‌ای باید فقط مشخصات گل شاخه‌ای داشته باشد."
 
@@ -301,6 +319,12 @@ class CutFlowerDetails(models.Model):
         AUTUMN = "autumn", "پاییز"
         WINTER = "winter", "زمستان"
 
+    class BloomOpeningStage(models.TextChoices):
+        CLOSED = "closed", "غنچه بسته"
+        SEMI_OPEN = "semi_open", "نیمه‌باز"
+        OPEN = "open", "باز"
+        MIXED = "mixed", "ترکیبی"
+
     product = models.OneToOneField(
         Product,
         on_delete=models.CASCADE,
@@ -325,6 +349,12 @@ class CutFlowerDetails(models.Model):
     )
     seasonal_availability = models.CharField(
         "فصل عرضه", max_length=20, choices=SeasonalAvailability.choices, blank=True
+    )
+    bloom_opening_stage = models.CharField(
+        "مرحله بازشدگی گل",
+        max_length=20,
+        choices=BloomOpeningStage.choices,
+        blank=True,
     )
     care_notes = models.TextField("نکات نگهداری", blank=True)
     shipping_notes = models.TextField("نکات ارسال", blank=True)
@@ -354,6 +384,129 @@ class CutFlowerDetails(models.Model):
         return f"مشخصات {self.product.name}"
 
 
+class ArrangementDetails(models.Model):
+    class ArrangementType(models.TextChoices):
+        BOUQUET = "bouquet", "دسته‌گل"
+        FLOWER_BOX = "flower_box", "باکس گل"
+        BASKET = "basket", "سبد گل"
+
+    product = models.OneToOneField(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="arrangement_details",
+        verbose_name="محصول",
+    )
+    arrangement_type = models.CharField(
+        "نوع گل‌آرایی", max_length=20, choices=ArrangementType.choices
+    )
+    approximate_dimensions = models.CharField("ابعاد تقریبی", max_length=120, blank=True)
+    dominant_color_theme = models.CharField("تم رنگی غالب", max_length=120, blank=True)
+    design_style = models.CharField("سبک طراحی", max_length=120, blank=True)
+    care_notes = models.TextField("نکات نگهداری", blank=True)
+    shipping_notes = models.TextField("نکات ارسال", blank=True)
+
+    class Meta:
+        verbose_name = "مشخصات گل‌آرایی"
+        verbose_name_plural = "مشخصات گل‌آرایی‌ها"
+
+    def clean(self) -> None:
+        super().clean()
+        if self.product_id and self.product.product_type != Product.ProductType.ARRANGEMENT:
+            raise ValidationError(
+                {"product": "مشخصات گل‌آرایی فقط برای محصول از نوع گل‌آرایی مجاز است."}
+            )
+        if self.product_id and (
+            self.product.sale_unit != Product.SaleUnit.ITEM or self.product.unit_size != 1
+        ):
+            raise ValidationError(
+                {"product": "گل‌آرایی کامل باید با واحد عدد و اندازه واحد ۱ فروخته شود."}
+            )
+
+    def __str__(self) -> str:
+        return f"مشخصات {self.product.name}"
+
+
+class ArrangementComposition(models.Model):
+    arrangement = models.ForeignKey(
+        ArrangementDetails,
+        on_delete=models.CASCADE,
+        related_name="composition",
+        verbose_name="گل‌آرایی",
+    )
+    label = models.CharField("عنوان", max_length=180)
+    stem_count = models.PositiveSmallIntegerField(
+        "تعداد شاخه", blank=True, null=True, validators=[MinValueValidator(1)]
+    )
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        ordering = ("sort_order", "id")
+        verbose_name = "جزء گل‌آرایی"
+        verbose_name_plural = "اجزای گل‌آرایی"
+        constraints = (
+            models.CheckConstraint(
+                condition=Q(stem_count__gte=1) | Q(stem_count__isnull=True),
+                name="arrangement_composition_stem_count_positive",
+            ),
+        )
+
+    def clean(self) -> None:
+        super().clean()
+        if not self.label.strip():
+            raise ValidationError({"label": "عنوان جزء گل‌آرایی الزامی است."})
+
+    def __str__(self) -> str:
+        return self.label
+
+
+class CutFlowerVariant(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="cut_flower_variants",
+        verbose_name="محصول",
+    )
+    color = models.CharField("رنگ", max_length=80)
+    price = models.PositiveBigIntegerField(
+        "قیمت هر واحد فروش (تومان)", validators=[MinValueValidator(0)]
+    )
+    stock_quantity = models.PositiveIntegerField(
+        "موجودی واحد فروش", default=0, validators=[MinValueValidator(0)]
+    )
+    is_active = models.BooleanField("فعال", default=True)
+    created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
+    updated_at = models.DateTimeField("زمان به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        ordering = ("id",)
+        verbose_name = "تنوع رنگ گل شاخه‌ای"
+        verbose_name_plural = "تنوع‌های رنگ گل شاخه‌ای"
+        constraints = (
+            models.UniqueConstraint(fields=("product", "color"), name="unique_cut_flower_color"),
+            models.CheckConstraint(condition=Q(price__gte=0), name="cut_flower_variant_price_nonnegative"),
+            models.CheckConstraint(
+                condition=Q(stock_quantity__gte=0), name="cut_flower_variant_stock_nonnegative"
+            ),
+        )
+
+    @property
+    def is_in_stock(self) -> bool:
+        return self.is_active and self.stock_quantity > 0
+
+    def clean(self) -> None:
+        super().clean()
+        errors = {}
+        if self.product_id and self.product.product_type != Product.ProductType.CUT_FLOWER:
+            errors["product"] = "تنوع رنگ فقط برای محصول گل شاخه‌ای مجاز است."
+        if not self.color.strip():
+            errors["color"] = "عنوان رنگ الزامی است."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self) -> str:
+        return f"{self.product.name} - {self.color}"
+
+
 class Plant(Product):
     class Meta:
         proxy = True
@@ -366,6 +519,13 @@ class CutFlower(Product):
         proxy = True
         verbose_name = "گل شاخه‌ای"
         verbose_name_plural = "گل‌های شاخه‌ای"
+
+
+class Arrangement(Product):
+    class Meta:
+        proxy = True
+        verbose_name = "گل‌آرایی"
+        verbose_name_plural = "گل‌آرایی‌ها"
 
 
 class ProductImage(models.Model):

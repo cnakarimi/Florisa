@@ -183,6 +183,20 @@ export function OrderDetailExperience({
                         {formatToman(Number(item.unit_price))}
                       </p>
 
+                      {item.variant_color ? (
+                        <p className="mt-1 text-xs text-zinc-400">
+                          رنگ: {item.variant_color}
+                        </p>
+                      ) : null}
+
+                      <p className="mt-1 text-[11px] text-zinc-500">
+                        {item.product_type === "cut_flower"
+                          ? `هر دسته ${toPersianDigits(item.unit_size)} شاخه`
+                          : item.product_type === "plant"
+                            ? "تعداد بر حسب گلدان"
+                            : "تعداد بر حسب گل‌آرایی کامل"}
+                      </p>
+
                       <p className="mt-1 text-sm font-black text-amber-400">
                         {formatToman(Number(item.line_total))}
                       </p>

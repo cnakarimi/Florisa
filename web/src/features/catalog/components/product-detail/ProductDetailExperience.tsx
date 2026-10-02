@@ -291,8 +291,8 @@ export function ProductDetailExperience({
         onToggleFavorite={(selectedProduct) => {
           toggleFavorite(selectedProduct);
         }}
-        onAddToCart={(selectedProduct, quantity) => {
-          cart.addItem(selectedProduct, quantity);
+        onAddToCart={(selectedProduct, quantity, variantId) => {
+          cart.addItem(selectedProduct, quantity, variantId);
         }}
       />
     </>

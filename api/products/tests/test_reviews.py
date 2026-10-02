@@ -116,13 +116,13 @@ class ProductReviewTests(TestCase):
         self.product.save(update_fields=["is_active"])
         self.assertEqual(self.client.get(self.review_url()).status_code, 404)
 
-    def test_detail_rating_uses_only_approved_reviews_and_keeps_two_queries(self):
+    def test_detail_rating_uses_only_approved_reviews_without_n_plus_one_queries(self):
         self.make_review(rating=5)
         self.make_review(rating=4)
         self.make_review(rating=1, is_approved=False)
         self.make_review(product=self.other_product, rating=1)
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(self.detail_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

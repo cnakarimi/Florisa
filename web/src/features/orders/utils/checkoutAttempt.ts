@@ -4,8 +4,15 @@ const KEY = "florisa_checkout_attempt_v1";
 
 export function cartFingerprint(items: CheckoutItemInput[]): string {
   return [...items]
-    .sort((a, b) => a.product_id - b.product_id)
-    .map((item) => `${item.product_id}:${item.quantity}`)
+    .sort(
+      (a, b) =>
+        a.product_id - b.product_id ||
+        (a.variant_id ?? 0) - (b.variant_id ?? 0),
+    )
+    .map(
+      (item) =>
+        `${item.product_id}:${item.variant_id ?? "base"}:${item.quantity}`,
+    )
     .join("|");
 }
 

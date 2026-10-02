@@ -37,6 +37,7 @@ function hasSharedProductFields(value: Record<string, unknown>): boolean {
     (typeof value.cover_image === "string" || value.cover_image === null) &&
     typeof value.is_featured === "boolean" &&
     typeof value.is_in_stock === "boolean" &&
+    typeof value.has_purchasable_variant === "boolean" &&
     isRecord(value.category) &&
     typeof value.category.id === "number" &&
     typeof value.category.name === "string" &&
@@ -61,7 +62,38 @@ export function isProduct(value: unknown): value is CatalogProduct {
 
   if (value.product_type === "cut_flower") {
     return (
-      value.details === null || typeof value.details.flower_type === "string"
+      value.details === null ||
+      (typeof value.details.flower_type === "string" &&
+        Array.isArray(value.details.variants) &&
+        value.details.variants.every(
+          (variant) =>
+            isRecord(variant) &&
+            typeof variant.id === "number" &&
+            typeof variant.color === "string" &&
+            typeof variant.price === "number" &&
+            typeof variant.stock_quantity === "number" &&
+            typeof variant.is_active === "boolean" &&
+            typeof variant.is_in_stock === "boolean",
+        ))
+    );
+  }
+
+  if (value.product_type === "arrangement") {
+    return (
+      value.details === null ||
+      (typeof value.details.arrangement_type === "string" &&
+        typeof value.details.approximate_dimensions === "string" &&
+        typeof value.details.dominant_color_theme === "string" &&
+        typeof value.details.design_style === "string" &&
+        Array.isArray(value.details.composition) &&
+        value.details.composition.every(
+          (entry) =>
+            isRecord(entry) &&
+            typeof entry.id === "number" &&
+            typeof entry.label === "string" &&
+            (typeof entry.stem_count === "number" || entry.stem_count === null) &&
+            typeof entry.sort_order === "number",
+        ))
     );
   }
 

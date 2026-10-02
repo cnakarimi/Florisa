@@ -1,8 +1,11 @@
 import type { ProductType, SaleUnit } from "@/features/catalog/types";
 
-export const CART_STORAGE_KEY = "florisa_cart_v1";
+export const CART_STORAGE_KEY = "florisa_cart_v2";
+export const LEGACY_CART_STORAGE_KEY = "florisa_cart_v1";
 
-export const CART_STORAGE_VERSION = 1;
+export const CART_STORAGE_VERSION = 2;
+
+export type CartLineId = string;
 
 export interface CartProductSnapshot {
   id: number;
@@ -22,12 +25,16 @@ export interface CartProductSnapshot {
   product_type: ProductType;
   product_identity: string;
   color: string;
+  variant_id: number | null;
+  requires_variant_selection: boolean;
+  validation_message: string;
 
   is_in_stock: boolean;
   is_available: boolean;
 }
 
 export interface CartItem {
+  line_id: CartLineId;
   product: CartProductSnapshot;
   quantity: number;
 }

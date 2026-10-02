@@ -44,7 +44,11 @@ interface ProductDetailViewProps {
   onSelectProduct: (product: CatalogProduct) => void;
   onToggleFavorite: (product: CatalogProduct) => void;
 
-  onAddToCart: (product: CatalogProduct, quantity: number) => void;
+  onAddToCart: (
+    product: CatalogProduct,
+    quantity: number,
+    variantId?: number,
+  ) => void;
 }
 
 export function ProductDetailView({
@@ -107,9 +111,6 @@ export function ProductDetailView({
 
   const minimumQuantity = Math.max(1, product.minimum_order_quantity);
 
-  const canBuy =
-    product.is_in_stock && product.stock_quantity >= minimumQuantity;
-
   /*
    * Quantity selection is not part of the current
    * mobile Product Detail design.
@@ -121,10 +122,24 @@ export function ProductDetailView({
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const activeVariants = product.product_type === "cut_flower"
+    ? (product.details?.variants.filter((variant) => variant.is_active) ?? [])
+    : [];
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
+    activeVariants.length === 1 ? activeVariants[0].id : null,
+  );
+  const selectedVariant = activeVariants.find(
+    (variant) => variant.id === selectedVariantId,
+  ) ?? null;
 
   const activeImage = gallery[selectedImage] ?? gallery[0];
 
-  const totalPrice = product.price * quantity;
+  const selectedPrice = selectedVariant?.price ?? product.price;
+  const selectedStock = selectedVariant?.stock_quantity ?? product.stock_quantity;
+  const canBuy = product.product_type === "cut_flower"
+    ? Boolean(selectedVariant) && selectedStock >= minimumQuantity
+    : product.is_in_stock && product.stock_quantity >= minimumQuantity;
+  const totalPrice = selectedPrice * quantity;
 
   /*
    * Keep the actual detail object so TypeScript
@@ -202,11 +217,43 @@ export function ProductDetailView({
 
             {plantDetails ? <ProductOptions /> : null}
 
+            {cutFlowerDetails && activeVariants.length > 0 ? (
+              <fieldset className="mt-4">
+                <legend className="mb-2 text-sm font-bold text-text-primary">
+                  انتخاب رنگ
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {activeVariants.map((variant) => (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => setSelectedVariantId(variant.id)}
+                      disabled={variant.stock_quantity < minimumQuantity}
+                      aria-pressed={selectedVariantId === variant.id}
+                      className={`rounded-lg border px-3 py-2 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        selectedVariantId === variant.id
+                          ? "border-action-primary bg-action-primary/10 text-text-primary"
+                          : "border-border-subtle text-text-secondary"
+                      }`}
+                    >
+                      {variant.color} · {toPersianDigits(variant.price.toLocaleString("en-US"))} تومان
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            ) : null}
+
             <ProductPurchasePanel
               product={product}
               quantity={quantity}
               canBuy={canBuy}
               totalPrice={totalPrice}
+              variantId={selectedVariant?.id}
+              disabledLabel={
+                product.product_type === "cut_flower" && !selectedVariant
+                  ? "ابتدا رنگ را انتخاب کنید"
+                  : undefined
+              }
               onAddToCart={onAddToCart}
             />
           </section>

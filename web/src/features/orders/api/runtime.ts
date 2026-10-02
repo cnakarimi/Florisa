@@ -5,6 +5,10 @@ import type {
   UserAddress,
 } from "@/features/orders/types";
 
+function makeLineId(productId: number, variantId: number | null): string {
+  return `${productId}:${variantId ?? "base"}`;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -39,7 +43,11 @@ function isPreviewItem(value: unknown): value is PreviewItem {
     isRecord(value) &&
     typeof value.product_id === "number" &&
     typeof value.product_name === "string" &&
-    (value.product_type === "plant" || value.product_type === "cut_flower") &&
+    (value.product_type === "plant" ||
+      value.product_type === "arrangement" ||
+      value.product_type === "cut_flower") &&
+    (typeof value.variant_id === "number" || value.variant_id === null) &&
+    typeof value.variant_color === "string" &&
     typeof value.sale_unit === "string" &&
     typeof value.sale_unit_display === "string" &&
     typeof value.unit_size === "number" &&
@@ -108,7 +116,13 @@ export function isOrder(value: unknown): value is Order {
         typeof item.id === "number" &&
         (typeof item.product === "number" || item.product === null) &&
         typeof item.product_name === "string" &&
-        (item.product_type === "plant" || item.product_type === "cut_flower") &&
+        (typeof item.variant === "number" || item.variant === null) &&
+        (typeof item.variant_id_snapshot === "number" ||
+          item.variant_id_snapshot === null) &&
+        typeof item.variant_color === "string" &&
+        (item.product_type === "plant" ||
+          item.product_type === "arrangement" ||
+          item.product_type === "cut_flower") &&
         typeof item.sale_unit === "string" &&
         typeof item.sale_unit_display === "string" &&
         typeof item.unit_size === "number" &&
@@ -119,12 +133,12 @@ export function isOrder(value: unknown): value is Order {
     )
   );
 }
-export function parseOrderItemErrors(value: unknown): Record<number, string> {
+export function parseOrderItemErrors(value: unknown): Record<string, string> {
   if (!isRecord(value) || !Array.isArray(value.item_errors)) {
     return {};
   }
 
-  const errors: Record<number, string> = {};
+  const errors: Record<string, string> = {};
 
   for (const item of value.item_errors) {
     if (!isRecord(item)) {
@@ -139,7 +153,14 @@ export function parseOrderItemErrors(value: unknown): Record<number, string> {
       typeof item.message === "string" &&
       item.message.trim()
     ) {
-      errors[productId] = item.message;
+      const rawVariantId = item.variant_id;
+      const variantId = rawVariantId === null || rawVariantId === undefined
+        ? null
+        : Number(rawVariantId);
+      if (variantId !== null && (!Number.isInteger(variantId) || variantId <= 0)) {
+        continue;
+      }
+      errors[makeLineId(productId, variantId)] = item.message;
     }
   }
 

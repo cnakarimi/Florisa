@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -54,6 +54,11 @@ export function ProductDetailExperience({
   const [areReviewsLoading, setAreReviewsLoading] = useState(true);
 
   const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
+  const [areMoreReviewsLoading, setAreMoreReviewsLoading] = useState(false);
+  const [moreReviewsError, setMoreReviewsError] = useState<string | null>(null);
+  const reviewsRequest = useRef({ slug, busy: false });
 
   const [relatedProducts, setRelatedProducts] = useState<CatalogProduct[]>([]);
 
@@ -65,6 +70,8 @@ export function ProductDetailExperience({
    */
   useEffect(() => {
     let isCurrent = true;
+    const requestState = { slug, busy: false };
+    reviewsRequest.current = requestState;
 
     Promise.resolve().then(() => {
       if (!isCurrent) {
@@ -74,6 +81,10 @@ export function ProductDetailExperience({
       setAreReviewsLoading(true);
       setReviewsError(null);
       setReviews([]);
+      setReviewPage(1);
+      setHasMoreReviews(false);
+      setAreMoreReviewsLoading(false);
+      setMoreReviewsError(null);
     });
 
     getProductReviews(slug, retryKey > 0)
@@ -83,6 +94,7 @@ export function ProductDetailExperience({
         }
 
         setReviews(result.results);
+        setHasMoreReviews(Boolean(result.next));
       })
       .catch((requestError: unknown) => {
         if (!isCurrent) {
@@ -99,8 +111,32 @@ export function ProductDetailExperience({
 
     return () => {
       isCurrent = false;
+      if (reviewsRequest.current === requestState) reviewsRequest.current = { slug: "", busy: false };
     };
   }, [retryKey, slug]);
+
+  const loadMoreReviews = async () => {
+    const requestState = reviewsRequest.current;
+    if (!hasMoreReviews || requestState.busy || areReviewsLoading) return;
+    requestState.busy = true;
+    setAreMoreReviewsLoading(true);
+    setMoreReviewsError(null);
+    try {
+      const result = await getProductReviews(slug, true, reviewPage + 1);
+      if (reviewsRequest.current !== requestState) return;
+      setReviews(current => {
+        const ids = new Set(current.map(review => review.id));
+        return [...current, ...result.results.filter(review => !ids.has(review.id))];
+      });
+      setReviewPage(page => page + 1);
+      setHasMoreReviews(Boolean(result.next));
+    } catch (error) {
+      if (reviewsRequest.current === requestState) setMoreReviewsError(getApiErrorMessage(error));
+    } finally {
+      requestState.busy = false;
+      if (reviewsRequest.current === requestState) setAreMoreReviewsLoading(false);
+    }
+  };
 
   /*
    * Related products
@@ -281,6 +317,10 @@ export function ProductDetailExperience({
         reviews={reviews}
         areReviewsLoading={areReviewsLoading}
         reviewsError={reviewsError}
+        hasMoreReviews={hasMoreReviews}
+        areMoreReviewsLoading={areMoreReviewsLoading}
+        moreReviewsError={moreReviewsError}
+        onLoadMoreReviews={loadMoreReviews}
         relatedProducts={relatedProducts}
         areRelatedProductsLoading={areRelatedProductsLoading}
         cartCount={cart.isHydrated ? cart.totalQuantity : 0}

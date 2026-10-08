@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ProductDesignIcon } from "./PlantMobileSections";
 
 import {
   HeartOutlineIcon,
@@ -19,13 +20,16 @@ interface ProductInfoProps {
   product: CatalogProductDetail;
   isFavorite: boolean;
   onToggleFavorite: (product: CatalogProduct) => void;
+  mobilePlant?: boolean;
 }
 
 export function ProductInfo({
   product,
   isFavorite,
   onToggleFavorite,
+  mobilePlant = false,
 }: ProductInfoProps) {
+  const nameId = useId();
   const [shareStatus, setShareStatus] = useState("");
 
   const shareTimerRef =
@@ -38,7 +42,7 @@ export function ProductInfo({
 
   const productSubtitle =
     plantDetails?.pot_included && plantDetails.pot_material
-      ? `گلدان - ${plantDetails.pot_material}`
+      ? `${mobilePlant ? "گلدان " : "گلدان - "}${plantDetails.pot_material}`
       : product.category.name;
 
   const rating = product.rating_average;
@@ -99,25 +103,25 @@ export function ProductInfo({
   return (
     <section
       className="flex flex-col gap-3"
-      aria-labelledby="product-name"
+      aria-labelledby={nameId}
     >
       {/* Top row */}
       <div className="flex items-center justify-between gap-4">
         <h1
-          id="product-name"
+          id={nameId}
           className="min-w-0 text-right text-xl font-bold leading-7 text-text-primary"
         >
           {product.name}
         </h1>
 
-        <div className="flex shrink-0 items-center gap-4">
+        <div className={`flex shrink-0 items-center ${mobilePlant ? "gap-[22px]" : "gap-4"}`}>
           <button
             type="button"
             onClick={handleShare}
             className="grid size-8 place-items-center text-text-primary transition-colors hover:text-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
             aria-label="اشتراک‌گذاری محصول"
           >
-            <ShareIcon aria-hidden="true" />
+            {mobilePlant ? <ProductDesignIcon name="share" /> : <ShareIcon aria-hidden="true" />}
           </button>
 
           <button
@@ -135,32 +139,32 @@ export function ProductInfo({
             }
             aria-pressed={isFavorite}
           >
-            <HeartOutlineIcon
+            {mobilePlant ? <span className={isFavorite ? "rounded-full bg-red-500/20" : ""}><ProductDesignIcon name="favorite" /></span> : <HeartOutlineIcon
               className={
                 isFavorite ? "bg-error-100" : undefined
               }
               aria-hidden="true"
-            />
+            />}
           </button>
         </div>
       </div>
 
       {/* Bottom row */}
       <div className="flex items-center justify-between gap-4">
-        <p className="min-w-0 text-right text-sm font-normal leading-5 text-text-secondary">
+        <p className={`min-w-0 text-right font-normal leading-5 text-text-secondary ${mobilePlant ? "text-xs" : "text-sm"}`}>
           {productSubtitle}
         </p>
 
         {rating !== null ? (
           <div className="flex shrink-0 items-center gap-1 pl-1.5">
             <span className="text-xs font-medium leading-5 text-text-primary">
-              {toPersianDigits(rating.toFixed(1))}
+              <bdi>{toPersianDigits(rating.toFixed(1))}</bdi>
             </span>
 
-            <StarIcon
+            {mobilePlant ? <ProductDesignIcon name="star" /> : <StarIcon
               className="mb-1 size-3.5 fill-current text-text-brand"
               aria-hidden="true"
-            />
+            />}
           </div>
         ) : null}
       </div>

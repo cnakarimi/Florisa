@@ -20,18 +20,23 @@ import { ProductInfo } from "./ProductInfo";
 import { ProductOptions } from "./ProductOptions";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { ProductReviews } from "./ProductReviews";
+import { PlantMobileDetail } from "./PlantMobileDetail";
 import {
   CutFlowerSpecifications,
   PlantDetails,
   ProductCareTips,
 } from "./ProductSpecifications";
 
-interface ProductDetailViewProps {
+export interface ProductDetailViewProps {
   product: CatalogProductDetail;
 
   reviews: CatalogProductReview[];
   areReviewsLoading: boolean;
   reviewsError: string | null;
+  hasMoreReviews: boolean;
+  areMoreReviewsLoading: boolean;
+  moreReviewsError: string | null;
+  onLoadMoreReviews: () => void;
 
   relatedProducts: CatalogProduct[];
   areRelatedProductsLoading: boolean;
@@ -56,6 +61,10 @@ export function ProductDetailView({
   reviews,
   areReviewsLoading,
   reviewsError,
+  hasMoreReviews,
+  areMoreReviewsLoading,
+  moreReviewsError,
+  onLoadMoreReviews,
   relatedProducts,
   areRelatedProductsLoading,
   cartCount,
@@ -111,13 +120,8 @@ export function ProductDetailView({
 
   const minimumQuantity = Math.max(1, product.minimum_order_quantity);
 
-  /*
-   * Quantity selection is not part of the current
-   * mobile Product Detail design.
-   *
-   * Until that interaction is designed, Add to Cart
-   * uses the product's minimum order quantity.
-   */
+  // Keep the existing desktop and other product-type purchase behavior.
+  // PlantMobileDetail owns the mobile plant quantity selector.
   const quantity = minimumQuantity;
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -156,7 +160,15 @@ export function ProductDetailView({
       dir="rtl"
       className="min-h-dvh bg-background-primary text-right text-text-primary selection:bg-action-primary/30 selection:text-text-inverse"
     >
-      <div className="mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32">
+      {product.product_type === "plant" && <PlantMobileDetail
+        product={product} reviews={reviews} areReviewsLoading={areReviewsLoading} reviewsError={reviewsError}
+        hasMoreReviews={hasMoreReviews} areMoreReviewsLoading={areMoreReviewsLoading} moreReviewsError={moreReviewsError} onLoadMoreReviews={onLoadMoreReviews}
+        relatedProducts={relatedProducts} areRelatedProductsLoading={areRelatedProductsLoading}
+        cartCount={cartCount} isFavorite={isFavorite} onBack={onBack} onNavigateToCart={onNavigateToCart}
+        onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
+        gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
+      />}
+      <div className={`mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32 ${product.product_type === "plant" ? "hidden md:block" : ""}`}>
         {/* Temporary desktop header.
             Mobile navigation lives inside ProductGallery.
             Desktop will be redesigned after its Figma is complete. */}
@@ -215,7 +227,7 @@ export function ProductDetailView({
               onToggleFavorite={onToggleFavorite}
             />
 
-            {plantDetails ? <ProductOptions /> : null}
+            {plantDetails ? <ProductOptions details={plantDetails} /> : null}
 
             {cutFlowerDetails && activeVariants.length > 0 ? (
               <fieldset className="mt-4">

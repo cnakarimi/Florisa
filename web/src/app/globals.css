@@ -129,6 +129,10 @@ button {
 }
 
 @media (max-width: 767px) {
+  body:has([data-plant-mobile-detail]) [data-product-route-navbar] {
+    display: none;
+  }
+
   .site-footer {
     padding-bottom: calc(1.75rem + env(safe-area-inset-bottom));
   }

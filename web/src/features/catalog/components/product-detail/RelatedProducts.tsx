@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+import Link from "next/link";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 
 import type { CatalogProduct } from "@/features/catalog/types";
@@ -9,6 +11,7 @@ interface RelatedProductsProps {
   isLoading: boolean;
   onAddToCart: (product: CatalogProduct) => void;
   onSelectProduct: (product: CatalogProduct) => void;
+  mobilePlant?: boolean;
 }
 
 export function RelatedProducts({
@@ -16,19 +19,24 @@ export function RelatedProducts({
   isLoading,
   onAddToCart,
   onSelectProduct,
+  mobilePlant = false,
 }: RelatedProductsProps) {
+  const titleId = useId();
   if (!isLoading && products.length === 0) {
     return null;
   }
 
   return (
-    <section className="py-4" aria-labelledby="related-products-title">
+    <section className={mobilePlant ? "py-8" : "py-4"} aria-labelledby={titleId}>
+      <div className="flex items-center justify-between">
       <h2
-        id="related-products-title"
-        className="px-4 text-base font-bold leading-6 text-text-primary sm:px-6 md:px-8"
+        id={titleId}
+        className={mobilePlant ? "px-5 text-mobile-body-large font-normal" : "px-4 text-base font-bold leading-6 text-text-primary sm:px-6 md:px-8"}
       >
-        محصولات مشابه
+        {mobilePlant ? "گیاهان پیشنهادی" : "محصولات مشابه"}
       </h2>
+      {mobilePlant && <Link href="/shop?product_type=plant" className="px-5 text-mobile-body-small text-text-secondary">مشاهده همه</Link>}
+      </div>
 
       {isLoading ? (
         <div
@@ -49,7 +57,7 @@ export function RelatedProducts({
           {[0, 1, 2].map((item) => (
             <div
               key={item}
-              className="
+              className={mobilePlant ? "w-[220px] shrink-0 snap-start [&_article]:border [&_article]:border-white/10 [&_article>button]:aspect-auto [&_article>button]:h-[200px] [&_h3]:text-[15px]" : `
                 w-[72vw]
                 min-w-[240px]
                 max-w-[290px]
@@ -60,7 +68,7 @@ export function RelatedProducts({
 
                 md:w-[30vw]
                 md:max-w-[300px]
-              "
+              `}
             >
               <div className="overflow-hidden rounded-xl bg-background-secondary">
                 <div className="aspect-square animate-pulse bg-background-tertiary" />
@@ -77,7 +85,7 @@ export function RelatedProducts({
       ) : (
         <div
           dir="rtl"
-          className="
+          className={mobilePlant ? "mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : `
             mt-3
             flex
             snap-x
@@ -95,13 +103,13 @@ export function RelatedProducts({
 
             [scrollbar-width:none]
             [&::-webkit-scrollbar]:hidden
-          "
+          `}
           aria-label="محصولات مشابه"
         >
           {products.map((product) => (
             <div
               key={product.id}
-              className="
+              className={mobilePlant ? "w-[220px] shrink-0 snap-start [&_article]:border [&_article]:border-white/10 [&_article>button]:aspect-auto [&_article>button]:h-[200px] [&_h3]:text-[15px]" : `
                 w-[72vw]
                 min-w-[240px]
                 max-w-[290px]
@@ -113,7 +121,7 @@ export function RelatedProducts({
 
                 md:w-[30vw]
                 md:max-w-[300px]
-              "
+              `}
             >
               <ProductCard
                 product={product}

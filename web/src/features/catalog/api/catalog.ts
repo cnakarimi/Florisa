@@ -99,9 +99,10 @@ export async function getProductDetail(
 export async function getProductReviews(
   slug: string,
   force = false,
+  page = 1,
 ): Promise<PaginatedProductReviews> {
   const data = await cachedRequest<unknown>(
-    `/api/products/${encodeURIComponent(slug)}/reviews/`,
+    `/api/products/${encodeURIComponent(slug)}/reviews/${page > 1 ? `?page=${page}` : ""}`,
     force,
   );
 

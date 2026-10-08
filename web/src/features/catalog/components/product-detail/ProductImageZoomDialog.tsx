@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 import { CatalogImage } from "@/features/catalog/components/CatalogImage";
@@ -18,16 +18,23 @@ export function ProductImageZoomDialog({
   image,
   onClose,
 }: ProductImageZoomDialogProps) {
+  const closeButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
     const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButton.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
+      }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        closeButton.current?.focus();
       }
     };
 
@@ -37,6 +44,7 @@ export function ProductImageZoomDialog({
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
     };
   }, [isOpen, onClose]);
 
@@ -53,9 +61,10 @@ export function ProductImageZoomDialog({
       onClick={onClose}
     >
       <button
+        ref={closeButton}
         type="button"
         onClick={onClose}
-        className="absolute right-4 top-4 z-10 grid size-11 place-items-center rounded-full border border-border-subtle bg-background-primary/60 text-text-inverse transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
+        className="absolute right-4 top-4 z-10 grid size-11 place-items-center rounded-full border border-border-subtle bg-background-primary/60 text-text-primary transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
         aria-label="بستن تصویر"
       >
         <X className="size-5" aria-hidden="true" />

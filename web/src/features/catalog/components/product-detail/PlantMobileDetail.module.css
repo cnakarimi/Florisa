@@ -1,0 +1,38 @@
+.page {
+  --text-primary: #f5f5f5;
+  color: #f5f5f5;
+  background: var(--background-primary);
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+.page button,
+.purchaseBar button {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.page button[aria-label="افزایش تعداد گلدان"],
+.page button[aria-label="کاهش تعداد گلدان"] { font-size: 20px; }
+.page article button { font-size: 11px; font-weight: 700; }
+.purchaseBar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  border-radius: 10px 10px 0 0;
+  background: var(--background-secondary);
+  box-shadow: var(--shadow-purchase);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Product routes use the gallery navigation; there is no BottomNav on this route.
+   Reserve its height as well if a shared navigation is mounted in the future. */
+:global(body:has([data-mobile-bottom-nav])) .purchaseBar {
+  bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
+}
+:global(body:has([data-mobile-bottom-nav])) .page {
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 767px) {
+  .page { display: block; }
+}
+@media (min-width: 768px) { .page { display: none; } }

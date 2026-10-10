@@ -261,6 +261,8 @@ export function CartPageExperience({
                               <h2 className="truncate text-sm font-extrabold leading-tight text-white">
                                 {item.product.name}
                               </h2>
+                              {item.product.pot_name && <p className="mt-1 text-xs text-zinc-400">گلدان: {item.product.pot_name}</p>}
+                              {item.product.product_type === "plant" && !item.product.configuration_image && <p className="mt-1 text-[11px] text-zinc-500">تصویر عمومی گیاه</p>}
 
                               <p className="mt-1 truncate text-[11px] text-zinc-400">
                                 {item.product.product_identity}
@@ -374,11 +376,11 @@ export function CartPageExperience({
                           قیمت هر {item.product.sale_unit_display}:{" "}
                           {formatToman(item.product.price)} · حداقل{" "}
                           {toPersianDigits(item.product.minimum_order_quantity)}{" "}
-                          {item.product.sale_unit_display} · موجودی{" "}
-                          {toPersianDigits(item.product.stock_quantity)}{" "}
                           {item.product.sale_unit_display}
+                          {item.product.product_type !== "plant" && <> · موجودی {toPersianDigits(item.product.stock_quantity)} {item.product.sale_unit_display}</>}
                         </p>
                       )}
+                      {item.product.requires_pot_selection && <button type="button" onClick={() => { cart.removeItem(item.line_id); router.push(`/products/${encodeURIComponent(item.product.slug)}`); }} className="mt-3 text-xs text-amber-400 underline">حذف این ترکیب و انتخاب گلدان دیگر</button>}
                     </article>
                   );
                 })}

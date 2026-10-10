@@ -4,6 +4,8 @@ interface CartItemLike {
   product: {
     id: number;
     variant_id: number | null;
+    pot_option_id?: number | null;
+    product_type?: string;
   };
   quantity: number;
 }
@@ -13,6 +15,7 @@ export function mapCartToCheckoutItems(
 ): CheckoutItemInput[] {
   return items.map((item) => ({
     product_id: item.product.id,
+    ...(item.product.product_type === "plant" || item.product.pot_option_id != null ? { pot_option_id: item.product.pot_option_id ?? null } : {}),
     ...(item.product.variant_id !== null
       ? { variant_id: item.product.variant_id }
       : {}),

@@ -18,6 +18,7 @@ class OrderItemInline(admin.TabularInline):
     can_delete = False
     readonly_fields = (
         "product", "variant", "variant_id_snapshot", "variant_color",
+        "pot_assignment", "pot_option_id_snapshot", "pot_id_snapshot", "pot_name", "pot_attributes", "pot_surcharge",
         "product_name", "product_type", "sale_unit", "sale_unit_display",
         "unit_size", "quantity", "unit_price", "line_total", "cover_image",
     )

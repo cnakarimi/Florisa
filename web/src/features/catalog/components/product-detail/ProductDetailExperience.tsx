@@ -25,6 +25,7 @@ import { ApiError, getApiErrorMessage } from "@/lib/api/client";
 import { CatalogFeedback } from "../CatalogFeedback";
 import { ProductDetailLoading } from "./ProductDetailLoading";
 import { ProductDetailView } from "./ProductDetailView";
+import { resolvePlantPotOption } from "@/features/cart/logic";
 
 interface ProductDetailExperienceProps {
   slug: string;
@@ -258,6 +259,14 @@ export function ProductDetailExperience({
     router.push("/");
   }, [router]);
 
+  useEffect(() => {
+    let current = true;
+    const refresh = () => { getProductDetail(slug, true).then(result => { if (current) setProduct(result); }).catch(() => {}); };
+    const timer = window.setInterval(refresh, 60_000);
+    window.addEventListener("focus", refresh);
+    return () => { current = false; window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, [slug]);
+
   const openProduct = useCallback(
     (selectedProduct: CatalogProduct) => {
       router.push(`/products/${encodeURIComponent(selectedProduct.slug)}`);
@@ -331,7 +340,15 @@ export function ProductDetailExperience({
         onToggleFavorite={(selectedProduct) => {
           toggleFavorite(selectedProduct);
         }}
-        onAddToCart={(selectedProduct, quantity, variantId) => {
+        onAddToCart={async (selectedProduct, quantity, variantId, potOptionId) => {
+          if (selectedProduct.product_type === "plant") {
+            const current = await getProductDetail(selectedProduct.slug, true);
+            if (current.id === product.id) setProduct(current);
+            const resolution = resolvePlantPotOption(current, potOptionId ?? null);
+            if (!resolution.option || quantity > resolution.option.max_quantity) throw new Error(resolution.message || "تعداد انتخاب‌شده موجود نیست.");
+            cart.addItem(current, quantity, undefined, potOptionId ?? null);
+            return;
+          }
           cart.addItem(selectedProduct, quantity, variantId);
         }}
       />

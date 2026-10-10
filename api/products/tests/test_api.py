@@ -422,9 +422,9 @@ class CatalogAPITests(APITestCase):
     def test_list_and_detail_queries_are_optimized(self):
         product = self.make_plant()
         ProductImage.objects.create(product=product, image="one.jpg")
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             list_response = self.client.get(reverse("products:product-list"))
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             detail_response = self.client.get(
                 reverse("products:product-detail", kwargs={"slug": product.slug})
             )

@@ -17,7 +17,8 @@ import { toPersianDigits } from "@/utils/persian";
 import { ProductGallery, type GalleryImage } from "./ProductGallery";
 import { ProductImageZoomDialog } from "./ProductImageZoomDialog";
 import { ProductInfo } from "./ProductInfo";
-import { ProductOptions } from "./ProductOptions";
+import { ProductPotSelector } from "./ProductPotSelector";
+import { getPlantPotOptions, initialPlantPot, selectedPotDetails } from "../../utils/pot-options";
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { ProductReviews } from "./ProductReviews";
 import { PlantMobileDetail } from "./PlantMobileDetail";
@@ -53,7 +54,8 @@ export interface ProductDetailViewProps {
     product: CatalogProduct,
     quantity: number,
     variantId?: number,
-  ) => void;
+    potOptionId?: number | null,
+  ) => void | Promise<void>;
 }
 
 export function ProductDetailView({
@@ -75,13 +77,24 @@ export function ProductDetailView({
   onToggleFavorite,
   onAddToCart,
 }: ProductDetailViewProps) {
+  const [selectedPotRecord, setSelectedPotRecord] = useState(() => initialPlantPot(product));
+  const potOptions = getPlantPotOptions(product);
+  const selectedPot = potOptions.find(option => option.id === selectedPotRecord?.id) ?? selectedPotRecord;
+  const potAvailable = Boolean(selectedPot && potOptions.some(option => option.id === selectedPot.id && option.is_available));
   const gallery = useMemo<GalleryImage[]>(() => {
     const seen = new Set<string>();
     const images: GalleryImage[] = [];
+    if (product.product_type === "plant" && selectedPot?.configuration_image) {
+      const imageUrl = getProductImageUrl(selectedPot.configuration_image);
+      if (imageUrl) {
+        seen.add(imageUrl);
+        images.push({ key: `pot-${selectedPot.id}`, src: imageUrl, alt: `${product.name} در ${selectedPot.name}`, isConfiguration: true });
+      }
+    }
 
     const coverImageUrl = getProductImageUrl(product.cover_image);
 
-    if (coverImageUrl) {
+    if (coverImageUrl && !seen.has(coverImageUrl)) {
       seen.add(coverImageUrl);
 
       images.push({
@@ -116,7 +129,7 @@ export function ProductDetailView({
     }
 
     return images;
-  }, [product]);
+  }, [product, selectedPot]);
 
   const minimumQuantity = Math.max(1, product.minimum_order_quantity);
 
@@ -138,11 +151,11 @@ export function ProductDetailView({
 
   const activeImage = gallery[selectedImage] ?? gallery[0];
 
-  const selectedPrice = selectedVariant?.price ?? product.price;
-  const selectedStock = selectedVariant?.stock_quantity ?? product.stock_quantity;
+  const selectedPrice = selectedPot?.unit_price ?? selectedVariant?.price ?? product.price;
+  const selectedStock = selectedPot?.max_quantity ?? selectedVariant?.stock_quantity ?? product.stock_quantity;
   const canBuy = product.product_type === "cut_flower"
     ? Boolean(selectedVariant) && selectedStock >= minimumQuantity
-    : product.is_in_stock && product.stock_quantity >= minimumQuantity;
+    : product.is_in_stock && selectedStock >= minimumQuantity && (product.product_type !== "plant" || potAvailable);
   const totalPrice = selectedPrice * quantity;
 
   /*
@@ -150,7 +163,7 @@ export function ProductDetailView({
    * can correctly narrow the product type.
    */
   const plantDetails =
-    product.product_type === "plant" ? product.details : null;
+    product.product_type === "plant" && product.details ? selectedPotDetails(product.details, selectedPot) : null;
 
   const cutFlowerDetails =
     product.product_type === "cut_flower" ? product.details : null;
@@ -167,6 +180,7 @@ export function ProductDetailView({
         cartCount={cartCount} isFavorite={isFavorite} onBack={onBack} onNavigateToCart={onNavigateToCart}
         onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
         gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
+        potOptions={potOptions} selectedPot={selectedPot} potAvailable={potAvailable} onSelectPot={option => { setSelectedPotRecord(option); setSelectedImage(0); }}
       />}
       <div className={`mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32 ${product.product_type === "plant" ? "hidden md:block" : ""}`}>
         {/* Temporary desktop header.
@@ -218,16 +232,18 @@ export function ProductDetailView({
             onNavigateToCart={onNavigateToCart}
             onSelectImage={setSelectedImage}
             onOpenZoom={() => setIsZoomOpen(true)}
+            caption={product.product_type === "plant" && selectedPot?.configuration_image && !activeImage.isConfiguration ? "تصویر عمومی گیاه؛ این تصویر ترکیب انتخاب‌شده را نشان نمی‌دهد." : undefined}
           />
 
           <section className="min-w-0 px-4 py-4 sm:px-6 md:px-0 md:py-0 md:pt-2">
             <ProductInfo
               product={product}
+              potName={selectedPot?.name}
               isFavorite={isFavorite}
               onToggleFavorite={onToggleFavorite}
             />
 
-            {plantDetails ? <ProductOptions details={plantDetails} /> : null}
+            {plantDetails && selectedPot ? <ProductPotSelector options={potOptions} selected={selectedPot} available={potAvailable} productAvailable={product.is_in_stock} onSelect={option => { setSelectedPotRecord(option); setSelectedImage(0); }} /> : null}
 
             {cutFlowerDetails && activeVariants.length > 0 ? (
               <fieldset className="mt-4">
@@ -266,7 +282,7 @@ export function ProductDetailView({
                   ? "ابتدا رنگ را انتخاب کنید"
                   : undefined
               }
-              onAddToCart={onAddToCart}
+              onAddToCart={(item, amount, variantId) => onAddToCart(item, amount, variantId, selectedPot?.id)}
             />
           </section>
         </div>
@@ -313,7 +329,7 @@ export function ProductDetailView({
           isLoading={areRelatedProductsLoading}
           onSelectProduct={onSelectProduct}
           onAddToCart={(relatedProduct) => {
-            onAddToCart(
+            return onAddToCart(
               relatedProduct,
               Math.max(1, relatedProduct.minimum_order_quantity),
             );

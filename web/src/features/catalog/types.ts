@@ -129,7 +129,23 @@ export interface ArrangementProductDetails {
   composition: ArrangementCompositionEntry[];
 }
 
+export interface PlantPotOption {
+  id: number | null;
+  pot_id: number | null;
+  name: string;
+  is_baseline: boolean;
+  additional_price: number;
+  unit_price: number;
+  image: string | null;
+  configuration_image: string | null;
+  attributes: Record<string, string | number | null>;
+  is_available: boolean;
+  max_quantity: number;
+}
+
 interface ProductBase {
+  pot_options?: PlantPotOption[];
+  initial_pot_option_id?: number | null;
   id: number;
   name: string;
   slug: string;

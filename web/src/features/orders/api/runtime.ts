@@ -5,7 +5,8 @@ import type {
   UserAddress,
 } from "@/features/orders/types";
 
-function makeLineId(productId: number, variantId: number | null): string {
+function makeLineId(productId: number, variantId: number | null, potId?: number | null): string {
+  if (potId != null) return `${productId}:pot:${potId}`;
   return `${productId}:${variantId ?? "base"}`;
 }
 
@@ -15,6 +16,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isMoney(value: unknown): value is string {
   return typeof value === "string" && /^\d+$/.test(value);
+}
+
+function hasPotSnapshot(value: Record<string, unknown>): boolean {
+  return (value.pot_option_id === undefined || value.pot_option_id === null || typeof value.pot_option_id === "number") &&
+    (value.pot_option_id_snapshot === undefined || value.pot_option_id_snapshot === null || typeof value.pot_option_id_snapshot === "number") &&
+    (value.pot_name === undefined || typeof value.pot_name === "string") &&
+    (value.pot_attributes === undefined || isRecord(value.pot_attributes)) &&
+    (value.pot_surcharge === undefined || (typeof value.pot_surcharge === "number" && value.pot_surcharge >= 0));
 }
 
 export function isAddress(value: unknown): value is UserAddress {
@@ -42,6 +51,7 @@ function isPreviewItem(value: unknown): value is PreviewItem {
   return (
     isRecord(value) &&
     typeof value.product_id === "number" &&
+    hasPotSnapshot(value) &&
     typeof value.product_name === "string" &&
     (value.product_type === "plant" ||
       value.product_type === "arrangement" ||
@@ -113,6 +123,7 @@ export function isOrder(value: unknown): value is Order {
     value.items.every(
       (item) =>
         isRecord(item) &&
+        hasPotSnapshot(item) &&
         typeof item.id === "number" &&
         (typeof item.product === "number" || item.product === null) &&
         typeof item.product_name === "string" &&
@@ -160,7 +171,9 @@ export function parseOrderItemErrors(value: unknown): Record<string, string> {
       if (variantId !== null && (!Number.isInteger(variantId) || variantId <= 0)) {
         continue;
       }
-      errors[makeLineId(productId, variantId)] = item.message;
+      const potId = item.pot_option_id == null ? null : Number(item.pot_option_id);
+      if (potId !== null && (!Number.isInteger(potId) || potId <= 0)) continue;
+      errors[makeLineId(productId, variantId, potId)] = item.message;
     }
   }
 

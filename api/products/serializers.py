@@ -1,5 +1,6 @@
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
+from products.pot_options import plant_pot_options
 
 from products.models import (
     ArrangementComposition,
@@ -104,7 +105,7 @@ class PlantDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlantDetails
-        exclude = ("id", "product")
+        exclude = ("id", "product", "initial_pot_assignment")
         read_only_fields = tuple(field.name for field in PlantDetails._meta.fields) + (
             "plant_size_display",
             "quality_grade_display",
@@ -177,6 +178,20 @@ class ArrangementDetailsSerializer(serializers.ModelSerializer):
         )
 
 
+class PlantPotOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(allow_null=True)
+    pot_id = serializers.IntegerField(allow_null=True)
+    name = serializers.CharField()
+    is_baseline = serializers.BooleanField()
+    additional_price = serializers.IntegerField()
+    unit_price = serializers.IntegerField()
+    image = serializers.CharField(allow_null=True)
+    configuration_image = serializers.CharField(allow_null=True)
+    attributes = serializers.JSONField()
+    is_available = serializers.BooleanField()
+    max_quantity = serializers.IntegerField()
+
+
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySummarySerializer(read_only=True)
     cover_image = serializers.SerializerMethodField()
@@ -195,6 +210,16 @@ class ProductListSerializer(serializers.ModelSerializer):
     is_in_stock = serializers.SerializerMethodField()
     has_purchasable_variant = serializers.SerializerMethodField()
     details = serializers.SerializerMethodField()
+    pot_options = serializers.SerializerMethodField()
+    initial_pot_option_id = serializers.SerializerMethodField()
+
+    @extend_schema_field(PlantPotOptionSerializer(many=True))
+    def get_pot_options(self, product):
+        return plant_pot_options(product, self.context.get("request"))[0] if product.product_type == Product.ProductType.PLANT else []
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_initial_pot_option_id(self, product):
+        return plant_pot_options(product)[1] if product.product_type == Product.ProductType.PLANT else None
 
     # Backward-compatible commercial aliases. New clients should use the canonical names.
     price_per_bundle = serializers.SerializerMethodField()
@@ -290,6 +315,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "has_purchasable_variant",
             "category",
             "details",
+            "pot_options",
+            "initial_pot_option_id",
             "price_per_bundle",
             "stock_bundles",
             "stems_per_bundle",

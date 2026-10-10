@@ -8,6 +8,7 @@ from django.db.models import (
     IntegerField,
     OuterRef,
     Q,
+    Prefetch,
     QuerySet,
     Subquery,
     Sum,
@@ -28,6 +29,7 @@ from products.models import (
     CutFlowerVariant,
     HomeSlide,
     PlantDetails,
+    PlantPotAssignment,
     Product,
     ProductReview,
 )
@@ -67,7 +69,8 @@ def public_product_queryset() -> QuerySet[Product]:
         is_active=True,
         category__is_active=True,
     ).select_related("category", "plant_details", "arrangement_details", "cut_flower_details").prefetch_related(
-        "arrangement_details__composition", "cut_flower_variants"
+        "arrangement_details__composition", "cut_flower_variants",
+        Prefetch("pot_assignments", queryset=PlantPotAssignment.objects.select_related("pot")),
     ).annotate(
         active_variant_min_price=Subquery(minimum_price, output_field=BigIntegerField()),
         active_variant_stock=Coalesce(
@@ -292,7 +295,7 @@ class ProductRelatedListView(ListAPIView):
 
     def get_queryset(self) -> QuerySet[Product]:
         queryset = super().get_queryset()
-        product = get_object_or_404(queryset, slug=self.kwargs["slug"])
+        product = get_object_or_404(queryset.prefetch_related(None), slug=self.kwargs["slug"])
         related = queryset.filter(category_id=product.category_id).exclude(pk=product.pk)
         # Keep ordering separate from eligibility for future ranking changes.
         return related.order_by(*self.ordering)[:self.result_limit]

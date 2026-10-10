@@ -23,7 +23,7 @@ from media_store.storage import DatabaseMediaStorage
 from media_store.uploads import LimitedUploadHandler
 from media_store.validation import MAX_IMAGE_BYTES, validate_image_upload
 from products.admin import HomeSlideAdmin
-from products.models import Category, HomeSlide, PlantDetails, Product, ProductImage
+from products.models import Category, HomeSlide, PlantDetails, Product, ProductImage, Pot, PlantPotAssignment
 from products.serializers import HomeSlideSerializer, ProductDetailSerializer
 
 
@@ -70,6 +70,7 @@ class ValidationTests(TestCase):
     def test_all_upload_fields_accept_supported_formats(self):
         for model, name in ((HomeSlide, "mobile_image"), (HomeSlide, "desktop_image"),
                             (Product, "cover_upload"), (ProductImage, "image_upload"),
+                            (Pot, "image"), (PlantPotAssignment, "combination_image"),
                             (Article, "cover_image")):
             field = model._meta.get_field(name)
             for extension in ("jpg", "jpeg", "png", "webp"):
@@ -86,6 +87,7 @@ class ValidationTests(TestCase):
         ):
             for model, name in ((HomeSlide, "mobile_image"), (HomeSlide, "desktop_image"),
                                 (Product, "cover_upload"), (ProductImage, "image_upload"),
+                                (Pot, "image"), (PlantPotAssignment, "combination_image"),
                                 (Article, "cover_image")):
                 field = model._meta.get_field(name)
                 with self.subTest(field=name):

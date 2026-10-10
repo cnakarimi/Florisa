@@ -76,6 +76,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
 
 class CheckoutItemInputSerializer(serializers.Serializer):
+    pot_option_id = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=2_147_483_647)
     product_id = serializers.IntegerField(min_value=1, max_value=2_147_483_647)
     variant_id = serializers.IntegerField(
         required=False, allow_null=True, min_value=1, max_value=2_147_483_647
@@ -87,7 +88,7 @@ class CartPreviewRequestSerializer(serializers.Serializer):
     items = CheckoutItemInputSerializer(many=True, allow_empty=False, max_length=100)
 
     def validate_items(self, items):
-        identities = [(item["product_id"], item.get("variant_id")) for item in items]
+        identities = [(item["product_id"], item.get("variant_id"), item.get("pot_option_id")) for item in items]
         if len(identities) != len(set(identities)):
             raise serializers.ValidationError("هر محصول و تنوع رنگ باید فقط یک‌بار در سبد ارسال شود.")
         return items
@@ -100,6 +101,10 @@ class OrderCreateRequestSerializer(CartPreviewRequestSerializer):
 
 
 class CartPreviewItemSerializer(serializers.Serializer):
+    pot_option_id = serializers.IntegerField(allow_null=True)
+    pot_name = serializers.CharField(allow_blank=True)
+    pot_attributes = serializers.JSONField()
+    pot_surcharge = serializers.IntegerField()
     product_id = serializers.IntegerField()
     variant_id = serializers.IntegerField(allow_null=True)
     variant_color = serializers.CharField(allow_blank=True)
@@ -130,6 +135,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = (
             "id", "product", "variant", "variant_id_snapshot", "variant_color",
+            "pot_assignment", "pot_option_id_snapshot", "pot_id_snapshot", "pot_name", "pot_attributes", "pot_surcharge",
             "product_name", "product_type", "sale_unit",
             "sale_unit_display", "unit_size", "quantity", "unit_price",
             "line_total", "cover_image",

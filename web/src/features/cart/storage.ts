@@ -1,6 +1,7 @@
 import {
   CART_STORAGE_KEY,
   CART_STORAGE_VERSION,
+  PREVIOUS_CART_STORAGE_KEY,
   LEGACY_CART_STORAGE_KEY,
   type CartItem,
   type CartProductSnapshot,
@@ -48,7 +49,7 @@ function isCartItem(value: unknown): value is CartItem {
   );
 }
 
-function normalizeStoredItem(item: CartItem): CartItem {
+function normalizeStoredItem(item: CartItem, version: number): CartItem {
   const legacy = item.product as CartProductSnapshot & Record<string, unknown>;
   const price = Number(legacy.price ?? legacy.price_per_bundle);
   const unitSize = Number(legacy.unit_size ?? legacy.stems_per_bundle);
@@ -69,11 +70,13 @@ function normalizeStoredItem(item: CartItem): CartItem {
     ? Math.trunc(legacy.variant_id)
     : null;
   const productType = legacy.product_type ?? "cut_flower";
+  const rawPotId = legacy.pot_option_id;
+  const potId = version >= 3 && productType === "plant" && typeof rawPotId === "number" && Number.isInteger(rawPotId) && rawPotId > 0 ? rawPotId : null;
   const requiresVariantSelection =
     productType === "cut_flower" && variantId === null;
 
   return {
-    line_id: makeCartLineId(Math.trunc(item.product.id), variantId),
+    line_id: makeCartLineId(Math.trunc(item.product.id), variantId, potId),
     product: {
       ...item.product,
       id: Math.trunc(item.product.id),
@@ -94,6 +97,12 @@ function normalizeStoredItem(item: CartItem): CartItem {
         legacy.product_identity ?? legacy.flower_type ?? "",
       ),
       variant_id: variantId,
+      ...(productType === "plant" ? { pot_option_id: potId,
+        pot_name: potId ? String(legacy.pot_name ?? "گلدان انتخاب‌شده") : "گلدان پلاستیکی پایه",
+        pot_id: potId ? legacy.pot_id as number | null : null,
+        pot_surcharge: potId ? Number(legacy.pot_surcharge ?? 0) : 0,
+        configuration_image: potId && typeof legacy.configuration_image === "string" ? legacy.configuration_image : null,
+        requires_pot_selection: version >= 3 && Boolean(legacy.requires_pot_selection) } : {}),
       requires_variant_selection: requiresVariantSelection,
       validation_message: requiresVariantSelection
         ? "رنگ این گل باید دوباره انتخاب شود."
@@ -114,7 +123,7 @@ export function parseStoredCart(rawValue: string | null): CartItem[] {
     const parsed: unknown = JSON.parse(rawValue);
     if (
       !isRecord(parsed) ||
-      (parsed.version !== CART_STORAGE_VERSION && parsed.version !== 1) ||
+      (parsed.version !== CART_STORAGE_VERSION && parsed.version !== 1 && parsed.version !== 2) ||
       !Array.isArray(parsed.items)
     ) {
       return [];
@@ -125,7 +134,7 @@ export function parseStoredCart(rawValue: string | null): CartItem[] {
       if (!isCartItem(rawItem)) {
         continue;
       }
-      const normalized = normalizeStoredItem(rawItem);
+      const normalized = normalizeStoredItem(rawItem, Number(parsed.version));
       uniqueItems.set(normalized.line_id, normalized);
     }
 
@@ -143,6 +152,7 @@ export function readStoredCart(): CartItem[] {
   try {
     return parseStoredCart(
       window.localStorage.getItem(CART_STORAGE_KEY) ??
+        window.localStorage.getItem(PREVIOUS_CART_STORAGE_KEY) ??
         window.localStorage.getItem(LEGACY_CART_STORAGE_KEY),
     );
   } catch {
@@ -166,6 +176,7 @@ export function writeStoredCart(items: CartItem[]): void {
       JSON.stringify(storedCart),
     );
     window.localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
+    window.localStorage.removeItem(PREVIOUS_CART_STORAGE_KEY);
   } catch {
     // The in-memory cart remains usable when storage is unavailable.
   }

@@ -1,4 +1,5 @@
 "use client";
+import { useRef, useState } from "react";
 
 import type {
   CatalogProduct,
@@ -14,7 +15,7 @@ interface ProductPurchasePanelProps {
   totalPrice: number;
   variantId?: number;
   disabledLabel?: string;
-  onAddToCart: (product: CatalogProduct, quantity: number, variantId?: number) => void;
+  onAddToCart: (product: CatalogProduct, quantity: number, variantId?: number) => void | Promise<void>;
 }
 
 export function ProductPurchasePanel({
@@ -26,6 +27,18 @@ export function ProductPurchasePanel({
   disabledLabel,
   onAddToCart,
 }: ProductPurchasePanelProps) {
+  const locked = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const add = async () => {
+    if (!canBuy || locked.current) return;
+    locked.current = true;
+    setBusy(true);
+    setError("");
+    try { await onAddToCart(product, quantity, variantId); }
+    catch { setError("این ترکیب در دسترس نیست؛ گلدان دیگری انتخاب کنید یا دوباره تلاش کنید."); }
+    finally { locked.current = false; setBusy(false); }
+  };
   return (
     <div
       data-footer-overlay="product-actions"
@@ -66,8 +79,9 @@ rounded-t-[10px]
         {/* Add to cart */}
         <button
           type="button"
-          onClick={() => onAddToCart(product, quantity, variantId)}
-          disabled={!canBuy}
+          onClick={add}
+          disabled={!canBuy || busy}
+          aria-busy={busy}
           className="
             flex
             h-11
@@ -100,9 +114,10 @@ rounded-t-[10px]
             disabled:opacity-100
           "
         >
-          {canBuy ? "افزودن به سبد خرید" : disabledLabel ?? "در حال حاضر ناموجود"}
+          {busy ? "در حال افزودن…" : canBuy ? "افزودن به سبد خرید" : disabledLabel ?? "در حال حاضر ناموجود"}
         </button>
       </div>
+      {error && <p role="alert" className="px-4 pb-2 text-xs text-red-400">{error}</p>}
     </div>
   );
 }

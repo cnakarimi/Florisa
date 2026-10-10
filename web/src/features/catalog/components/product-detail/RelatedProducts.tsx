@@ -9,7 +9,7 @@ import type { CatalogProduct } from "@/features/catalog/types";
 interface RelatedProductsProps {
   products: CatalogProduct[];
   isLoading: boolean;
-  onAddToCart: (product: CatalogProduct) => void;
+  onAddToCart: (product: CatalogProduct) => void | Promise<void>;
   onSelectProduct: (product: CatalogProduct) => void;
   mobilePlant?: boolean;
 }

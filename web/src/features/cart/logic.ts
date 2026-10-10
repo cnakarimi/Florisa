@@ -1,7 +1,9 @@
 import type { CartItem, CartLineId, CartProductSnapshot } from "./types.ts";
-import type { CatalogProduct, CutFlowerVariant } from "@/features/catalog/types";
+import type { CatalogProduct, CutFlowerVariant, PlantPotOption } from "@/features/catalog/types";
+import { getPlantPotOptions, POT_UNAVAILABLE_MESSAGE } from "../catalog/utils/pot-options.ts";
 
-export function makeCartLineId(productId: number, variantId: number | null): CartLineId {
+export function makeCartLineId(productId: number, variantId: number | null, potOptionId?: number | null): CartLineId {
+  if (potOptionId != null) return `${productId}:pot:${potOptionId}`;
   return `${productId}:${variantId ?? "base"}`;
 }
 
@@ -42,6 +44,7 @@ export function normalizeCartQuantity(
     !product.is_available ||
     !product.is_in_stock ||
     product.requires_variant_selection ||
+    product.requires_pot_selection ||
     Boolean(product.validation_message)
   ) return null;
   const minimum = Math.max(1, Math.trunc(product.minimum_order_quantity));
@@ -59,7 +62,7 @@ export function addCartSnapshot(
     snapshot.minimum_order_quantity,
     Math.trunc(requestedQuantity ?? snapshot.minimum_order_quantity),
   );
-  const lineId = makeCartLineId(snapshot.id, snapshot.variant_id);
+  const lineId = makeCartLineId(snapshot.id, snapshot.variant_id, snapshot.pot_option_id);
   const existing = items.find((item) => item.line_id === lineId);
   const quantity = normalizeCartQuantity(
     snapshot,
@@ -122,17 +125,19 @@ export function setCartItemQuantity(
 export function productToCartSnapshot(
   product: CatalogProduct,
   variant: CutFlowerVariant | null = null,
+  potOption: PlantPotOption | null = null,
 ): CartProductSnapshot {
   const isCutFlower = product.product_type === "cut_flower";
   const selectedVariant = isCutFlower ? variant : null;
+  const pot = product.product_type === "plant" ? potOption ?? getPlantPotOptions(product).find(option => option.is_baseline) : null;
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    cover_image: product.cover_image,
-    price: selectedVariant?.price ?? product.price,
+    cover_image: pot?.configuration_image ?? product.cover_image,
+    price: pot?.unit_price ?? selectedVariant?.price ?? product.price,
     unit_size: product.unit_size,
-    stock_quantity: selectedVariant?.stock_quantity ?? product.stock_quantity,
+    stock_quantity: pot?.max_quantity ?? selectedVariant?.stock_quantity ?? product.stock_quantity,
     minimum_order_quantity: product.minimum_order_quantity,
     sale_unit: product.sale_unit,
     sale_unit_display: product.sale_unit_display,
@@ -147,10 +152,12 @@ export function productToCartSnapshot(
       selectedVariant?.color ??
       (product.product_type === "plant" ? (product.details?.color ?? "") : ""),
     variant_id: selectedVariant?.id ?? null,
+    ...(pot ? { pot_option_id: pot.id, pot_id: pot.pot_id, pot_name: pot.name,
+      pot_surcharge: pot.additional_price, configuration_image: pot.configuration_image, requires_pot_selection: false } : {}),
     requires_variant_selection: isCutFlower && !selectedVariant,
     validation_message:
       isCutFlower && !selectedVariant ? "لطفاً رنگ گل را دوباره انتخاب کنید." : "",
-    is_in_stock: selectedVariant?.is_in_stock ?? product.is_in_stock,
+    is_in_stock: pot?.is_available ?? selectedVariant?.is_in_stock ?? product.is_in_stock,
     is_available: true,
   };
 }
@@ -164,9 +171,15 @@ export function isCartItemValid(item: CartItem): boolean {
     item.product.is_available &&
     item.product.is_in_stock &&
     !item.product.requires_variant_selection &&
+    !item.product.requires_pot_selection &&
     !item.product.validation_message &&
     Number.isInteger(item.quantity) &&
     item.quantity >= minimum &&
     item.quantity <= stock
   );
+}
+
+export function resolvePlantPotOption(product: CatalogProduct, optionId: number | null) {
+  const option = getPlantPotOptions(product).find(option => option.id === optionId && option.is_available) ?? null;
+  return { option, message: option ? "" : product.is_in_stock ? POT_UNAVAILABLE_MESSAGE : "این گیاه در حال حاضر ناموجود است." };
 }

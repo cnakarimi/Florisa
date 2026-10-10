@@ -122,7 +122,7 @@ class ProductReviewTests(TestCase):
         self.make_review(rating=1, is_approved=False)
         self.make_review(product=self.other_product, rating=1)
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.client.get(self.detail_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

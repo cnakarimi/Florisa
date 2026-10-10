@@ -7,12 +7,13 @@ import { CatalogImage } from "@/features/catalog/components/CatalogImage";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { getProductImageUrl } from "@/features/catalog/utils/images";
 import { formatTomanAmount, toPersianDigits } from "@/utils/persian";
+import { BASELINE_POT_NAME } from "../utils/pot-options";
 
 interface ProductCardProps {
   product: CatalogProduct;
   imageSizes: string;
   originalPrice?: string | number | null;
-  onAddToCart: (product: CatalogProduct) => void;
+  onAddToCart: (product: CatalogProduct) => void | Promise<void>;
   onSelectProduct: (product: CatalogProduct) => void;
 }
 
@@ -26,6 +27,9 @@ export function ProductCard({
   onSelectProduct,
 }: ProductCardProps) {
   const [isAdded, setIsAdded] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [purchaseError, setPurchaseError] = useState("");
+  const purchaseLock = useRef(false);
 
   const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,14 +40,9 @@ export function ProductCard({
     product.product_type === "cut_flower" &&
     (product.details?.variants.filter((variant) => variant.is_active).length ?? 0) !== 1;
 
-  const potMaterial =
-    product.product_type === "plant"
-      ? (product.details?.pot_material ?? "")
-      : "";
-
   const packageLabel =
     product.product_type === "plant"
-      ? `گلدان ${potMaterial}`.trim()
+      ? BASELINE_POT_NAME
       : product.unit_size > 1
         ? `${product.sale_unit_display} ${toPersianDigits(
             product.unit_size,
@@ -71,10 +70,10 @@ export function ProductCard({
     };
   }, []);
 
-  const handleAddToCart = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleAddToCart = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
-    if (!isAvailable) {
+    if (!isAvailable || purchaseLock.current) {
       return;
     }
 
@@ -83,7 +82,11 @@ export function ProductCard({
       return;
     }
 
-    onAddToCart(product);
+    purchaseLock.current = true;
+    setIsAdding(true);
+    setPurchaseError("");
+    try {
+      await onAddToCart(product);
 
     setIsAdded(true);
 
@@ -94,6 +97,12 @@ export function ProductCard({
     animationTimer.current = setTimeout(() => {
       setIsAdded(false);
     }, ADDED_FEEDBACK_DURATION_MS);
+    } catch {
+      setPurchaseError("افزودن محصول انجام نشد؛ دوباره تلاش کنید.");
+    } finally {
+      purchaseLock.current = false;
+      setIsAdding(false);
+    }
   };
 
   return (
@@ -245,7 +254,8 @@ export function ProductCard({
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={!isAvailable}
+            disabled={!isAvailable || isAdding}
+            aria-busy={isAdding}
             aria-label={
               isAvailable
                 ? requiresColorSelection
@@ -292,7 +302,7 @@ export function ProductCard({
               <>
                 <span className="text-white text-center">ناموجود</span>
               </>
-            ) : requiresColorSelection ? (
+            ) : isAdding ? (<span>در حال افزودن…</span>) : requiresColorSelection ? (
               <span>انتخاب رنگ</span>
             ) : isAdded ? (
               <>
@@ -304,6 +314,7 @@ export function ProductCard({
             )}
           </button>
         </div>
+        {purchaseError && <p role="status" className="mt-2 text-xs text-red-400">{purchaseError}</p>}
       </div>
     </article>
   );

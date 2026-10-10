@@ -15,6 +15,8 @@ from products.models import (
     HomeSlide,
     Plant,
     PlantDetails,
+    Pot,
+    PlantPotAssignment,
     Product,
     ProductImage,
     ProductReview,
@@ -60,6 +62,11 @@ class PlantDetailsInline(admin.StackedInline):
     max_num = 1
     validate_min = True
     validate_max = True
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "initial_pot_assignment":
+            object_id = request.resolver_match.kwargs.get("object_id") if request.resolver_match else None
+            kwargs["queryset"] = PlantPotAssignment.objects.filter(product_id=object_id) if object_id else PlantPotAssignment.objects.none()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     fieldsets = (
         (
             "مشخصات گیاه",
@@ -75,7 +82,7 @@ class PlantDetailsInline(admin.StackedInline):
             },
         ),
         (
-            "گلدان همراه",
+            "گلدان همراه (اطلاعات قدیمی؛ قیمت پایه شامل گلدان پلاستیکی است)",
             {
                 "fields": (
                     "pot_included",
@@ -85,6 +92,10 @@ class PlantDetailsInline(admin.StackedInline):
                     "has_drainage",
                 )
             },
+        ),
+        (
+            "انتخاب اولیه گلدان",
+            {"fields": ("initial_pot_assignment",)},
         ),
         (
             "نگهداری و ارسال",
@@ -212,6 +223,27 @@ class TypedProductAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+@admin.register(Pot)
+class PotAdmin(admin.ModelAdmin):
+    list_display = ("name", "material", "color", "is_active", "stock_quantity")
+    list_filter = ("is_active", "material", "color")
+    search_fields = ("name", "material", "color")
+
+
+class PlantPotAssignmentInline(admin.TabularInline):
+    model = PlantPotAssignment
+    extra = 0
+    autocomplete_fields = ("pot",)
+    fields = ("pot", "additional_price", "is_active", "display_order", "combination_image")
+
+
+@admin.register(PlantPotAssignment)
+class PlantPotAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("product", "pot", "additional_price", "is_active", "display_order")
+    search_fields = ("product__name", "pot__name")
+    autocomplete_fields = ("product", "pot")
+
+
 @admin.register(Plant)
 class PlantAdmin(TypedProductAdmin):
     product_type = Product.ProductType.PLANT
@@ -228,7 +260,7 @@ class PlantAdmin(TypedProductAdmin):
     )
     list_editable = ("is_featured", "featured_order")
     list_filter = ("category", "sale_unit", "is_active", "is_featured")
-    inlines = (PlantDetailsInline, ProductImageInline)
+    inlines = (PlantDetailsInline, PlantPotAssignmentInline, ProductImageInline)
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)

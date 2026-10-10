@@ -235,6 +235,11 @@ class PlantDetails(models.Model):
     )
     pet_friendly = models.BooleanField("سازگار با حیوانات خانگی", blank=True, null=True)
     pot_included = models.BooleanField("گلدان همراه", default=True)
+    initial_pot_assignment = models.ForeignKey(
+        "PlantPotAssignment", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="initial_for", verbose_name="گلدان انتخاب‌شده اولیه",
+        help_text="خالی: اولین گلدان تزئینی موجود، سپس گلدان پلاستیکی پایه.",
+    )
     pot_material = models.CharField("جنس گلدان", max_length=50, blank=True)
     pot_color = models.CharField("رنگ گلدان", max_length=50, blank=True)
     pot_size_cm = models.PositiveSmallIntegerField(
@@ -282,6 +287,8 @@ class PlantDetails(models.Model):
         errors: dict[str, str] = {}
         if self.product_id and self.product.product_type != Product.ProductType.PLANT:
             errors["product"] = "مشخصات گیاه فقط برای محصول از نوع گیاه مجاز است."
+        if self.initial_pot_assignment_id and self.initial_pot_assignment.product_id != self.product_id:
+            errors["initial_pot_assignment"] = "گلدان اولیه باید به همین گیاه اختصاص داشته باشد."
         if (
             self.ideal_temperature_min is not None
             and self.ideal_temperature_max is not None
@@ -526,6 +533,52 @@ class Arrangement(Product):
         proxy = True
         verbose_name = "گل‌آرایی"
         verbose_name_plural = "گل‌آرایی‌ها"
+
+
+class Pot(models.Model):
+    name = models.CharField("نام", max_length=180)
+    material = models.CharField("جنس", max_length=80, blank=True)
+    color = models.CharField("رنگ", max_length=80, blank=True)
+    diameter_cm = models.PositiveSmallIntegerField("قطر (سانتی‌متر)", null=True, blank=True)
+    height_cm = models.PositiveSmallIntegerField("ارتفاع (سانتی‌متر)", null=True, blank=True)
+    image = UploadImageField("تصویر گلدان", upload_to="pots/%Y/%m/", blank=True)
+    is_active = models.BooleanField("فعال", default=True)
+    stock_quantity = models.PositiveIntegerField("موجودی مشترک", default=0)
+
+    class Meta:
+        ordering = ("name", "id")
+        verbose_name = "گلدان تزئینی"
+        verbose_name_plural = "گلدان‌های تزئینی"
+        constraints = (models.CheckConstraint(condition=Q(stock_quantity__gte=0), name="pot_stock_nonnegative"),)
+
+    def __str__(self):
+        return self.name
+
+
+class PlantPotAssignment(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="pot_assignments", verbose_name="گیاه")
+    pot = models.ForeignKey(Pot, on_delete=models.CASCADE, related_name="plant_assignments", verbose_name="گلدان")
+    additional_price = models.PositiveBigIntegerField("هزینه اضافی (تومان)", default=0)
+    is_active = models.BooleanField("فعال", default=True)
+    display_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+    combination_image = UploadImageField("تصویر همین گیاه در این گلدان", upload_to="plants/pot-combinations/%Y/%m/", blank=True)
+
+    class Meta:
+        ordering = ("display_order", "id")
+        verbose_name = "گلدان سازگار گیاه"
+        verbose_name_plural = "گلدان‌های سازگار گیاه"
+        constraints = (
+            models.UniqueConstraint(fields=("product", "pot"), name="unique_plant_pot"),
+            models.CheckConstraint(condition=Q(additional_price__gte=0), name="plant_pot_price_nonnegative"),
+        )
+
+    def clean(self):
+        super().clean()
+        if self.product_id and self.product.product_type != Product.ProductType.PLANT:
+            raise ValidationError({"product": "گلدان سازگار فقط برای گیاه مجاز است."})
+
+    def __str__(self):
+        return f"{self.product.name} — {self.pot.name}"
 
 
 class ProductImage(models.Model):

@@ -20,6 +20,7 @@ import {
   makeCartLineId,
   productToCartSnapshot,
   resolveCutFlowerVariant,
+  resolvePlantPotOption,
   setCartItemQuantity,
 } from "@/features/cart/logic";
 import { readStoredCart, writeStoredCart } from "@/features/cart/storage";
@@ -44,7 +45,7 @@ interface CartContextValue {
   refreshError: string | null;
   hasInvalidItems: boolean;
 
-  addItem: (product: CatalogProduct, quantity?: number, variantId?: number) => void;
+  addItem: (product: CatalogProduct, quantity?: number, variantId?: number, potOptionId?: number | null) => void;
   removeItem: (lineId: CartLineId) => void;
   increaseItem: (lineId: CartLineId) => void;
   decreaseItem: (lineId: CartLineId) => void;
@@ -116,7 +117,7 @@ export function CartProvider({ children }: CartProviderProps) {
   }, []);
 
   const addItem = useCallback(
-    (product: CatalogProduct, requestedQuantity?: number, variantId?: number) => {
+    (product: CatalogProduct, requestedQuantity?: number, variantId?: number, potOptionId?: number | null) => {
       const activeVariants =
         product.product_type === "cut_flower"
           ? (product.details?.variants.filter((variant) => variant.is_active) ?? [])
@@ -127,7 +128,9 @@ export function CartProvider({ children }: CartProviderProps) {
           ? activeVariants[0]
           : null);
       if (product.product_type === "cut_flower" && !variant) return;
-      const snapshot = productToCartSnapshot(product, variant);
+      const pot = product.product_type === "plant" ? resolvePlantPotOption(product, potOptionId ?? null).option : null;
+      if (product.product_type === "plant" && !pot) return;
+      const snapshot = productToCartSnapshot(product, variant, pot);
 
       setItems((current) =>
         addCartSnapshot(current, snapshot, requestedQuantity),
@@ -240,6 +243,11 @@ export function CartProvider({ children }: CartProviderProps) {
                     };
                   }
                   snapshot = productToCartSnapshot(product, selectedVariant);
+                } else if (product.product_type === "plant") {
+                  const resolution = resolvePlantPotOption(product, item.product.pot_option_id ?? null);
+                  if (!resolution.option) return { ...item, product: { ...item.product,
+                    is_in_stock: false, requires_pot_selection: product.is_in_stock, validation_message: resolution.message } };
+                  snapshot = productToCartSnapshot(product, null, resolution.option);
                 } else {
                   snapshot = productToCartSnapshot(product);
                 }
@@ -248,7 +256,7 @@ export function CartProvider({ children }: CartProviderProps) {
                 const validationMessage = item.quantity < minimum
                   ? `حداقل تعداد سفارش به ${minimum} تغییر کرده است.`
                   : item.quantity > snapshot.stock_quantity
-                    ? `موجودی فعلی ${snapshot.stock_quantity} ${snapshot.sale_unit_display} است.`
+                    ? product.product_type === "plant" ? "تعداد انتخاب‌شده برای این ترکیب موجود نیست؛ تعداد را کاهش دهید یا گلدان دیگری انتخاب کنید." : `موجودی فعلی ${snapshot.stock_quantity} ${snapshot.sale_unit_display} است.`
                     : "";
                 const refreshedSnapshot = {
                   ...snapshot,
@@ -256,7 +264,7 @@ export function CartProvider({ children }: CartProviderProps) {
                 };
 
                 return {
-                  line_id: makeCartLineId(snapshot.id, snapshot.variant_id),
+                  line_id: makeCartLineId(snapshot.id, snapshot.variant_id, snapshot.pot_option_id),
                   product: refreshedSnapshot,
                   quantity: item.quantity,
                 };

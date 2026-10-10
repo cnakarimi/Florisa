@@ -147,6 +147,11 @@ content format, related products/articles, pagination, and response examples.
 
 ## Product type and checkout contracts
 
+Reusable plant pots extend this contract with a separate `pot_option_id`.
+Plants can use baseline plastic at zero surcharge or an assigned decorative
+pot with a surcharge and shared inventory. See [plant pot selection](../docs/plant-pot-selection.md)
+for the API, migration, inventory, snapshot and Admin workflow details.
+
 All prices are integer toman. `quantity` always counts sale units: pots for a
 plant, complete ready-made arrangements for an arrangement, and bundles for a
 cut-flower color. A cut flower's `unit_size` is the shared number of stems in

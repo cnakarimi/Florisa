@@ -7,11 +7,11 @@ export function cartFingerprint(items: CheckoutItemInput[]): string {
     .sort(
       (a, b) =>
         a.product_id - b.product_id ||
-        (a.variant_id ?? 0) - (b.variant_id ?? 0),
+        (a.variant_id ?? 0) - (b.variant_id ?? 0) || (a.pot_option_id ?? 0) - (b.pot_option_id ?? 0),
     )
     .map(
       (item) =>
-        `${item.product_id}:${item.variant_id ?? "base"}:${item.quantity}`,
+        `${item.product_id}:${item.variant_id ?? "base"}${item.pot_option_id != null ? `:pot:${item.pot_option_id}` : ""}:${item.quantity}`,
     )
     .join("|");
 }

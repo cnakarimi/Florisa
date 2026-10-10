@@ -178,6 +178,12 @@ class OrderItem(models.Model):
         "رنگ در زمان سفارش", max_length=80, blank=True, editable=False
     )
     product_name = models.CharField("نام محصول", max_length=180, editable=False)
+    pot_assignment = models.ForeignKey("products.PlantPotAssignment", on_delete=models.SET_NULL, null=True, blank=True, editable=False)
+    pot_option_id_snapshot = models.PositiveBigIntegerField(null=True, blank=True, editable=False)
+    pot_id_snapshot = models.PositiveBigIntegerField(null=True, blank=True, editable=False)
+    pot_name = models.CharField("گلدان سفارش", max_length=180, blank=True, editable=False)
+    pot_attributes = models.JSONField(default=dict, blank=True, editable=False)
+    pot_surcharge = models.PositiveBigIntegerField(default=0, editable=False)
     product_type = models.CharField("نوع محصول", max_length=20, editable=False)
     sale_unit = models.CharField("واحد فروش", max_length=20, editable=False)
     sale_unit_display = models.CharField("عنوان واحد فروش", max_length=40, editable=False)
@@ -206,7 +212,7 @@ class OrderItem(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=("order", "product"),
-                condition=Q(variant__isnull=True, variant_id_snapshot__isnull=True),
+                condition=Q(variant__isnull=True, variant_id_snapshot__isnull=True, pot_option_id_snapshot__isnull=True),
                 name="unique_unvaried_product_per_order",
             ),
             models.UniqueConstraint(
@@ -215,6 +221,8 @@ class OrderItem(models.Model):
                 name="unique_product_variant_per_order",
             ),
             models.CheckConstraint(condition=Q(quantity__gte=1), name="order_item_quantity_positive"),
+            models.UniqueConstraint(fields=("order", "product", "pot_option_id_snapshot"), condition=Q(pot_option_id_snapshot__isnull=False), name="unique_order_plant_pot_option"),
+            models.CheckConstraint(condition=Q(pot_surcharge__gte=0), name="order_pot_surcharge_nonnegative"),
             models.CheckConstraint(
                 condition=Q(unit_price__gte=0) & Q(line_total__gte=0),
                 name="order_item_totals_nonnegative",

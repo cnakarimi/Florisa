@@ -14,6 +14,7 @@ export interface GalleryImage {
   key: string;
   src: string | null;
   alt: string;
+  isConfiguration?: boolean;
 }
 
 interface ProductGalleryProps {
@@ -25,6 +26,7 @@ interface ProductGalleryProps {
   onSelectImage: (index: number) => void;
   onOpenZoom: () => void;
   mobilePlant?: boolean;
+  caption?: string;
 }
 
 export function ProductGallery({
@@ -36,6 +38,7 @@ export function ProductGallery({
   onSelectImage,
   onOpenZoom,
   mobilePlant = false,
+  caption,
 }: ProductGalleryProps) {
   const touchStart = useRef<number | null>(null);
   const activeImage = gallery[selectedImage] ?? gallery[0];
@@ -131,6 +134,7 @@ export function ProductGallery({
           {mobilePlant ? <ProductDesignIcon name="expand" /> : <ExpandIcon aria-hidden="true" />}
         </button>
       </div>
+      {caption && <p className="px-4 py-2 text-xs leading-6 text-text-secondary">{caption}</p>}
     </section>
   );
 }

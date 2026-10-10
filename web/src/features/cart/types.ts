@@ -1,9 +1,10 @@
 import type { ProductType, SaleUnit } from "@/features/catalog/types";
 
-export const CART_STORAGE_KEY = "florisa_cart_v2";
+export const CART_STORAGE_KEY = "florisa_cart_v3";
+export const PREVIOUS_CART_STORAGE_KEY = "florisa_cart_v2";
 export const LEGACY_CART_STORAGE_KEY = "florisa_cart_v1";
 
-export const CART_STORAGE_VERSION = 2;
+export const CART_STORAGE_VERSION = 3;
 
 export type CartLineId = string;
 
@@ -26,6 +27,12 @@ export interface CartProductSnapshot {
   product_identity: string;
   color: string;
   variant_id: number | null;
+  pot_option_id?: number | null;
+  pot_id?: number | null;
+  pot_name?: string;
+  pot_surcharge?: number;
+  configuration_image?: string | null;
+  requires_pot_selection?: boolean;
   requires_variant_selection: boolean;
   validation_message: string;
 

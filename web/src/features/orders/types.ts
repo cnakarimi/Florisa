@@ -36,6 +36,7 @@ export interface AddressInput {
 export interface CheckoutItemInput {
   product_id: number;
   variant_id?: number;
+  pot_option_id?: number | null;
   quantity: number;
 }
 
@@ -47,6 +48,10 @@ export interface SubmitOrderInput {
 }
 
 export interface PreviewItem {
+  pot_option_id?: number | null;
+  pot_name?: string;
+  pot_attributes?: Record<string, string | number | null>;
+  pot_surcharge?: number;
   product_id: number;
   variant_id: number | null;
   variant_color: string;
@@ -88,6 +93,8 @@ export interface OrderItem extends Omit<
   product: number | null;
   variant: number | null;
   variant_id_snapshot: number | null;
+  pot_option_id_snapshot?: number | null;
+  pot_id_snapshot?: number | null;
 }
 
 export interface Order {

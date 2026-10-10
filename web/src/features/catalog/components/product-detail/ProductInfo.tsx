@@ -21,6 +21,7 @@ interface ProductInfoProps {
   isFavorite: boolean;
   onToggleFavorite: (product: CatalogProduct) => void;
   mobilePlant?: boolean;
+  potName?: string;
 }
 
 export function ProductInfo({
@@ -28,6 +29,7 @@ export function ProductInfo({
   isFavorite,
   onToggleFavorite,
   mobilePlant = false,
+  potName,
 }: ProductInfoProps) {
   const nameId = useId();
   const [shareStatus, setShareStatus] = useState("");
@@ -40,10 +42,10 @@ export function ProductInfo({
       ? product.details
       : null;
 
-  const productSubtitle =
+  const productSubtitle = potName ?? (
     plantDetails?.pot_included && plantDetails.pot_material
       ? `${mobilePlant ? "گلدان " : "گلدان - "}${plantDetails.pot_material}`
-      : product.category.name;
+      : product.category.name);
 
   const rating = product.rating_average;
 

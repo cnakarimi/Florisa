@@ -183,6 +183,12 @@ export function OrderDetailExperience({
                         {formatToman(Number(item.unit_price))}
                       </p>
 
+                      {item.pot_name && <p className="mt-1 text-xs text-zinc-400">گلدان: {item.pot_name}</p>}
+                      {item.product_type === "plant" && !item.pot_attributes?.configuration_image && <p className="mt-1 text-xs text-zinc-500">تصویر عمومی گیاه</p>}
+                      {item.pot_name && item.pot_attributes && <p className="mt-1 text-xs text-zinc-400">{[item.pot_attributes.material, item.pot_attributes.color,
+                        item.pot_attributes.diameter_cm ? `قطر ${toPersianDigits(item.pot_attributes.diameter_cm)} سانتی‌متر` : "",
+                        item.pot_attributes.height_cm ? `ارتفاع ${toPersianDigits(item.pot_attributes.height_cm)} سانتی‌متر` : ""].filter(Boolean).join(" · ")}</p>}
+                      {item.pot_name && <p className="mt-1 text-xs text-zinc-400">هزینه اضافی گلدان: {formatToman(Number(item.pot_surcharge ?? 0))}</p>}
                       {item.variant_color ? (
                         <p className="mt-1 text-xs text-zinc-400">
                           رنگ: {item.variant_color}

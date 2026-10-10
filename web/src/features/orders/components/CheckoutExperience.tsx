@@ -360,7 +360,7 @@ export function CheckoutExperience() {
             <div className="space-y-3">
               {preview.items.map((item) => (
                 <div
-                  key={makeCartLineId(item.product_id, item.variant_id)}
+                  key={makeCartLineId(item.product_id, item.variant_id, item.pot_option_id)}
                   className="flex gap-3 border-b border-white/5 pb-3"
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/30">
@@ -381,6 +381,8 @@ export function CheckoutExperience() {
                       × {formatToman(Number(item.unit_price))}
                     </p>
 
+                    {item.pot_name && <p className="mt-1 text-xs text-zinc-400">گلدان: {item.pot_name}</p>}
+                    {item.product_type === "plant" && !item.pot_attributes?.configuration_image && <p className="mt-1 text-xs text-zinc-500">تصویر عمومی گیاه</p>}
                     {item.variant_color ? (
                       <p className="mt-1 text-xs text-zinc-400">
                         رنگ: {item.variant_color}
@@ -399,9 +401,9 @@ export function CheckoutExperience() {
                       {formatToman(Number(item.line_total))}
                     </p>
 
-                    {itemErrors[makeCartLineId(item.product_id, item.variant_id)] ? (
+                    {itemErrors[makeCartLineId(item.product_id, item.variant_id, item.pot_option_id)] ? (
                       <p className="mt-1 text-xs text-rose-300">
-                        {itemErrors[makeCartLineId(item.product_id, item.variant_id)]}
+                        {itemErrors[makeCartLineId(item.product_id, item.variant_id, item.pot_option_id)]}
                       </p>
                     ) : null}
                   </div>

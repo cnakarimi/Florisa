@@ -45,8 +45,21 @@ function hasSharedProductFields(value: Record<string, unknown>): boolean {
   );
 }
 
+function hasPotOptions(value: Record<string, unknown>): boolean {
+  if (value.pot_options === undefined) return true;
+  return Array.isArray(value.pot_options) && value.pot_options.every(option =>
+    isRecord(option) && (option.id === null || (typeof option.id === "number" && option.id > 0)) &&
+    (option.pot_id === null || typeof option.pot_id === "number") && typeof option.name === "string" &&
+    typeof option.is_baseline === "boolean" && typeof option.additional_price === "number" && option.additional_price >= 0 &&
+    typeof option.unit_price === "number" && option.unit_price >= 0 && typeof option.max_quantity === "number" && option.max_quantity >= 0 &&
+    typeof option.is_available === "boolean" && isRecord(option.attributes) &&
+    (option.image === null || typeof option.image === "string") &&
+    (option.configuration_image === null || typeof option.configuration_image === "string")) &&
+    (value.initial_pot_option_id === null || typeof value.initial_pot_option_id === "number");
+}
+
 export function isProduct(value: unknown): value is CatalogProduct {
-  if (!isRecord(value) || !hasSharedProductFields(value)) {
+  if (!isRecord(value) || !hasSharedProductFields(value) || !hasPotOptions(value)) {
     return false;
   }
 

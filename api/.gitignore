@@ -4,6 +4,9 @@ __pycache__/
 *.py[cod]
 db.sqlite3
 integration-local.sqlite3
+pot-selection-local.sqlite3
+.test-tmp/
+.test-media/
 .coverage
 .pytest_cache/
 media/

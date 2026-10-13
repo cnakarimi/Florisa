@@ -129,7 +129,8 @@ button {
 }
 
 @media (max-width: 767px) {
-  body:has([data-plant-mobile-detail]) [data-product-route-navbar] {
+  body:has([data-plant-mobile-detail]) [data-product-route-navbar],
+  body:has([data-arrangement-mobile-detail]) [data-product-route-navbar] {
     display: none;
   }
 

@@ -12,11 +12,17 @@ const ICON_DIMENSIONS: Record<string, [number, number]> = {
   "description-arrow": [11,11],
 };
 
-export function ProductDesignIcon({ name }: { name: string }) {
-  const [width, height] = ICON_DIMENSIONS[name];
+const ARRANGEMENT_ICON_DIMENSIONS: Record<string, [number, number]> = {
+  expand: [24, 24], favorite: [32, 32], share: [20.5, 21.9253], star: [12, 11.9931],
+  search: [40, 40], back: [21.1004, 15.5001], cart: [19.5, 22.2797],
+  "description-arrow": [10.6667, 10.6667],
+};
+
+export function ProductDesignIcon({ name, directory = "product-detail" }: { name: string; directory?: string }) {
+  const [width, height] = (directory === "arrangement-detail" ? ARRANGEMENT_ICON_DIMENSIONS : ICON_DIMENSIONS)[name];
   // SVGs are exported unchanged from the target Figma nodes, at their native dimensions.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={`/images/product-detail/${name}.svg`} width={width} height={height} alt="" aria-hidden="true" className="shrink-0" />;
+  return <img src={`/images/${directory}/${name}.svg`} width={width} height={height} alt="" aria-hidden="true" className="shrink-0" />;
 }
 
 export function SpecificationTable({ group }: { group: SpecificationGroup }) {

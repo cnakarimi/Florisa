@@ -22,6 +22,7 @@ import { getPlantPotOptions, initialPlantPot, selectedPotDetails } from "../../u
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { ProductReviews } from "./ProductReviews";
 import { PlantMobileDetail } from "./PlantMobileDetail";
+import { ArrangementMobileDetail } from "./ArrangementMobileDetail";
 import { PlantQuantitySelector } from "./PlantQuantitySelector";
 import { getPlantPurchase } from "../../utils/plant-detail";
 import {
@@ -143,7 +144,16 @@ export function ProductDetailView({
         gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
         potOptions={potOptions} selectedPot={selectedPot} potAvailable={potAvailable} onSelectPot={option => { setSelectedPotRecord(option); setSelectedImage(0); }}
       />}
-      <div className={`mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32 ${product.product_type === "plant" ? "hidden md:block" : ""}`}>
+      {product.product_type === "arrangement" && <ArrangementMobileDetail
+        key={product.id}
+        product={product} reviews={reviews} areReviewsLoading={areReviewsLoading} reviewsError={reviewsError}
+        hasMoreReviews={hasMoreReviews} areMoreReviewsLoading={areMoreReviewsLoading} moreReviewsError={moreReviewsError} onLoadMoreReviews={onLoadMoreReviews}
+        relatedProducts={relatedProducts} areRelatedProductsLoading={areRelatedProductsLoading}
+        cartCount={cartCount} isFavorite={isFavorite} onBack={onBack} onNavigateToCart={onNavigateToCart}
+        onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
+        gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
+      />}
+      <div className={`mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32 ${product.product_type === "plant" || product.product_type === "arrangement" ? "hidden md:block" : ""}`}>
         {/* Temporary desktop header.
             Mobile navigation lives inside ProductGallery.
             Desktop will be redesigned after its Figma is complete. */}

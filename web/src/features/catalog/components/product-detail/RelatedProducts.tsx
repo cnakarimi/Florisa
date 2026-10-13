@@ -12,6 +12,8 @@ interface RelatedProductsProps {
   onAddToCart: (product: CatalogProduct) => void | Promise<void>;
   onSelectProduct: (product: CatalogProduct) => void;
   mobilePlant?: boolean;
+  title?: string;
+  viewAllHref?: string;
 }
 
 export function RelatedProducts({
@@ -20,6 +22,8 @@ export function RelatedProducts({
   onAddToCart,
   onSelectProduct,
   mobilePlant = false,
+  title,
+  viewAllHref = "/shop?product_type=plant",
 }: RelatedProductsProps) {
   const titleId = useId();
   if (!isLoading && products.length === 0) {
@@ -33,9 +37,9 @@ export function RelatedProducts({
         id={titleId}
         className={mobilePlant ? "px-5 text-mobile-body-large font-normal" : "px-4 text-base font-bold leading-6 text-text-primary sm:px-6 md:px-8"}
       >
-        {mobilePlant ? "گیاهان پیشنهادی" : "محصولات مشابه"}
+        {title ?? (mobilePlant ? "گیاهان پیشنهادی" : "محصولات مشابه")}
       </h2>
-      {mobilePlant && <Link href="/shop?product_type=plant" className="px-5 text-mobile-body-small text-text-secondary">مشاهده همه</Link>}
+      {mobilePlant && <Link href={viewAllHref} className="px-5 text-mobile-body-small text-text-secondary">مشاهده همه</Link>}
       </div>
 
       {isLoading ? (

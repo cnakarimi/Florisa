@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatTomanAmount } from "@/utils/persian";
 import styles from "./PlantMobileDetail.module.css";
 
-export function PurchaseBar({ total, canBuy, onAdd }: { total: number; canBuy: boolean; onAdd: () => void | Promise<void> }) {
+export function PurchaseBar({ total, canBuy, onAdd, onPendingChange }: { total: number; canBuy: boolean; onAdd: () => void | Promise<void>; onPendingChange?: (pending: boolean) => void }) {
   const [state, setState] = useState<"ready" | "adding" | "added" | "error">("ready");
   const locked = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -12,6 +12,7 @@ export function PurchaseBar({ total, canBuy, onAdd }: { total: number; canBuy: b
   const add = async () => {
     if (!canBuy || locked.current) return;
     locked.current = true;
+    onPendingChange?.(true);
     setState("adding");
     try {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -20,7 +21,7 @@ export function PurchaseBar({ total, canBuy, onAdd }: { total: number; canBuy: b
     } catch {
       setState("error");
     } finally {
-      timer.current = setTimeout(() => { locked.current = false; setState("ready"); }, 1000);
+      timer.current = setTimeout(() => { locked.current = false; setState("ready"); onPendingChange?.(false); }, 1000);
     }
   };
   const busy = state === "adding" || state === "added";

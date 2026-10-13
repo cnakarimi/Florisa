@@ -23,6 +23,7 @@ interface ProductGalleryProps {
   onOpenZoom: () => void;
   mobilePlant?: boolean;
   caption?: string;
+  assetDirectory?: string;
   showArrows?: boolean;
 }
 
@@ -36,6 +37,7 @@ export function ProductGallery({
   onOpenZoom,
   mobilePlant = false,
   caption,
+  assetDirectory = "product-detail",
   showArrows = true,
 }: ProductGalleryProps) {
   const touchStart = useRef<number | null>(null);
@@ -60,12 +62,12 @@ export function ProductGallery({
         {mobilePlant && <div dir="ltr" className="absolute inset-x-0 top-0 z-10 flex h-11 items-center justify-between">
           <div className="flex w-[88px] items-center gap-2">
             <button type="button" onClick={onNavigateToCart} aria-label="مشاهده سبد خرید" className="relative grid size-10 shrink-0 place-items-center focus-visible:outline-2 focus-visible:outline-action-primary">
-              <ProductDesignIcon name="cart" />{cartCount > 0 && <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-action-primary text-xs font-medium text-background-primary">{toPersianDigits(cartCount)}</span>}
+              <ProductDesignIcon name="cart" directory={assetDirectory} />{cartCount > 0 && <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-action-primary text-xs font-medium text-background-primary">{toPersianDigits(cartCount)}</span>}
             </button>
-            <Link href="/shop" aria-label="جست‌وجوی محصولات" className="grid size-10 shrink-0 place-items-center focus-visible:outline-2 focus-visible:outline-action-primary"><ProductDesignIcon name="search" /></Link>
+            <Link href="/shop" aria-label="جست‌وجوی محصولات" className="grid size-10 shrink-0 place-items-center focus-visible:outline-2 focus-visible:outline-action-primary"><ProductDesignIcon name="search" directory={assetDirectory} /></Link>
           </div>
-          <Link href="/" aria-label="فلوریسا"><Image src="/images/product-detail/logo.svg" width={73} height={28} alt="فلوریسا" /></Link>
-          <div className="flex w-[88px] justify-end"><button type="button" onClick={onBack} aria-label="بازگشت" className="grid size-10 place-items-center focus-visible:outline-2 focus-visible:outline-action-primary"><ProductDesignIcon name="back" /></button></div>
+          <Link href="/" aria-label="فلوریسا"><Image src={`/images/${assetDirectory}/logo.svg`} width={73} height={28} alt="فلوریسا" /></Link>
+          <div className="flex w-[88px] justify-end"><button type="button" onClick={onBack} aria-label="بازگشت" className="grid size-10 place-items-center focus-visible:outline-2 focus-visible:outline-action-primary"><ProductDesignIcon name="back" directory={assetDirectory} /></button></div>
         </div>}
         {/* Back */}
         {!mobilePlant && <>
@@ -133,7 +135,7 @@ export function ProductGallery({
           className="absolute bottom-4 right-4 z-10 grid size-10 place-items-center"
           aria-label="نمایش تصویر در اندازه بزرگ"
         >
-          {mobilePlant ? <ProductDesignIcon name="expand" /> : <ExpandIcon aria-hidden="true" />}
+          {mobilePlant ? <ProductDesignIcon name="expand" directory={assetDirectory} /> : <ExpandIcon aria-hidden="true" />}
         </button>
       </div>
       {caption && <p className="px-4 py-2 text-xs leading-6 text-text-secondary">{caption}</p>}

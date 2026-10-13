@@ -12,6 +12,7 @@ interface ProductReviewsProps {
   isLoading?: boolean;
   error?: string | null;
   mobilePlant?: boolean;
+  mobileArrangement?: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
   moreError?: string | null;
@@ -66,6 +67,7 @@ export function ProductReviews({
   isLoading = false,
   error = null,
   mobilePlant = false,
+  mobileArrangement = false,
   hasMore = false,
   isLoadingMore = false,
   moreError = null,
@@ -101,7 +103,7 @@ export function ProductReviews({
       </div>
 
       {mobilePlant && ratingAverage !== null && reviewCount > 0 && <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-background-secondary p-4">
-        <bdi className="numeric-ltr text-[28px] font-bold leading-9">{toPersianDigits(ratingAverage.toFixed(1))}</bdi>
+        <bdi className={mobileArrangement ? "numeric-ltr text-[32px] font-extrabold leading-10" : "numeric-ltr text-[28px] font-bold leading-9"}>{toPersianDigits(ratingAverage.toFixed(1))}</bdi>
         <div><p dir="ltr" className="text-sm tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(ratingAverage)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < Math.round(ratingAverage) ? "" : "opacity-25"}>★</span>)}</p><p className="mt-1 text-mobile-ui-caption text-text-secondary">از {toPersianDigits(reviewCount)} نظر</p></div>
       </div>}
 
@@ -129,13 +131,22 @@ export function ProductReviews({
       ) : null}
 
       {!isLoading && !error && reviews.length > 0 ? (
-        <div className={mobilePlant ? "mt-6 flex flex-col gap-6" : "mt-3 flex flex-col gap-3"}>
+        <div className={mobileArrangement ? "mt-6 flex flex-col" : mobilePlant ? "mt-6 flex flex-col gap-6" : "mt-3 flex flex-col gap-3"}>
           {reviews.map((review) => (
             <article
               key={review.id}
-              className={mobilePlant ? "border-b border-white/10 pb-6" : "rounded-xl bg-background-secondary p-3"}
+              className={mobileArrangement ? "border-b border-white/10 py-4" : mobilePlant ? "border-b border-white/10 pb-6" : "rounded-xl bg-background-secondary p-3"}
             >
-              <div className="flex items-center justify-between gap-3">
+              {mobileArrangement ? <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-muted text-sm" aria-hidden="true">{getReviewerInitial(review.reviewer_name)}</span>
+                  <div className="min-w-0">
+                    <p className="break-words text-mobile-ui-button font-semibold">{review.reviewer_name}</p>
+                    <time dateTime={review.created_at} className="text-mobile-ui-caption text-text-tertiary">{formatRelativeDate(review.created_at)}</time>
+                  </div>
+                </div>
+                <p dir="ltr" className="shrink-0 text-xs tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(review.rating)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < review.rating ? "" : "opacity-25"}>★</span>)}</p>
+              </div> : <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <div
                     className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-semibold text-text-primary"
@@ -155,10 +166,10 @@ export function ProductReviews({
                 >
                   {formatRelativeDate(review.created_at)}
                 </time>
-              </div>
+              </div>}
 
-              {mobilePlant && <p dir="ltr" className="mt-3 text-xs tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(review.rating)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < review.rating ? "" : "opacity-25"}>★</span>)}</p>}
-              <p className="mt-3 whitespace-pre-line break-words text-xs font-normal leading-6 text-text-secondary">
+              {mobilePlant && !mobileArrangement && <p dir="ltr" className="mt-3 text-xs tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(review.rating)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < review.rating ? "" : "opacity-25"}>★</span>)}</p>}
+              <p className={mobileArrangement ? "mt-[11px] whitespace-pre-line break-words text-mobile-body-small text-text-secondary" : "mt-3 whitespace-pre-line break-words text-xs font-normal leading-6 text-text-secondary"}>
                 {review.comment}
               </p>
             </article>

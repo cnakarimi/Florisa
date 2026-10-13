@@ -1,0 +1,18 @@
+.page { --border-subtle-on-dark: rgb(255 255 255 / 10%); overflow-wrap: anywhere; }
+.attributes, .composition { display: flex; flex-direction: column; padding: 32px 16px; }
+.attributes { gap: 16px; }
+.attributeHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; }
+.attributeHeader h2 { min-width: 0; }
+.quantity { display: flex; align-items: center; flex-shrink: 0; height: 30px; border: 1px solid var(--border-subtle-on-dark); border-radius: 8px; background: var(--background-secondary); }
+.page .quantity button { width: 28px; height: 28px; color: var(--text-brand); font-size: 20px; }
+.quantity button:disabled { opacity: .3; }
+.quantity button:focus-visible { outline: 2px solid var(--action-primary); outline-offset: 2px; }
+.quantity output { min-width: 24px; text-align: center; font-size: var(--text-mobile-body-base); }
+.specifications { padding: 8px 16px; border: 1px solid var(--border-subtle-on-dark); border-radius: 8px; background: var(--background-secondary); }
+.specifications > div { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 8px 0; font-size: var(--text-mobile-body-base); line-height: var(--text-mobile-body-base--line-height); }
+.specifications > div + div, .compositionCard > li + li { border-top: 1px solid var(--border-subtle-on-dark); }
+.specifications dt { color: var(--text-secondary); flex: 1; }
+.specifications dd { flex: 1.25; text-align: left; font-weight: var(--font-weight-semibold); }
+.composition { gap: 24px; }
+.compositionCard { padding: 4px 16px; border-radius: 12px; background: var(--background-secondary); }
+.compositionCard li { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 80px; padding: 16px 0; font-size: var(--text-mobile-body-large); line-height: var(--text-mobile-body-large--line-height); }

@@ -22,6 +22,8 @@ interface ProductInfoProps {
   onToggleFavorite: (product: CatalogProduct) => void;
   mobilePlant?: boolean;
   potName?: string;
+  subtitle?: string;
+  assetDirectory?: string;
 }
 
 export function ProductInfo({
@@ -30,6 +32,8 @@ export function ProductInfo({
   onToggleFavorite,
   mobilePlant = false,
   potName,
+  subtitle,
+  assetDirectory = "product-detail",
 }: ProductInfoProps) {
   const nameId = useId();
   const [shareStatus, setShareStatus] = useState("");
@@ -42,7 +46,7 @@ export function ProductInfo({
       ? product.details
       : null;
 
-  const productSubtitle = potName ?? (
+  const productSubtitle = subtitle ?? potName ?? (
     plantDetails?.pot_included && plantDetails.pot_material
       ? `${mobilePlant ? "گلدان " : "گلدان - "}${plantDetails.pot_material}`
       : product.category.name);
@@ -123,7 +127,7 @@ export function ProductInfo({
             className="grid size-8 place-items-center text-text-primary transition-colors hover:text-text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-primary"
             aria-label="اشتراک‌گذاری محصول"
           >
-            {mobilePlant ? <ProductDesignIcon name="share" /> : <ShareIcon aria-hidden="true" />}
+            {mobilePlant ? <ProductDesignIcon name="share" directory={assetDirectory} /> : <ShareIcon aria-hidden="true" />}
           </button>
 
           <button
@@ -141,7 +145,7 @@ export function ProductInfo({
             }
             aria-pressed={isFavorite}
           >
-            {mobilePlant ? <span className={isFavorite ? "rounded-full bg-red-500/20" : ""}><ProductDesignIcon name="favorite" /></span> : <HeartOutlineIcon
+            {mobilePlant ? <span className={isFavorite ? "rounded-full bg-red-500/20" : ""}><ProductDesignIcon name="favorite" directory={assetDirectory} /></span> : <HeartOutlineIcon
               className={
                 isFavorite ? "bg-error-100" : undefined
               }
@@ -163,7 +167,7 @@ export function ProductInfo({
               <bdi>{toPersianDigits(rating.toFixed(1))}</bdi>
             </span>
 
-            {mobilePlant ? <ProductDesignIcon name="star" /> : <StarIcon
+            {mobilePlant ? <ProductDesignIcon name="star" directory={assetDirectory} /> : <StarIcon
               className="mb-1 size-3.5 fill-current text-text-brand"
               aria-hidden="true"
             />}

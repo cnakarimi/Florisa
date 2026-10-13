@@ -140,7 +140,7 @@ export function productToCartSnapshot(
     stock_quantity: pot?.max_quantity ?? selectedVariant?.stock_quantity ?? product.stock_quantity,
     minimum_order_quantity: product.minimum_order_quantity,
     sale_unit: product.sale_unit,
-    sale_unit_display: product.sale_unit_display,
+    sale_unit_display: product.product_type === "plant" ? "گیاه" : product.sale_unit_display,
     product_type: product.product_type,
     product_identity:
       product.product_type === "plant"

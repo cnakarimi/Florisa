@@ -98,6 +98,10 @@ class PlantDetailsInline(admin.StackedInline):
             {"fields": ("initial_pot_assignment",)},
         ),
         (
+            "تصویر گیاه در گلدان پایه",
+            {"fields": ("baseline_image",)},
+        ),
+        (
             "نگهداری و ارسال",
             {
                 "fields": (

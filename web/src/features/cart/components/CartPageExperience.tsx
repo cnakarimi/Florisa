@@ -261,7 +261,7 @@ export function CartPageExperience({
                               <h2 className="truncate text-sm font-extrabold leading-tight text-white">
                                 {item.product.name}
                               </h2>
-                              {item.product.pot_name && <p className="mt-1 text-xs text-zinc-400">گلدان: {item.product.pot_name}</p>}
+                              {item.product.pot_name && <p className="mt-1 text-xs text-zinc-400">گیاه با گلدان: {item.product.pot_name}</p>}
                               {item.product.product_type === "plant" && !item.product.configuration_image && <p className="mt-1 text-[11px] text-zinc-500">تصویر عمومی گیاه</p>}
 
                               <p className="mt-1 truncate text-[11px] text-zinc-400">
@@ -336,7 +336,7 @@ export function CartPageExperience({
                         <CartItemFact
                           label={
                             item.product.product_type === "plant"
-                              ? "تعداد گلدان"
+                              ? "تعداد گیاه"
                               : item.product.product_type === "arrangement"
                                 ? "تعداد گل‌آرایی کامل"
                                 : "تعداد دسته"
@@ -347,9 +347,9 @@ export function CartPageExperience({
                         />
 
                         <CartItemFact
-                          label={item.product.product_type === "cut_flower" ? "شاخه در هر دسته" : "واحد هر کالا"}
+                          label={item.product.product_type === "plant" ? "هر واحد سفارش" : item.product.product_type === "cut_flower" ? "شاخه در هر دسته" : "واحد هر کالا"}
                           value={
-                            item.product.product_type === "cut_flower"
+                            item.product.product_type === "plant" ? "۱ گیاه + ۱ گلدان" : item.product.product_type === "cut_flower"
                               ? `${toPersianDigits(item.product.unit_size)} شاخه`
                               : toPersianDigits(item.product.unit_size)
                           }
@@ -373,7 +373,7 @@ export function CartPageExperience({
                         </p>
                       ) : (
                         <p className="mt-2 text-[10px] text-zinc-500">
-                          قیمت هر {item.product.sale_unit_display}:{" "}
+                          {item.product.product_type === "plant" ? "قیمت گیاه با گلدان انتخاب‌شده" : `قیمت هر ${item.product.sale_unit_display}`}:{" "}
                           {formatToman(item.product.price)} · حداقل{" "}
                           {toPersianDigits(item.product.minimum_order_quantity)}{" "}
                           {item.product.sale_unit_display}

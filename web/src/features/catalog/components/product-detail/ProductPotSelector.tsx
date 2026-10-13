@@ -33,8 +33,8 @@ export function ProductPotSelector({ options, selected, available, productAvaila
       </button>)}
     </div>
     <p className="text-xs text-text-secondary">گلدان انتخاب‌شده: {selected.name}</p>
-    <p className="mt-2 text-sm text-text-brand">قیمت هر گلدان: {toPersianDigits(selected.unit_price.toLocaleString("en-US"))} تومان</p>
-    {(typeof selected.attributes.diameter_cm === "number" || typeof selected.attributes.height_cm === "number") && <p className="mt-1 text-xs text-text-secondary">{typeof selected.attributes.diameter_cm === "number" ? `قطر ${toPersianDigits(selected.attributes.diameter_cm)} سانتی‌متر` : ""} {typeof selected.attributes.height_cm === "number" ? `ارتفاع ${toPersianDigits(selected.attributes.height_cm)} سانتی‌متر` : ""}</p>}
+    <p className="mt-2 text-sm text-text-brand">قیمت گیاه با گلدان انتخاب‌شده: {toPersianDigits(selected.unit_price.toLocaleString("en-US"))} تومان</p>
+    {(typeof selected.attributes.diameter_cm === "number" || typeof selected.attributes.height_cm === "number") && <p className="mt-1 text-xs text-text-secondary">مشخصات گلدان انتخاب‌شده: {typeof selected.attributes.diameter_cm === "number" ? `قطر ${toPersianDigits(selected.attributes.diameter_cm)} سانتی‌متر` : ""} {typeof selected.attributes.height_cm === "number" ? `ارتفاع ${toPersianDigits(selected.attributes.height_cm)} سانتی‌متر` : ""}</p>}
     {!selected.configuration_image && <p className="mt-2 text-xs leading-6 text-text-secondary">تصویر عمومی گیاه نمایش داده می‌شود؛ تصویر این گیاه در گلدان انتخاب‌شده هنوز ثبت نشده است.</p>}
     {!available && <p role="alert" className="mt-2 text-xs leading-6 text-red-400">{productAvailable ? POT_UNAVAILABLE_MESSAGE : "این گیاه در حال حاضر ناموجود است."}</p>}
   </fieldset>;

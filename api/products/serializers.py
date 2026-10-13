@@ -1,6 +1,6 @@
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema_field
 from rest_framework import serializers
-from products.pot_options import plant_pot_options
+from products.pot_options import plant_pot_options, purchase_unit_display
 
 from products.models import (
     ArrangementComposition,
@@ -105,7 +105,7 @@ class PlantDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlantDetails
-        exclude = ("id", "product", "initial_pot_assignment")
+        exclude = ("id", "product", "initial_pot_assignment", "baseline_image")
         read_only_fields = tuple(field.name for field in PlantDetails._meta.fields) + (
             "plant_size_display",
             "quality_grade_display",
@@ -204,7 +204,11 @@ class ProductListSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(url) if request else url
         return product.cover_image
     product_type_display = serializers.CharField(source="get_product_type_display", read_only=True)
-    sale_unit_display = serializers.CharField(source="get_sale_unit_display", read_only=True)
+    sale_unit_display = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.CharField())
+    def get_sale_unit_display(self, product):
+        return purchase_unit_display(product)
     price = serializers.SerializerMethodField()
     stock_quantity = serializers.SerializerMethodField()
     is_in_stock = serializers.SerializerMethodField()

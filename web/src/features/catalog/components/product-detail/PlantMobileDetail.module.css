@@ -10,8 +10,8 @@
   font-weight: 600;
   line-height: 20px;
 }
-.page button[aria-label="افزایش تعداد گلدان"],
-.page button[aria-label="کاهش تعداد گلدان"] { font-size: 20px; }
+.page button[aria-label="افزایش تعداد گیاه"],
+.page button[aria-label="کاهش تعداد گیاه"] { font-size: 20px; }
 .page article button { font-size: 11px; font-weight: 700; }
 .purchaseBar {
   position: fixed;

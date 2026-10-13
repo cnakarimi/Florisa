@@ -11,10 +11,10 @@ import type {
 } from "@/features/catalog/types";
 import { RelatedProducts } from "./RelatedProducts";
 
-import { getProductImageUrl } from "@/features/catalog/utils/images";
+import { buildProductGallery, galleryIndex } from "../../utils/product-gallery";
 import { toPersianDigits } from "@/utils/persian";
 
-import { ProductGallery, type GalleryImage } from "./ProductGallery";
+import { ProductGallery } from "./ProductGallery";
 import { ProductImageZoomDialog } from "./ProductImageZoomDialog";
 import { ProductInfo } from "./ProductInfo";
 import { ProductPotSelector } from "./ProductPotSelector";
@@ -22,6 +22,8 @@ import { getPlantPotOptions, initialPlantPot, selectedPotDetails } from "../../u
 import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { ProductReviews } from "./ProductReviews";
 import { PlantMobileDetail } from "./PlantMobileDetail";
+import { PlantQuantitySelector } from "./PlantQuantitySelector";
+import { getPlantPurchase } from "../../utils/plant-detail";
 import {
   CutFlowerSpecifications,
   PlantDetails,
@@ -81,63 +83,19 @@ export function ProductDetailView({
   const potOptions = getPlantPotOptions(product);
   const selectedPot = potOptions.find(option => option.id === selectedPotRecord?.id) ?? selectedPotRecord;
   const potAvailable = Boolean(selectedPot && potOptions.some(option => option.id === selectedPot.id && option.is_available));
-  const gallery = useMemo<GalleryImage[]>(() => {
-    const seen = new Set<string>();
-    const images: GalleryImage[] = [];
-    if (product.product_type === "plant" && selectedPot?.configuration_image) {
-      const imageUrl = getProductImageUrl(selectedPot.configuration_image);
-      if (imageUrl) {
-        seen.add(imageUrl);
-        images.push({ key: `pot-${selectedPot.id}`, src: imageUrl, alt: `${product.name} در ${selectedPot.name}`, isConfiguration: true });
-      }
-    }
-
-    const coverImageUrl = getProductImageUrl(product.cover_image);
-
-    if (coverImageUrl && !seen.has(coverImageUrl)) {
-      seen.add(coverImageUrl);
-
-      images.push({
-        key: "cover",
-        src: coverImageUrl,
-        alt: product.name,
-      });
-    }
-
-    for (const image of product.images) {
-      const imageUrl = getProductImageUrl(image.image);
-
-      if (!imageUrl || seen.has(imageUrl)) {
-        continue;
-      }
-
-      seen.add(imageUrl);
-
-      images.push({
-        key: String(image.id),
-        src: imageUrl,
-        alt: image.alt_text || product.name,
-      });
-    }
-
-    if (images.length === 0) {
-      images.push({
-        key: "fallback",
-        src: null,
-        alt: product.name,
-      });
-    }
-
-    return images;
-  }, [product, selectedPot]);
+  const gallery = useMemo(() => buildProductGallery(product, selectedPot), [product, selectedPot]);
+  const gallerySignature = JSON.stringify(gallery.map(image => image.key));
 
   const minimumQuantity = Math.max(1, product.minimum_order_quantity);
 
-  // Keep the existing desktop and other product-type purchase behavior.
-  // PlantMobileDetail owns the mobile plant quantity selector.
-  const quantity = minimumQuantity;
+  const [requestedQuantity, setRequestedQuantity] = useState(minimumQuantity);
 
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [gallerySelection, setGallerySelection] = useState({ signature: gallerySignature, index: 0 });
+  if (gallerySelection.signature !== gallerySignature) {
+    setGallerySelection({ signature: gallerySignature, index: 0 });
+  }
+  const selectedImage = gallerySelection.signature === gallerySignature ? galleryIndex(gallerySelection.index, gallery.length) : 0;
+  const setSelectedImage = (index: number) => setGallerySelection({ signature: gallerySignature, index: galleryIndex(index, gallery.length) });
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const activeVariants = product.product_type === "cut_flower"
     ? (product.details?.variants.filter((variant) => variant.is_active) ?? [])
@@ -156,6 +114,8 @@ export function ProductDetailView({
   const canBuy = product.product_type === "cut_flower"
     ? Boolean(selectedVariant) && selectedStock >= minimumQuantity
     : product.is_in_stock && selectedStock >= minimumQuantity && (product.product_type !== "plant" || potAvailable);
+  const plantPurchase = getPlantPurchase(requestedQuantity, minimumQuantity, selectedStock, canBuy, selectedPrice);
+  const quantity = product.product_type === "plant" ? plantPurchase.quantity : minimumQuantity;
   const totalPrice = selectedPrice * quantity;
 
   /*
@@ -179,6 +139,7 @@ export function ProductDetailView({
         relatedProducts={relatedProducts} areRelatedProductsLoading={areRelatedProductsLoading}
         cartCount={cartCount} isFavorite={isFavorite} onBack={onBack} onNavigateToCart={onNavigateToCart}
         onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
+        quantity={quantity} onChangeQuantity={setRequestedQuantity}
         gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
         potOptions={potOptions} selectedPot={selectedPot} potAvailable={potAvailable} onSelectPot={option => { setSelectedPotRecord(option); setSelectedImage(0); }}
       />}
@@ -232,7 +193,7 @@ export function ProductDetailView({
             onNavigateToCart={onNavigateToCart}
             onSelectImage={setSelectedImage}
             onOpenZoom={() => setIsZoomOpen(true)}
-            caption={product.product_type === "plant" && selectedPot?.configuration_image && !activeImage.isConfiguration ? "تصویر عمومی گیاه؛ این تصویر ترکیب انتخاب‌شده را نشان نمی‌دهد." : undefined}
+            caption={product.product_type === "plant" && selectedPot && !activeImage.isConfiguration ? "تصویر عمومی گیاه؛ این تصویر ترکیب انتخاب‌شده را نشان نمی‌دهد." : undefined}
           />
 
           <section className="min-w-0 px-4 py-4 sm:px-6 md:px-0 md:py-0 md:pt-2">
@@ -244,6 +205,8 @@ export function ProductDetailView({
             />
 
             {plantDetails && selectedPot ? <ProductPotSelector options={potOptions} selected={selectedPot} available={potAvailable} productAvailable={product.is_in_stock} onSelect={option => { setSelectedPotRecord(option); setSelectedImage(0); }} /> : null}
+
+            {plantDetails && <PlantQuantitySelector quantity={quantity} minimum={minimumQuantity} maximum={selectedStock} available={canBuy} onChange={setRequestedQuantity} />}
 
             {cutFlowerDetails && activeVariants.length > 0 ? (
               <fieldset className="mt-4">
@@ -272,6 +235,7 @@ export function ProductDetailView({
             ) : null}
 
             <ProductPurchasePanel
+              key={`${product.id}:${selectedPot?.id ?? selectedVariant?.id ?? "baseline"}:${quantity}`}
               product={product}
               quantity={quantity}
               canBuy={canBuy}

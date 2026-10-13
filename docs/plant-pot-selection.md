@@ -6,6 +6,8 @@ Plants retain their base price and plant inventory on `Product`. The baseline pl
 
 The product API exposes available `pot_options` and an effective `initial_pot_option_id`. For a new product view, it uses the preferred available decorative pot, then the first available decorative option in display order, then baseline plastic. Options that cannot satisfy the plant's minimum quantity are unavailable. Public option data exposes a derived maximum quantity, not the shared pot's stock count.
 
+The optional `PlantDetails.baseline_image` stores the plant in its plastic nursery pot, independently of the initial decorative selection. Set it in the plant Admin form under **تصویر گیاه در گلدان پایه**. Never upload an empty-pot photograph here. When blank, the API uses the original repository `Product.cover_image`, then the general uploaded cover only if no original image exists. If that fallback photograph is decorative, upload the correct nursery-pot image explicitly. Baseline cart/checkout/order images use the same source. Migration `products.0018_plantdetails_baseline_image` adds this optional field without inferring or changing existing photographs.
+
 The final unit price is `Product.price + PlantPotAssignment.additional_price`; baseline plastic adds zero. The combination image is used when present. A standalone pot image is identified as a pot image and is not presented as an exact image of the plant/pot combination. When no combination image exists, the plant gallery remains available with a generic-image caption.
 
 ## Admin workflow
@@ -18,6 +20,8 @@ The final unit price is `Product.price + PlantPotAssignment.additional_price`; b
 Legacy plant pot fields remain available as historical information and do not define the new purchase configuration. Existing values are preserved. Baseline plastic needs no `Pot` record or inventory entry.
 
 ## Cart, checkout and orders
+
+Quantity counts complete plant configurations. One unit is exactly one plant with one selected pot; two units are two plants with two of that same pot. The selector is single-select, pots have no independent quantity or purchase action, and different configurations may remain distinct cart lines. Public plant units are labeled `گیاه`; the existing internal sale-unit code `pot` remains compatible.
 
 Plant checkout items use `pot_option_id`; it is separate from `variant_id`, which remains for cut-flower variants. An omitted or null option resolves to baseline plastic, including requests from legacy clients. The server rejects assignments owned by another plant, inactive assignments or pots, unavailable plants and insufficient stock.
 

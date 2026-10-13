@@ -10,12 +10,8 @@ import { BackIcon } from "@/components/icons/BackIcon";
 import { CartIcon } from "@/components/icons";
 import { ExpandIcon } from "@/components/icons/ExpandIcon";
 
-export interface GalleryImage {
-  key: string;
-  src: string | null;
-  alt: string;
-  isConfiguration?: boolean;
-}
+import type { GalleryImage } from "../../utils/product-gallery";
+export type { GalleryImage } from "../../utils/product-gallery";
 
 interface ProductGalleryProps {
   gallery: GalleryImage[];
@@ -27,6 +23,7 @@ interface ProductGalleryProps {
   onOpenZoom: () => void;
   mobilePlant?: boolean;
   caption?: string;
+  showArrows?: boolean;
 }
 
 export function ProductGallery({
@@ -39,6 +36,7 @@ export function ProductGallery({
   onOpenZoom,
   mobilePlant = false,
   caption,
+  showArrows = true,
 }: ProductGalleryProps) {
   const touchStart = useRef<number | null>(null);
   const activeImage = gallery[selectedImage] ?? gallery[0];
@@ -97,8 +95,12 @@ export function ProductGallery({
         </button>
 
         </>}
+        {showArrows && gallery.length > 1 && <>
+          <button type="button" aria-label="تصویر قبلی" onClick={() => onSelectImage((selectedImage - 1 + gallery.length) % gallery.length)} className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white">‹</button>
+          <button type="button" aria-label="تصویر بعدی" onClick={() => onSelectImage((selectedImage + 1) % gallery.length)} className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white">›</button>
+        </>}
         {/* Pagination */}
-        {gallery.length > 1 ? (
+        {gallery.length > 0 ? (
           <div
             className={`absolute left-1/2 z-10 flex -translate-x-1/2 items-center ${mobilePlant ? "bottom-0" : "bottom-4 gap-1"}`}
             aria-label="انتخاب تصویر محصول"

@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 
 from orders.models import Order, OrderItem, UserAddress
 from products.models import CutFlowerVariant, Product, PlantPotAssignment, Pot
-from products.pot_options import BASELINE_POT_NAME, pot_attributes, uploaded_url
+from products.pot_options import BASELINE_POT_NAME, pot_attributes, uploaded_url, baseline_configuration_image, purchase_unit_display
 
 
 @dataclass(frozen=True)
@@ -117,9 +117,9 @@ def validate_products(items: list[dict], *, lock: bool) -> list[ValidatedLine]:
         if message is None and stock_quantity <= 0:
             message = "این محصول ناموجود است."
         elif message is None and quantity < product.minimum_order_quantity:
-            message = f"حداقل تعداد سفارش {product.minimum_order_quantity} {product.get_sale_unit_display()} است."
+            message = f"حداقل تعداد سفارش {product.minimum_order_quantity} {purchase_unit_display(product)} است."
         elif message is None and quantity > stock_quantity:
-            message = f"تنها {stock_quantity} {product.get_sale_unit_display()} موجود است."
+            message = f"تنها {stock_quantity} {purchase_unit_display(product)} موجود است."
         if message:
             errors.append(
                 {"product_id": product_id, "variant_id": requested_variant_id, "pot_option_id": pot_option_id, "message": message}
@@ -170,7 +170,7 @@ def preview_cart(*, user, items: list[dict], address: UserAddress | None = None)
                 "product_name": line.product.name,
                 "product_type": line.product.product_type,
                 "sale_unit": line.product.sale_unit,
-                "sale_unit_display": line.product.get_sale_unit_display(),
+                "sale_unit_display": purchase_unit_display(line.product),
                 "unit_size": line.product.unit_size,
                 "quantity": line.quantity,
                 "unit_price": str(line.unit_price.quantize(Decimal("1"))),
@@ -244,7 +244,7 @@ def create_order(*, user, address_id: int, items: list[dict], idempotency_key, c
                 product_name=line.product.name,
                 product_type=line.product.product_type,
                 sale_unit=line.product.sale_unit,
-                sale_unit_display=line.product.get_sale_unit_display(),
+                sale_unit_display=purchase_unit_display(line.product),
                 unit_size=line.product.unit_size,
                 quantity=line.quantity,
                 unit_price=line.unit_price,
@@ -281,6 +281,8 @@ def create_order(*, user, address_id: int, items: list[dict], idempotency_key, c
 
 
 def configuration_image(line):
+    if line.product.product_type == Product.ProductType.PLANT and not line.pot_assignment:
+        return baseline_configuration_image(line.product) or ""
     if line.pot_assignment and line.pot_assignment.combination_image:
         return uploaded_url(line.pot_assignment.combination_image)
     return uploaded_url(line.product.cover_upload) or line.product.cover_image or ""
@@ -291,7 +293,7 @@ def pot_snapshot(line):
     plant = line.product.product_type == Product.ProductType.PLANT
     attributes = pot_attributes(assignment.pot) if assignment else {"material": "پلاستیک"} if plant else {}
     if plant:
-        attributes["configuration_image"] = uploaded_url(assignment.combination_image) if assignment else None
+        attributes["configuration_image"] = uploaded_url(assignment.combination_image) if assignment else baseline_configuration_image(line.product)
         attributes["image"] = uploaded_url(assignment.pot.image) if assignment else None
     return {"pot_option_id": assignment.pk if assignment else None,
             "pot_name": assignment.pot.name if assignment else BASELINE_POT_NAME if plant else "",

@@ -71,6 +71,7 @@ class ValidationTests(TestCase):
         for model, name in ((HomeSlide, "mobile_image"), (HomeSlide, "desktop_image"),
                             (Product, "cover_upload"), (ProductImage, "image_upload"),
                             (Pot, "image"), (PlantPotAssignment, "combination_image"),
+                            (PlantDetails, "baseline_image"),
                             (Article, "cover_image")):
             field = model._meta.get_field(name)
             for extension in ("jpg", "jpeg", "png", "webp"):
@@ -88,6 +89,7 @@ class ValidationTests(TestCase):
             for model, name in ((HomeSlide, "mobile_image"), (HomeSlide, "desktop_image"),
                                 (Product, "cover_upload"), (ProductImage, "image_upload"),
                                 (Pot, "image"), (PlantPotAssignment, "combination_image"),
+                            (PlantDetails, "baseline_image"),
                                 (Article, "cover_image")):
                 field = model._meta.get_field(name)
                 with self.subTest(field=name):

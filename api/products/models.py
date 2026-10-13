@@ -240,6 +240,7 @@ class PlantDetails(models.Model):
         related_name="initial_for", verbose_name="گلدان انتخاب‌شده اولیه",
         help_text="خالی: اولین گلدان تزئینی موجود، سپس گلدان پلاستیکی پایه.",
     )
+    baseline_image = UploadImageField("تصویر گیاه در گلدان پلاستیکی پایه", upload_to="plants/baseline/%Y/%m/", blank=True, help_text="تصویر خود گیاه در گلدان پلاستیکی؛ مستقل از گلدان تزئینی اولیه. خالی: تصویر اصلی قدیمی محصول.")
     pot_material = models.CharField("جنس گلدان", max_length=50, blank=True)
     pot_color = models.CharField("رنگ گلدان", max_length=50, blank=True)
     pot_size_cm = models.PositiveSmallIntegerField(

@@ -90,6 +90,17 @@ class PlantPotPurchasingTests(TestCase):
         self.pot.refresh_from_db(); self.plant.refresh_from_db(); self.other.refresh_from_db()
         self.assertEqual((self.pot.stock_quantity, self.plant.stock_quantity, self.other.stock_quantity), (1, 6, 6))
 
+    def test_quantity_two_is_two_complete_plant_and_selected_pot_units(self):
+        order = self.order([self.line(option=self.option, quantity=2)])
+        item = order.items.get()
+        self.assertEqual(item.quantity, 2)
+        self.assertEqual(item.unit_price, 1200)
+        self.assertEqual(item.line_total, 2400)
+        self.assertEqual(item.sale_unit_display, "گیاه")
+        self.assertEqual(item.pot_option_id_snapshot, self.option.pk)
+        self.plant.refresh_from_db(); self.pot.refresh_from_db()
+        self.assertEqual((self.plant.stock_quantity, self.pot.stock_quantity), (6, 3))
+
     def test_invalid_inactive_and_out_of_stock_selection_are_not_replaced(self):
         for lines in ([self.line(option=self.shared)], [dict(self.line(), variant_id=99)]):
             with self.assertRaises(ValidationError): self.order(lines)

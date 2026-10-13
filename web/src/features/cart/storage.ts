@@ -89,7 +89,7 @@ function normalizeStoredItem(item: CartItem, version: number): CartItem {
       minimum_order_quantity: minimum,
       sale_unit: legacy.sale_unit ?? "bunch",
       sale_unit_display:
-        typeof legacy.sale_unit_display === "string"
+        productType === "plant" ? "گیاه" : typeof legacy.sale_unit_display === "string"
           ? legacy.sale_unit_display
           : "دسته",
       product_type: productType,

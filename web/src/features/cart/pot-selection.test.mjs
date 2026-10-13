@@ -74,3 +74,13 @@ test("checkout mapping, errors and idempotency distinguish two pot configuration
   assert.equal(cartFingerprint(request), cartFingerprint([...request].reverse()));
   assert.deepEqual(parseOrderItemErrors({ item_errors: [{ product_id: 10, pot_option_id: 7, message: "ناموجود" }, { product_id: 10, pot_option_id: null, message: "تعداد" }] }), { "10:pot:7": "ناموجود", "10:base": "تعداد" });
 });
+
+test("two plants with one selected pot send two complete configuration units", () => {
+  const snapshot = productToCartSnapshot(plant, null, paid);
+  const cart = addCartSnapshot([], snapshot, 2);
+  assert.equal(snapshot.sale_unit_display, "گیاه");
+  assert.equal(cart[0].quantity * snapshot.price, 2400);
+  assert.deepEqual(mapCartToCheckoutItems(cart), [{ product_id: 10, pot_option_id: 7, quantity: 2 }]);
+  const hydrated = parseStoredCart(JSON.stringify({ version: 3, items: cart }));
+  assert.equal(hydrated[0].product.sale_unit_display, "گیاه");
+});

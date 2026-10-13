@@ -25,7 +25,7 @@ export function getProductImageUrl(
   if (value && /^https?:\/\//i.test(value)) {
     return value;
   }
-  if (value?.startsWith("/media/")) {
+  if (value?.startsWith("/media/") || value?.startsWith("/images/products/")) {
     return value;
   }
   return getRepositoryImageUrl(PRODUCT_IMAGE_BASE_PATH, filename);

@@ -66,7 +66,7 @@ rounded-t-[10px]
         {/* Price */}
         <div className="min-w-0 shrink-0">
           <p className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="text-xl font-bold leading-7 text-text-primary">
+            <span data-purchase-total className="text-xl font-bold leading-7 text-text-primary">
               {toPersianDigits(totalPrice.toLocaleString("en-US"))}
             </span>
 

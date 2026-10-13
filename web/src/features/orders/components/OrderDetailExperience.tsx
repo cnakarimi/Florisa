@@ -179,11 +179,11 @@ export function OrderDetailExperience({
 
                       <p className="mt-1 text-xs text-zinc-400">
                         {toPersianDigits(item.quantity)}{" "}
-                        {item.sale_unit_display} ×{" "}
+                        {item.product_type === "plant" ? "گیاه با گلدان" : item.sale_unit_display} ×{" "}
                         {formatToman(Number(item.unit_price))}
                       </p>
 
-                      {item.pot_name && <p className="mt-1 text-xs text-zinc-400">گلدان: {item.pot_name}</p>}
+                      {item.pot_name && <p className="mt-1 text-xs text-zinc-400">گیاه با گلدان: {item.pot_name}</p>}
                       {item.product_type === "plant" && !item.pot_attributes?.configuration_image && <p className="mt-1 text-xs text-zinc-500">تصویر عمومی گیاه</p>}
                       {item.pot_name && item.pot_attributes && <p className="mt-1 text-xs text-zinc-400">{[item.pot_attributes.material, item.pot_attributes.color,
                         item.pot_attributes.diameter_cm ? `قطر ${toPersianDigits(item.pot_attributes.diameter_cm)} سانتی‌متر` : "",

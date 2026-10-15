@@ -12,8 +12,9 @@ import {
 } from "react";
 
 import { getProductDetail } from "@/features/catalog/api/catalog";
-import type { CatalogProduct } from "@/features/catalog/types";
+import type { CatalogProduct, CutFlowerQuantity } from "@/features/catalog/types";
 import {
+  addCutFlowerSelectionToCart,
   addCartSnapshot,
   calculateCartTotals,
   isCartItemValid,
@@ -46,6 +47,7 @@ interface CartContextValue {
   hasInvalidItems: boolean;
 
   addItem: (product: CatalogProduct, quantity?: number, variantId?: number, potOptionId?: number | null) => void;
+  addCutFlowerSelection: (product: CatalogProduct, selection: CutFlowerQuantity[]) => void;
   removeItem: (lineId: CartLineId) => void;
   increaseItem: (lineId: CartLineId) => void;
   decreaseItem: (lineId: CartLineId) => void;
@@ -76,7 +78,18 @@ interface CartProviderProps {
 }
 
 export function CartProvider({ children }: CartProviderProps) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItemsState] = useState<CartItem[]>([]);
+  const itemsRef = useRef<CartItem[]>([]);
+  const mutationVersion = useRef(0);
+  // Serialize local cart mutations, including all-color adds after an API refresh.
+  // Keeping the current value here lets validation fail before any state is written.
+  const setItems = useCallback((update: CartItem[] | ((current: CartItem[]) => CartItem[])) => {
+    const next = typeof update === "function" ? update(itemsRef.current) : update;
+    if (next === itemsRef.current) return;
+    mutationVersion.current += 1;
+    itemsRef.current = next;
+    setItemsState(next);
+  }, []);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -92,7 +105,7 @@ export function CartProvider({ children }: CartProviderProps) {
       setItems(storedItems);
       setIsHydrated(true);
     });
-  }, []);
+  }, [setItems]);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -114,7 +127,7 @@ export function CartProvider({ children }: CartProviderProps) {
     return () => {
       window.removeEventListener("storage", handleStorage);
     };
-  }, []);
+  }, [setItems]);
 
   const addItem = useCallback(
     (product: CatalogProduct, requestedQuantity?: number, variantId?: number, potOptionId?: number | null) => {
@@ -136,18 +149,23 @@ export function CartProvider({ children }: CartProviderProps) {
         addCartSnapshot(current, snapshot, requestedQuantity),
       );
     },
-    [],
+    [setItems],
   );
+
+  const addCutFlowerSelection = useCallback((product: CatalogProduct, selection: CutFlowerQuantity[]) => {
+    if (!isHydrated) throw new Error("سبد خرید هنوز آماده نیست؛ دوباره تلاش کنید.");
+    setItems(current => addCutFlowerSelectionToCart(current, product, selection));
+  }, [isHydrated, setItems]);
 
   const removeItem = useCallback((lineId: CartLineId) => {
     setItems((current) =>
       current.filter((item) => item.line_id !== lineId),
     );
-  }, []);
+  }, [setItems]);
 
   const setQuantity = useCallback((lineId: CartLineId, quantity: number) => {
     setItems((current) => setCartItemQuantity(current, lineId, quantity));
-  }, []);
+  }, [setItems]);
 
   const increaseItem = useCallback((lineId: CartLineId) => {
     setItems((current) => {
@@ -159,7 +177,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
       return setCartItemQuantity(current, lineId, item.quantity + 1);
     });
-  }, []);
+  }, [setItems]);
 
   const decreaseItem = useCallback((lineId: CartLineId) => {
     setItems((current) => {
@@ -171,12 +189,12 @@ export function CartProvider({ children }: CartProviderProps) {
 
       return setCartItemQuantity(current, lineId, item.quantity - 1);
     });
-  }, []);
+  }, [setItems]);
 
   const clearCart = useCallback(() => {
     setItems([]);
     setRefreshError(null);
-  }, []);
+  }, [setItems]);
 
   const hasItem = useCallback(
     (productId: number, variantId?: number) =>
@@ -214,6 +232,7 @@ export function CartProvider({ children }: CartProviderProps) {
       }
 
       const request = (async () => {
+        const versionAtStart = mutationVersion.current;
         setIsRefreshing(true);
         setRefreshError(null);
 
@@ -286,6 +305,14 @@ export function CartProvider({ children }: CartProviderProps) {
             }),
           );
 
+          // A storage event or another cart action may have changed the cart
+          // during the request. Preserve that edit and let the caller retry.
+          if (mutationVersion.current !== versionAtStart) {
+            const message = "سبد خرید هنگام بررسی موجودی تغییر کرد؛ دوباره تلاش کنید.";
+            setRefreshError(message);
+            return cartResult(itemsRef.current, message);
+          }
+
           lastRefreshAtRef.current = Date.now();
 
           setItems(refreshedItems);
@@ -307,7 +334,7 @@ export function CartProvider({ children }: CartProviderProps) {
 
       return request;
     },
-    [items, refreshError],
+    [items, refreshError, setItems],
   );
 
   const totals = useMemo(() => calculateCartTotals(items), [items]);
@@ -325,6 +352,7 @@ export function CartProvider({ children }: CartProviderProps) {
       hasInvalidItems: items.some((item) => !isCartItemValid(item)),
 
       addItem,
+      addCutFlowerSelection,
       removeItem,
       increaseItem,
       decreaseItem,
@@ -338,6 +366,7 @@ export function CartProvider({ children }: CartProviderProps) {
     }),
     [
       addItem,
+      addCutFlowerSelection,
       clearCart,
       decreaseItem,
       getItemQuantity,

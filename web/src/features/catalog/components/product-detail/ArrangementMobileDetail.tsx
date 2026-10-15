@@ -13,7 +13,7 @@ import { toPersianDigits } from "@/utils/persian";
 import mobileStyles from "./PlantMobileDetail.module.css";
 import styles from "./ArrangementMobileDetail.module.css";
 
-interface Props extends ProductDetailViewProps {
+interface Props extends Omit<ProductDetailViewProps, "onAddCutFlowerSelection"> {
   gallery: GalleryImage[];
   selectedImage: number;
   onSelectImage: (index: number) => void;

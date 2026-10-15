@@ -109,6 +109,11 @@ export interface CutFlowerVariant {
   is_in_stock: boolean;
 }
 
+export interface CutFlowerQuantity {
+  variantId: number;
+  quantity: number;
+}
+
 export type ArrangementType = "bouquet" | "flower_box" | "basket";
 
 export interface ArrangementCompositionEntry {

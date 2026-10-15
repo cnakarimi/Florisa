@@ -8,6 +8,7 @@ import type {
   CatalogProduct,
   CatalogProductDetail,
   CatalogProductReview,
+  CutFlowerQuantity,
 } from "@/features/catalog/types";
 import { RelatedProducts } from "./RelatedProducts";
 
@@ -23,6 +24,7 @@ import { ProductPurchasePanel } from "./ProductPurchasePanel";
 import { ProductReviews } from "./ProductReviews";
 import { PlantMobileDetail } from "./PlantMobileDetail";
 import { ArrangementMobileDetail } from "./ArrangementMobileDetail";
+import { CutFlowerMobileDetail } from "./CutFlowerMobileDetail";
 import { PlantQuantitySelector } from "./PlantQuantitySelector";
 import { getPlantPurchase } from "../../utils/plant-detail";
 import {
@@ -59,6 +61,7 @@ export interface ProductDetailViewProps {
     variantId?: number,
     potOptionId?: number | null,
   ) => void | Promise<void>;
+  onAddCutFlowerSelection: (product: CatalogProduct, selection: CutFlowerQuantity[]) => void | Promise<void>;
 }
 
 export function ProductDetailView({
@@ -79,6 +82,7 @@ export function ProductDetailView({
   onSelectProduct,
   onToggleFavorite,
   onAddToCart,
+  onAddCutFlowerSelection,
 }: ProductDetailViewProps) {
   const [selectedPotRecord, setSelectedPotRecord] = useState(() => initialPlantPot(product));
   const potOptions = getPlantPotOptions(product);
@@ -153,7 +157,17 @@ export function ProductDetailView({
         onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
         gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
       />}
-      <div className={`mx-auto min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:pb-32 ${product.product_type === "plant" || product.product_type === "arrangement" ? "hidden md:block" : ""}`}>
+      {product.product_type === "cut_flower" && <CutFlowerMobileDetail
+        key={product.id}
+        product={product} reviews={reviews} areReviewsLoading={areReviewsLoading} reviewsError={reviewsError}
+        hasMoreReviews={hasMoreReviews} areMoreReviewsLoading={areMoreReviewsLoading} moreReviewsError={moreReviewsError} onLoadMoreReviews={onLoadMoreReviews}
+        relatedProducts={relatedProducts} areRelatedProductsLoading={areRelatedProductsLoading}
+        cartCount={cartCount} isFavorite={isFavorite} onBack={onBack} onNavigateToCart={onNavigateToCart}
+        onSelectProduct={onSelectProduct} onToggleFavorite={onToggleFavorite} onAddToCart={onAddToCart}
+        onAddCutFlowerSelection={onAddCutFlowerSelection}
+        gallery={gallery} selectedImage={selectedImage} onSelectImage={setSelectedImage} onOpenZoom={() => setIsZoomOpen(true)}
+      />}
+      <div className="mx-auto hidden min-h-dvh w-full max-w-screen-lg bg-background-primary pb-24 shadow-large md:block md:pb-32">
         {/* Temporary desktop header.
             Mobile navigation lives inside ProductGallery.
             Desktop will be redesigned after its Figma is complete. */}

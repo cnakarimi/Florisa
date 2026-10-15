@@ -130,7 +130,8 @@ button {
 
 @media (max-width: 767px) {
   body:has([data-plant-mobile-detail]) [data-product-route-navbar],
-  body:has([data-arrangement-mobile-detail]) [data-product-route-navbar] {
+  body:has([data-arrangement-mobile-detail]) [data-product-route-navbar],
+  body:has([data-cut-flower-mobile-detail]) [data-product-route-navbar] {
     display: none;
   }
 
@@ -145,6 +146,10 @@ button {
   body:has([data-footer-overlay="product-actions"]) .site-footer,
   body:has([data-footer-overlay="checkout-actions"]) .site-footer {
     padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  body:has([data-mobile-bottom-nav]):has([data-footer-overlay="product-actions"]) .site-footer {
+    padding-bottom: calc(10rem + env(safe-area-inset-bottom));
   }
 
   body:has([data-footer-overlay="cart-actions"]) .site-footer {

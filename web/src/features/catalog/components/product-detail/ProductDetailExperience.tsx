@@ -351,6 +351,16 @@ export function ProductDetailExperience({
           }
           cart.addItem(selectedProduct, quantity, variantId);
         }}
+        onAddCutFlowerSelection={async (selectedProduct, selection) => {
+          // Refresh existing lines first; then validate every increment against the
+          // latest product response and commit all color lines in one cart update.
+          const refresh = await cart.refreshCartItems(true);
+          if (refresh.error) throw new Error(refresh.error);
+          const current = await getProductDetail(selectedProduct.slug, true);
+          if (current.id !== selectedProduct.id) throw new Error("این محصول دیگر در دسترس نیست.");
+          setProduct(current);
+          cart.addCutFlowerSelection(current, selection);
+        }}
       />
     </>
   );

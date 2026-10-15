@@ -15,7 +15,7 @@ import type { PlantPotOption } from "../../types";
 import { ProductPotSelector } from "./ProductPotSelector";
 import { selectedPotDetails } from "../../utils/pot-options";
 
-interface PlantMobileDetailProps extends ProductDetailViewProps {
+interface PlantMobileDetailProps extends Omit<ProductDetailViewProps, "onAddCutFlowerSelection"> {
   gallery: GalleryImage[];
   selectedImage: number;
   onSelectImage: (index: number) => void;

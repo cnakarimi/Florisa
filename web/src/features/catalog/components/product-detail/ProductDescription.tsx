@@ -3,13 +3,13 @@
 import { useId, useState } from "react";
 import { ProductDesignIcon } from "./PlantMobileSections";
 
-export function ProductDescription({ text, assetDirectory }: { text: string; assetDirectory?: string }) {
+export function ProductDescription({ text, assetDirectory, title = "درباره این محصول" }: { text: string; assetDirectory?: string; title?: string }) {
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   if (!text.trim()) return null;
   return (
     <section className="px-4 py-8" aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`} className="text-mobile-heading-h4 font-semibold">درباره این محصول</h2>
+      <h2 id={`${id}-title`} className="text-mobile-heading-h4 font-semibold">{title}</h2>
       <div className="relative mt-3">
         <p id={`${id}-body`} className={`whitespace-pre-line break-words text-mobile-body-base text-text-secondary ${expanded ? "" : "line-clamp-3"}`}>{text}</p>
         {!expanded && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-b from-transparent to-background-primary" />}

@@ -1,6 +1,7 @@
 import type { CartItem, CartLineId, CartProductSnapshot } from "./types.ts";
-import type { CatalogProduct, CutFlowerVariant, PlantPotOption } from "@/features/catalog/types";
+import type { CatalogProduct, CutFlowerQuantity, CutFlowerVariant, PlantPotOption } from "@/features/catalog/types";
 import { getPlantPotOptions, POT_UNAVAILABLE_MESSAGE } from "../catalog/utils/pot-options.ts";
+import { cutFlowerLineError } from "../catalog/utils/cut-flower-detail.ts";
 
 export function makeCartLineId(productId: number, variantId: number | null, potOptionId?: number | null): CartLineId {
   if (potOptionId != null) return `${productId}:pot:${potOptionId}`;
@@ -73,6 +74,29 @@ export function addCartSnapshot(
   return items.map((item) =>
     item.line_id === lineId ? { line_id: lineId, product: snapshot, quantity } : item,
   );
+}
+
+/** Validate every increment against current variant data before changing any line.
+ * Unlike single-item quick add, a multi-color action must never silently clamp.
+ */
+export function addCutFlowerSelectionToCart(items: CartItem[], product: CatalogProduct, selection: CutFlowerQuantity[]): CartItem[] {
+  if (product.product_type !== "cut_flower" || selection.length === 0) throw new Error("ابتدا تعداد دسته‌ها را انتخاب کنید.");
+  const seen = new Set<number>();
+  const prepared = selection.map(({ variantId, quantity }) => {
+    if (seen.has(variantId)) throw new Error("هر رنگ باید فقط یک بار در انتخاب باشد.");
+    seen.add(variantId);
+    const variant = product.details?.variants.find(item => item.id === variantId);
+    const error = cutFlowerLineError(product, variant, quantity);
+    if (error || !variant) throw new Error(error);
+    const snapshot = productToCartSnapshot(product, variant);
+    const existing = items.find(item => item.line_id === makeCartLineId(product.id, variantId));
+    const merged = (existing?.quantity ?? 0) + quantity;
+    if (!Number.isInteger(merged) || merged > variant.stock_quantity) {
+      throw new Error(`با احتساب سبد خرید، تعداد رنگ «${variant.color}» از موجودی بیشتر است. تعداد را کاهش دهید یا سبد را ویرایش کنید.`);
+    }
+    return { snapshot, quantity };
+  });
+  return prepared.reduce((current, line) => addCartSnapshot(current, line.snapshot, line.quantity), items);
 }
 
 export function calculateCartTotals(items: CartItem[]): {

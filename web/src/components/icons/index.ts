@@ -15,5 +15,6 @@ export { LightIcon } from "./LightIcon";
 export { TemperatureIcon } from "./TemperatureIcon";
 export { ShovelIcon } from "./ShovelIcon";
 export { WateringIcon } from "./WateringIcon";
+export { CheckIcon } from "./CheckIcon";
 
 export type { IconProps } from "./Icon";

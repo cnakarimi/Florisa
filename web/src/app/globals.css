@@ -148,7 +148,10 @@ button {
     padding-bottom: calc(7rem + env(safe-area-inset-bottom));
   }
 
-  body:has([data-mobile-bottom-nav]):has([data-footer-overlay="product-actions"]) .site-footer {
+  body:has([data-mobile-bottom-nav]):has(
+      [data-footer-overlay="product-actions"]
+    )
+    .site-footer {
     padding-bottom: calc(10rem + env(safe-area-inset-bottom));
   }
 
@@ -182,4 +185,51 @@ button {
     rgba(0, 0, 0, 0.06) 42%,
     rgba(0, 0, 0, 0.48) 100%
   );
+}
+
+.florisa-scrollbar {
+  --scrollbar-track: #1a1a1a;
+  --scrollbar-thumb: #766326;
+  --scrollbar-thumb-hover: #d4af37;
+
+  /* Firefox و مرورگرهای دارای پشتیبانی استاندارد */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* کنترل جزئی‌تر در مرورگرهای دارای پشتیبانی WebKit */
+@supports selector(::-webkit-scrollbar) {
+  .florisa-scrollbar {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  .florisa-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .florisa-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 999px;
+  }
+
+  .florisa-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 999px;
+  }
+
+  .florisa-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  .florisa-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@media (forced-colors: active) {
+  .florisa-scrollbar {
+    scrollbar-color: auto;
+  }
 }

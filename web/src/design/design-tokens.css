@@ -132,6 +132,7 @@
   --text-brand: var(--color-brand-300);
   --text-accent: var(--color-brand-300);
   --text-disabled: var(--color-neutral-700);
+  --text-inverse: var(--color-neutral-900);
 
   /* Semantic border tokens */
 
@@ -182,6 +183,7 @@
   --color-success-500: var(--color-success-500);
   --color-error-500: var(--color-error-500);
   --color-surface-950: var(--color-surface-950);
+  --color-text-inverse: var(--text-inverse);
 
   /* Semantic color utilities */
 

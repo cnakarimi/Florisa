@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isProduct } from "./runtime.ts";
+import { isProduct, isProductDetail, isProductList, isPaginatedProducts } from "./runtime.ts";
 
 const shared = {
   id: 1,
@@ -21,6 +21,35 @@ const shared = {
   has_purchasable_variant: true,
   category: { id: 1, name: "گل", slug: "flowers" },
 };
+
+test("plant care normalizes missing entries across product response parsers", () => {
+  const plant = () => ({ ...shared, product_type: "plant", details: { plant_type: "Plant", care_notes: "Legacy notes" } });
+  const product = plant();
+  assert.equal(isProduct(product), true);
+  assert.deepEqual(product.details.care_items, []);
+  const list = [plant()];
+  assert.equal(isProductList(list), true);
+  assert.deepEqual(list[0].details.care_items, []);
+  const page = { count: 1, next: null, previous: null, results: [plant()] };
+  assert.equal(isPaginatedProducts(page), true);
+  assert.deepEqual(page.results[0].details.care_items, []);
+  const detail = { ...plant(), description: "", created_at: "", updated_at: "", rating_average: null, review_count: 0, images: [] };
+  assert.equal(isProductDetail(detail), true);
+  assert.deepEqual(detail.details.care_items, []);
+});
+
+test("plant care preserves populated and empty entries and rejects malformed content", () => {
+  const entry = { key: "humidity", value: "Draft", summary: "", explanation: "First line\nSecond line" };
+  const product = (care_items) => ({ ...shared, product_type: "plant", details: { plant_type: "Plant", care_items } });
+  for (const items of [[], [entry]]) {
+    const data = product(items);
+    assert.equal(isProduct(data), true);
+    assert.deepEqual(data.details.care_items, items);
+  }
+  for (const invalid of [null, {}, "", [{ ...entry, key: "care" }], [{ ...entry, summary: null }], [{ key: "soil", value: "Draft" }], [{ ...entry, explanation: 1 }]]) {
+    assert.equal(isProduct(product(invalid)), false);
+  }
+});
 
 test("arrangement details and ordered descriptive composition parse", () => {
   assert.equal(isProduct({

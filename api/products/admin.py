@@ -14,6 +14,7 @@ from products.models import (
     CutFlowerVariant,
     HomeSlide,
     Plant,
+    PlantCareItem,
     PlantDetails,
     Pot,
     PlantPotAssignment,
@@ -56,6 +57,7 @@ class RequiredDetailsInlineFormSet(BaseInlineFormSet):
 
 class PlantDetailsInline(admin.StackedInline):
     model = PlantDetails
+    show_change_link = True
     formset = RequiredDetailsInlineFormSet
     extra = 1
     min_num = 1
@@ -325,6 +327,28 @@ class ArrangementAdmin(TypedProductAdmin):
         obj.sale_unit = Product.SaleUnit.ITEM
         obj.unit_size = 1
         super().save_model(request, obj, form, change)
+
+
+class PlantCareItemInline(admin.StackedInline):
+    model = PlantCareItem
+    extra = 0
+    max_num = 5
+    fields = ("key", "value", "summary", "explanation")
+
+
+@admin.register(PlantDetails)
+class PlantDetailsAdmin(admin.ModelAdmin):
+    list_display = ("product", "plant_type")
+    search_fields = ("product__name", "product__slug", "plant_type")
+    readonly_fields = ("product",)
+    inlines = (PlantCareItemInline,)
+
+    def has_add_permission(self, request):
+        # Plant creation remains in the typed product admin flow.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(ArrangementDetails)

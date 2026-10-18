@@ -36,7 +36,15 @@ export interface ProductCategorySummary {
   slug: string;
 }
 
+export interface PlantCareItem {
+  key: "light" | "watering" | "temperature" | "humidity" | "soil";
+  value: string;
+  summary: string;
+  explanation: string;
+}
+
 export interface PlantProductDetails {
+  care_items: PlantCareItem[];
   plant_type: string;
   color: string;
 

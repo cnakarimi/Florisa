@@ -5,7 +5,15 @@ import type {
   CatalogProductReview,
   PaginatedCatalogProducts,
   PaginatedProductReviews,
+  PlantCareItem,
 } from "@/features/catalog/types";
+
+export function isPlantCareItem(value: unknown): value is PlantCareItem {
+  return isRecord(value) &&
+    ["light", "watering", "temperature", "humidity", "soil"].includes(String(value.key)) &&
+    typeof value.value === "string" && typeof value.summary === "string" &&
+    typeof value.explanation === "string";
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -68,9 +76,10 @@ export function isProduct(value: unknown): value is CatalogProduct {
   }
 
   if (value.product_type === "plant") {
-    return (
-      value.details === null || typeof value.details.plant_type === "string"
-    );
+    if (value.details === null) return true;
+    if (typeof value.details.plant_type !== "string") return false;
+    if (value.details.care_items === undefined) value.details.care_items = [];
+    return Array.isArray(value.details.care_items) && value.details.care_items.every(isPlantCareItem);
   }
 
   if (value.product_type === "cut_flower") {

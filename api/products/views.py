@@ -69,7 +69,7 @@ def public_product_queryset() -> QuerySet[Product]:
         is_active=True,
         category__is_active=True,
     ).select_related("category", "plant_details", "arrangement_details", "cut_flower_details").prefetch_related(
-        "arrangement_details__composition", "cut_flower_variants",
+        "arrangement_details__composition", "cut_flower_variants", "plant_details__care_items",
         Prefetch("pot_assignments", queryset=PlantPotAssignment.objects.select_related("pot")),
     ).annotate(
         active_variant_min_price=Subquery(minimum_price, output_field=BigIntegerField()),

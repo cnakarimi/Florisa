@@ -12,6 +12,7 @@ from products.models import (
     Category,
     CutFlowerDetails,
     CutFlowerVariant,
+    PlantCareItem,
     PlantDetails,
     Product,
     ProductImage,
@@ -136,6 +137,71 @@ class CatalogAPITests(APITestCase):
             arrangement=details, label="رز صورتی", stem_count=12, sort_order=1
         )
         return product
+
+    def test_plant_care_items_are_ordered_in_list_detail_and_related_responses(self):
+        current = self.make_plant()
+        plant = self.make_plant(details={"care_notes": "Legacy notes stay unchanged"})
+        keys = ["light", "watering", "temperature", "humidity", "soil"]
+        expected = [
+            {"key": key, "value": f"Draft {key}", "summary": "", "explanation": ""}
+            for key in keys
+        ]
+        expected[0].update(summary="Editorial summary", explanation="Editorial explanation")
+        for entry in reversed(expected):
+            PlantCareItem.objects.create(plant_details=plant.plant_details, **entry)
+        responses = [
+            self.client.get(reverse("products:product-list")),
+            self.client.get(reverse("products:product-detail", kwargs={"slug": plant.slug})),
+            self.client.get(self.related_url(current)),
+        ]
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = response.data
+            if isinstance(data, dict) and "results" in data:
+                data = data["results"]
+            if isinstance(data, list):
+                data = next(item for item in data if item["id"] == plant.pk)
+            self.assertEqual(data["details"]["care_items"], expected)
+            self.assertEqual(data["details"]["care_notes"], "Legacy notes stay unchanged")
+            self.assertEqual(data["details"]["light_requirement"], "indirect")
+
+    def test_empty_care_items_do_not_derive_from_legacy_notes(self):
+        plant = self.make_plant(details={"care_notes": "Legacy notes"})
+        response = self.client.get(reverse("products:product-detail", kwargs={"slug": plant.slug}))
+        self.assertEqual(response.data["details"]["care_items"], [])
+        self.assertEqual(response.data["details"]["care_notes"], "Legacy notes")
+
+    def test_care_items_are_read_only_and_absent_from_other_product_types(self):
+        from products.serializers import PlantDetailsSerializer
+
+        plant = self.make_plant()
+        serializer = PlantDetailsSerializer(
+            plant.plant_details,
+            data={"care_items": [{"key": "light", "value": "Ignored"}]}, partial=True,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertNotIn("care_items", serializer.validated_data)
+        serializer.save()
+        self.assertFalse(plant.plant_details.care_items.exists())
+        for product in (self.make_arrangement(), self.make_cut_flower()):
+            response = self.client.get(reverse("products:product-detail", kwargs={"slug": product.slug}))
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertNotIn("care_items", response.data["details"])
+
+    def test_care_items_are_prefetched_for_multiple_plants(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        for _ in range(4):
+            plant = self.make_plant()
+            PlantCareItem.objects.create(plant_details=plant.plant_details, key="soil", value="Draft")
+        with CaptureQueriesContext(connection) as queries:
+            response = self.client.get(reverse("products:product-list"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        care_queries = [query for query in queries if '"products_plantcareitem"' in query["sql"]]
+        self.assertEqual(len(care_queries), 1)
+        for plant in self.results(response):
+            self.assertEqual(plant["details"]["care_items"][0]["key"], "soil")
 
     def test_arrangement_detail_serializes_ordered_composition(self):
         product = self.make_arrangement()
@@ -422,9 +488,9 @@ class CatalogAPITests(APITestCase):
     def test_list_and_detail_queries_are_optimized(self):
         product = self.make_plant()
         ProductImage.objects.create(product=product, image="one.jpg")
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             list_response = self.client.get(reverse("products:product-list"))
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             detail_response = self.client.get(
                 reverse("products:product-detail", kwargs={"slug": product.slug})
             )
@@ -579,7 +645,7 @@ class CatalogAPITests(APITestCase):
         current = self.make_plant()
         self.make_plant()
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(self.related_url(current))
         self.assertEqual(len(response.data), 1)
 
@@ -587,7 +653,7 @@ class CatalogAPITests(APITestCase):
             factory = self.make_plant if index % 2 else self.make_cut_flower
             factory(category=current.category)
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.client.get(self.related_url(current))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 8)

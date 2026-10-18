@@ -308,6 +308,50 @@ class PlantDetails(models.Model):
         return f"مشخصات {self.product.name}"
 
 
+class PlantCareItem(models.Model):
+    class Key(models.TextChoices):
+        LIGHT = "light", "نور"
+        WATERING = "watering", "آبیاری"
+        TEMPERATURE = "temperature", "دما"
+        HUMIDITY = "humidity", "رطوبت"
+        SOIL = "soil", "خاک"
+
+    plant_details = models.ForeignKey(
+        PlantDetails,
+        on_delete=models.CASCADE,
+        related_name="care_items",
+        verbose_name="مشخصات گیاه",
+    )
+    key = models.CharField("موضوع", max_length=20, choices=Key.choices)
+    value = models.CharField("مقدار کوتاه", max_length=120)
+    summary = models.CharField("خلاصه", max_length=300, blank=True)
+    explanation = models.TextField("توضیح کامل", blank=True)
+
+    class Meta:
+        verbose_name = "مورد نگهداری گیاه"
+        verbose_name_plural = "موارد نگهداری گیاه"
+        ordering = (
+            models.Case(
+                models.When(key="light", then=0),
+                models.When(key="watering", then=1),
+                models.When(key="temperature", then=2),
+                models.When(key="humidity", then=3),
+                models.When(key="soil", then=4),
+                default=5,
+                output_field=models.IntegerField(),
+            ),
+            "pk",
+        )
+        constraints = (
+            models.UniqueConstraint(
+                fields=("plant_details", "key"), name="plant_care_item_unique_key"
+            ),
+        )
+
+    def __str__(self) -> str:
+        return f"{self.get_key_display()}: {self.value}"
+
+
 class CutFlowerDetails(models.Model):
     class FlowerGrade(models.TextChoices):
         STANDARD = "standard", "استاندارد"

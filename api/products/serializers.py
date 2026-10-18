@@ -9,6 +9,7 @@ from products.models import (
     CutFlowerDetails,
     CutFlowerVariant,
     HomeSlide,
+    PlantCareItem,
     PlantDetails,
     Product,
     ProductImage,
@@ -96,7 +97,15 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class PlantCareItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlantCareItem
+        fields = ("key", "value", "summary", "explanation")
+        read_only_fields = fields
+
+
 class PlantDetailsSerializer(serializers.ModelSerializer):
+    care_items = PlantCareItemSerializer(many=True, read_only=True)
     plant_size_display = serializers.CharField(source="get_plant_size_display", read_only=True)
     quality_grade_display = serializers.CharField(source="get_quality_grade_display", read_only=True)
     light_requirement_display = serializers.CharField(source="get_light_requirement_display", read_only=True)

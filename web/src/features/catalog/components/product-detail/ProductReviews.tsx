@@ -1,14 +1,15 @@
-import { StarIcon } from "@/components/icons";
+"use client";
+
 import { useId } from "react";
-
+import { StarIcon } from "@/components/icons";
 import type { CatalogProductReview } from "@/features/catalog/types";
-
 import { toPersianDigits } from "@/utils/persian";
 
 interface ProductReviewsProps {
   reviews: CatalogProductReview[];
   reviewCount: number;
   ratingAverage: number | null;
+  onAddReview?: () => void;
   isLoading?: boolean;
   error?: string | null;
   mobilePlant?: boolean;
@@ -22,13 +23,9 @@ interface ProductReviewsProps {
 function formatRelativeDate(value: string): string {
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
+  if (Number.isNaN(date.getTime())) return "";
 
-  const now = Date.now();
-  const difference = now - date.getTime();
-
+  const difference = Date.now() - date.getTime();
   const minutes = Math.max(1, Math.floor(difference / 60_000));
 
   if (minutes < 60) {
@@ -55,15 +52,37 @@ function formatRelativeDate(value: string): string {
 }
 
 function getReviewerInitial(name: string): string {
-  const trimmed = name.trim();
+  return name.trim().charAt(0) || "ک";
+}
 
-  return trimmed ? trimmed.charAt(0) : "ک";
+function ReviewStars({ rating }: { rating: number }) {
+  const score = Math.min(5, Math.max(0, rating));
+
+  return (
+    <span
+      role="img"
+      dir="ltr"
+      aria-label={`امتیاز ${toPersianDigits(score)} از ۵`}
+      className="flex shrink-0 gap-0.5 text-xs leading-4 text-text-brand"
+    >
+      {Array.from({ length: 5 }, (_, index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          className={index < Math.round(score) ? "" : "opacity-25"}
+        >
+          ★
+        </span>
+      ))}
+    </span>
+  );
 }
 
 export function ProductReviews({
   reviews,
   reviewCount,
   ratingAverage,
+  onAddReview,
   isLoading = false,
   error = null,
   mobilePlant = false,
@@ -74,112 +93,216 @@ export function ProductReviews({
   onLoadMore,
 }: ProductReviewsProps) {
   const titleId = useId();
+  const mobileLayout = mobilePlant || mobileArrangement;
+  const hasRating = ratingAverage !== null && reviewCount > 0;
+  const handleAddReview = onAddReview ?? (() => {
+    document.getElementById(`${titleId}-section`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  const addReviewButton = (
+    <button
+      type="button"
+      onClick={handleAddReview}
+      className="shrink-0 rounded-xl bg-action-primary px-4 py-2 text-mobile-ui-button font-semibold text-text-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+    >
+      ثبت تجربه خرید
+    </button>
+  );
+
   return (
     <section
+      dir="rtl"
       className={mobilePlant ? "px-4 py-8" : "px-4 py-4 sm:px-6 md:px-8"}
       aria-labelledby={titleId}
+      id={`${titleId}-section`}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2
           id={titleId}
-          className={mobilePlant ? "text-mobile-heading-h3 font-bold" : "text-base font-bold leading-6 text-text-primary"}
+          className={
+            mobilePlant
+              ? "text-mobile-heading-h3 font-bold text-text-primary"
+              : "text-base font-bold leading-6 text-text-primary"
+          }
         >
           نظرات کاربران
         </h2>
 
-        {!mobilePlant && ratingAverage !== null && reviewCount > 0 ? (
-          <div className="flex shrink-0 items-center gap-1">
-            <StarIcon size={12} className="text-[#F6AB27]" />
+        {!mobilePlant && (
+          <div className="flex flex-wrap items-center gap-3">
+            {hasRating && (
+              <div className="flex shrink-0 items-center gap-1">
+                <StarIcon size={12} className="text-text-brand" />
 
-            <span className="text-xs font-medium text-text-primary">
-              {toPersianDigits(ratingAverage.toFixed(1))}
-            </span>
+                <span className="text-xs font-medium text-text-primary">
+                  {toPersianDigits(ratingAverage.toFixed(1))}
+                </span>
 
-            <span className="text-[11px] text-text-secondary">
-              ({toPersianDigits(reviewCount)} نظر)
-            </span>
+                <span className="text-[11px] text-text-secondary">
+                  ({toPersianDigits(reviewCount)} نظر)
+                </span>
+              </div>
+            )}
+
+            {addReviewButton}
           </div>
-        ) : null}
+        )}
       </div>
 
-      {mobilePlant && ratingAverage !== null && reviewCount > 0 && <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-background-secondary p-4">
-        <bdi className={mobileArrangement ? "numeric-ltr text-[32px] font-extrabold leading-10" : "numeric-ltr text-[28px] font-bold leading-9"}>{toPersianDigits(ratingAverage.toFixed(1))}</bdi>
-        <div><p dir="ltr" className="text-sm tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(ratingAverage)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < Math.round(ratingAverage) ? "" : "opacity-25"}>★</span>)}</p><p className="mt-1 text-mobile-ui-caption text-text-secondary">از {toPersianDigits(reviewCount)} نظر</p></div>
-      </div>}
+      {mobilePlant && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-4 rounded-2xl border border-white/10 bg-background-secondary p-4">
+          <bdi
+            dir="ltr"
+            className="shrink-0 text-[32px] font-extrabold leading-10 text-text-primary"
+          >
+            {hasRating ? toPersianDigits(ratingAverage.toFixed(1)) : "—"}
+          </bdi>
 
-      {isLoading ? (
-        <div className={mobilePlant ? "mt-6 flex flex-col gap-6" : "mt-3 flex flex-col gap-3"}>
+          <div className="min-w-0">
+            <ReviewStars rating={hasRating ? ratingAverage : 0} />
+
+            <p className="mt-1 text-mobile-ui-caption text-text-tertiary">
+              از {toPersianDigits(reviewCount)} نظر
+            </p>
+          </div>
+
+          <div className="mr-auto">{addReviewButton}</div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div
+          role="status"
+          aria-label="در حال دریافت نظرات"
+          className={
+            mobileLayout
+              ? "mt-6 flex flex-col gap-4"
+              : "mt-3 flex flex-col gap-3"
+          }
+        >
           {[0, 1, 2].map((item) => (
             <div
               key={item}
-              className="h-[108px] animate-pulse rounded-xl bg-background-secondary"
+              aria-hidden="true"
+              className="h-[108px] animate-pulse rounded-xl bg-background-secondary motion-reduce:animate-none"
             />
           ))}
         </div>
-      ) : null}
+      )}
 
-      {!isLoading && error ? (
-        <p className="mt-3 text-xs leading-6 text-text-secondary">
+      {!isLoading && error && (
+        <p role="status" className="mt-3 text-xs leading-6 text-text-secondary">
           دریافت نظرات با مشکل روبه‌رو شد.
         </p>
-      ) : null}
+      )}
 
-      {!isLoading && !error && reviews.length === 0 ? (
+      {!isLoading && !error && reviews.length === 0 && (
         <p className="mt-3 text-xs leading-6 text-text-secondary">
           هنوز نظری برای این محصول ثبت نشده است.
         </p>
-      ) : null}
+      )}
 
-      {!isLoading && !error && reviews.length > 0 ? (
-        <div className={mobileArrangement ? "mt-6 flex flex-col" : mobilePlant ? "mt-6 flex flex-col gap-6" : "mt-3 flex flex-col gap-3"}>
+      {!isLoading && !error && reviews.length > 0 && (
+        <div
+          className={
+            mobileLayout
+              ? "mt-6 flex flex-col divide-y divide-background-tertiary/70"
+              : "mt-3 flex flex-col gap-3"
+          }
+        >
           {reviews.map((review) => (
             <article
               key={review.id}
-              className={mobileArrangement ? "border-b border-white/10 py-4" : mobilePlant ? "border-b border-white/10 pb-6" : "rounded-xl bg-background-secondary p-3"}
+              className={
+                mobileLayout ? "py-4" : "rounded-xl bg-background-secondary p-3"
+              }
             >
-              {mobileArrangement ? <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-muted text-sm" aria-hidden="true">{getReviewerInitial(review.reviewer_name)}</span>
-                  <div className="min-w-0">
-                    <p className="break-words text-mobile-ui-button font-semibold">{review.reviewer_name}</p>
-                    <time dateTime={review.created_at} className="text-mobile-ui-caption text-text-tertiary">{formatRelativeDate(review.created_at)}</time>
+              {mobileLayout ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-background-tertiary bg-action-secondary text-sm font-semibold text-text-primary"
+                    >
+                      {getReviewerInitial(review.reviewer_name)}
+                    </span>
+
+                    <div className="min-w-0">
+                      <p className="break-words text-mobile-ui-button font-semibold text-text-primary">
+                        {review.reviewer_name}
+                      </p>
+
+                      <time
+                        dateTime={review.created_at}
+                        className="block text-mobile-ui-caption text-text-tertiary"
+                      >
+                        {formatRelativeDate(review.created_at)}
+                      </time>
+                    </div>
                   </div>
+
+                  <ReviewStars rating={review.rating} />
                 </div>
-                <p dir="ltr" className="shrink-0 text-xs tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(review.rating)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < review.rating ? "" : "opacity-25"}>★</span>)}</p>
-              </div> : <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <div
-                    className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-semibold text-text-primary"
-                    aria-hidden="true"
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="grid size-9 shrink-0 place-items-center rounded-full bg-action-secondary text-xs font-semibold text-text-primary"
+                    >
+                      {getReviewerInitial(review.reviewer_name)}
+                    </span>
+
+                    <p className="truncate text-xs font-medium leading-5 text-text-primary">
+                      {review.reviewer_name}
+                    </p>
+                  </div>
+
+                  <time
+                    dateTime={review.created_at}
+                    className="shrink-0 text-[10px] leading-4 text-text-secondary"
                   >
-                    {getReviewerInitial(review.reviewer_name)}
-                  </div>
-
-                  <p className="truncate text-xs font-medium leading-5 text-text-primary">
-                    {review.reviewer_name}
-                  </p>
+                    {formatRelativeDate(review.created_at)}
+                  </time>
                 </div>
+              )}
 
-                <time
-                  dateTime={review.created_at}
-                  className="shrink-0 text-[10px] leading-4 text-text-secondary"
-                >
-                  {formatRelativeDate(review.created_at)}
-                </time>
-              </div>}
-
-              {mobilePlant && !mobileArrangement && <p dir="ltr" className="mt-3 text-xs tracking-[2px] text-text-brand" aria-label={`امتیاز ${toPersianDigits(review.rating)} از ۵`}>{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < review.rating ? "" : "opacity-25"}>★</span>)}</p>}
-              <p className={mobileArrangement ? "mt-[11px] whitespace-pre-line break-words text-mobile-body-small text-text-secondary" : "mt-3 whitespace-pre-line break-words text-xs font-normal leading-6 text-text-secondary"}>
+              <p
+                className={
+                  mobileLayout
+                    ? "mt-[11px] whitespace-pre-line [overflow-wrap:anywhere] text-mobile-body-small text-text-secondary"
+                    : "mt-3 whitespace-pre-line break-words text-xs font-normal leading-6 text-text-secondary"
+                }
+              >
                 {review.comment}
               </p>
             </article>
           ))}
         </div>
-      ) : null}
-      {mobilePlant && hasMore && !isLoading && !error && onLoadMore && <div className="mt-6">
-        <button type="button" onClick={onLoadMore} disabled={isLoadingMore} aria-busy={isLoadingMore} className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/10 bg-background-secondary text-mobile-ui-button font-semibold disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-action-primary">{isLoadingMore ? "در حال دریافت نظرات…" : "مشاهده نظرات بیشتر"}</button>
-        {moreError && <p role="status" className="mt-2 text-mobile-body-small text-text-secondary">دریافت نظرات بیشتر انجام نشد. دوباره تلاش کنید.</p>}
-      </div>}
+      )}
+
+      {mobilePlant && hasMore && !isLoading && !error && onLoadMore && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            aria-busy={isLoadingMore}
+            className="flex min-h-9 w-full items-center justify-center rounded-[13px] border border-white/10 bg-background-secondary px-4 py-2 text-sm font-medium leading-5 text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary disabled:opacity-60"
+          >
+            {isLoadingMore ? "در حال دریافت نظرات…" : "مشاهده نظرات بیشتر"}
+          </button>
+
+          {moreError && (
+            <p
+              role="status"
+              className="mt-2 text-mobile-body-small text-text-secondary"
+            >
+              دریافت نظرات بیشتر انجام نشد. دوباره تلاش کنید.
+            </p>
+          )}
+        </div>
+      )}
     </section>
   );
 }

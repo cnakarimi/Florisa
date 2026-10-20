@@ -84,12 +84,14 @@ export function SpecificationTable({ group }: { group: SpecificationGroup }) {
             <dt className="min-w-0 flex-1 font-medium text-text-secondary">
               {row.label}
             </dt>
-            <dd className="min-w-0 flex-1 break-words text-left">
-              {typeof row.value === "boolean"
-                ? row.value
-                  ? "بله"
-                  : "خیر"
-                : toPersianDigits(String(row.value))}
+            <dd dir="rtl" className="flex min-w-0 flex-1 justify-end">
+              <span className="min-w-0 max-w-full break-words text-right">
+                {typeof row.value === "boolean"
+                  ? row.value
+                    ? "بله"
+                    : "خیر"
+                  : toPersianDigits(String(row.value))}
+              </span>
             </dd>
           </div>
         ))}
@@ -248,16 +250,6 @@ export function PlantCareGuide({ details }: { details: PlantProductDetails }) {
           );
         })}
       </div>
-      {notes && (
-        <div className="mt-6">
-          <h3 className="mb-2 text-mobile-ui-button font-semibold text-text-brand">
-            نکات عمومی نگهداری
-          </h3>
-          <p className="whitespace-pre-line [overflow-wrap:anywhere] text-mobile-body-small text-text-secondary">
-            {notes}
-          </p>
-        </div>
-      )}
     </section>
   );
 }
